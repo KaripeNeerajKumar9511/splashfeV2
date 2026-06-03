@@ -7,18 +7,14 @@ import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MoveLeft } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Navigation from "@/components/home/Navigation";
+import MarketingNav from "@/components/home/MarketingNav";
 
 export default function ContactPage() {
   const generateCaptcha = () => {
     return Math.random().toString(36).substring(2, 6).toLocaleLowerCase() + Math.random().toString(36).substring(2, 6).toLocaleLowerCase();
   };
 
-  const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [form, setForm] = useState({
@@ -77,44 +73,44 @@ export default function ContactPage() {
   };
 
   return (
-    <>
-      <Navigation />
+    <div className="marketing-page min-h-screen w-full max-w-[100vw] overflow-x-clip bg-[#0E0D09] text-[#F2EDD8] [--nav-h:64px] pt-[var(--nav-h)] max-md:[--nav-h:56px]">
+      <MarketingNav />
 
-      <div className="min-h-screen bg-[#11100D] text-[#F4F1E9]">
+      <div className="min-h-[calc(100dvh-var(--nav-h))]">
         {/* Header */}
-        <section className="relative py-20 md:py-32 bg-[#171613] text-center border-b border-[#3A2A12]">
-          <div className="max-w-screen-xl mx-auto px-6">
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-br from-[#D99A25] to-[#F2B84B]">
+        <section className="relative py-12 sm:py-16 md:py-24 bg-[#161410] text-center border-b border-white/10">
+          <div className="max-w-screen-xl mx-auto px-4 sm:px-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tight mb-4 sm:mb-6 text-[#F2EDD8] font-[family-name:var(--font-geist-sans)]">
               Contact Us
             </h1>
 
-            <p className="text-lg md:text-xl text-[#8FA0B5] max-w-2xl mx-auto leading-relaxed">
-              We'd love to hear from you. Please fill out the form below or reach
+            <p className="text-base sm:text-lg md:text-xl text-[rgba(242,237,216,0.58)] max-w-2xl mx-auto leading-relaxed px-1">
+              We&apos;d love to hear from you. Please fill out the form below or reach
               out to us directly.
             </p>
           </div>
         </section>
 
         {/* Content */}
-        <section className="py-16 md:py-24 bg-[#11100D]">
-          <div className="max-w-screen-xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16">
+        <section className="py-10 sm:py-16 md:py-24 bg-[#0E0D09]">
+          <div className="max-w-screen-xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
             {/* Contact Details */}
             <div>
-              <h2 className="text-3xl font-bold mb-10 text-[#F4F1E9]">
+              <h2 className="text-2xl sm:text-3xl font-semibold mb-8 sm:mb-10 text-[#F2EDD8]">
                 Get in Touch
               </h2>
 
               <div className="space-y-8">
                 <div className="flex items-start gap-4">
-                  <MapPin className="w-6 h-6 text-[#D99A25] mt-1 shrink-0" />
+                  <MapPin className="w-6 h-6 text-[#C9A84C] mt-1 shrink-0" />
                   <div>
-                    <h3 className="text-lg font-semibold text-[#F4F1E9]">
+                    <h3 className="text-lg font-semibold text-[#F2EDD8]">
                       Office Address
                     </h3>
-                    <p className="text-[#8FA0B5] mt-1 leading-relaxed">
+                    <p className="text-[rgba(242,237,216,0.58)] mt-1 leading-relaxed break-words">
                       <a
                         href="https://maps.app.goo.gl/3tMuX7F4xemYYrxH6"
-                        className="hover:text-[#D99A25] transition-colors"
+                        className="hover:text-[#C9A84C] transition-colors"
                         target="_blank"
                       >
                         501, Manjeera Majestic Commercial Complex,
@@ -126,40 +122,40 @@ export default function ContactPage() {
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <Phone className="w-6 h-6 text-[#D99A25] mt-1 shrink-0" />
+                  <Phone className="w-6 h-6 text-[#C9A84C] mt-1 shrink-0" />
                   <div>
-                    <h3 className="text-lg font-semibold text-[#F4F1E9]">
+                    <h3 className="text-lg font-semibold text-[#F2EDD8]">
                       Contact Number
                     </h3>
-                    <p className="text-[#8FA0B5] mt-1">
+                    <p className="text-[rgba(242,237,216,0.58)] mt-1">
                       <a
                         href="tel:+918790900881"
-                        className="hover:text-[#D99A25] transition-colors"
+                        className="hover:text-[#C9A84C] transition-colors"
                       >
                         +91 8790900881
                       </a>
                     </p>
-                    <p className="text-sm text-[#6F7D8F] mt-1">
+                    <p className="text-sm text-[rgba(242,237,216,0.32)] mt-1">
                       Assistance hours: Monday - Sunday 24/7 Hours
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <Mail className="w-6 h-6 text-[#D99A25] mt-1 shrink-0" />
+                  <Mail className="w-6 h-6 text-[#C9A84C] mt-1 shrink-0" />
                   <div>
-                    <h3 className="text-lg font-semibold text-[#F4F1E9]">
+                    <h3 className="text-lg font-semibold text-[#F2EDD8]">
                       Email Address
                     </h3>
-                    <p className="text-[#8FA0B5] mt-1">
+                    <p className="text-[rgba(242,237,216,0.58)] mt-1">
                       <a
                         href="mailto:support@gosplash.ai"
-                        className="hover:text-[#D99A25] transition-colors"
+                        className="hover:text-[#C9A84C] transition-colors"
                       >
                         support@gosplash.ai
                       </a>
                     </p>
-                    <p className="text-sm text-[#6F7D8F] mt-1">
+                    <p className="text-sm text-[rgba(242,237,216,0.32)] mt-1">
                       Assistance hours: Monday - Sunday 24/7 Hours
                     </p>
                   </div>
@@ -167,7 +163,7 @@ export default function ContactPage() {
               </div>
 
               {/* Google Map Embed */}
-              <div className="mt-10 h-64 w-full bg-[#171613] rounded-lg overflow-hidden border border-[#3A2A12] shadow-[0_16px_42px_rgba(0,0,0,0.28)]">
+              <div className="mt-8 sm:mt-10 h-56 sm:h-64 w-full min-w-0 bg-[#161410] rounded-lg overflow-hidden border border-white/10">
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3805.323180100733!2d78.39097917516732!3d17.492079483413075!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb910057424ed5%3A0x199dce60198e6b9b!2sTechsprout%20AI%20Labs%20Pvt.%20Ltd.!5e0!3m2!1sen!2sin!4v1770624140087!5m2!1sen!2sin"
                   width="100%"
@@ -182,24 +178,24 @@ export default function ContactPage() {
             </div>
 
             {/* Contact Form */}
-            <div className="bg-[#171613] rounded-2xl p-8 md:p-10 border border-[#3A2A12] shadow-[0_16px_42px_rgba(0,0,0,0.28)]">
-              <h2 className="text-3xl font-bold mb-8 text-[#F4F1E9]">
+            <div className="bg-[#161410] rounded-2xl p-5 sm:p-8 md:p-10 border border-white/10 min-w-0">
+              <h2 className="text-2xl sm:text-3xl font-semibold mb-8 text-[#F2EDD8]">
                 Have any query?
               </h2>
 
               {success ? (
                 <div className="py-12 text-center">
                   <CheckCircle className="mx-auto h-16 w-16 text-[#22C55E] mb-6" />
-                  <h3 className="text-2xl font-semibold text-[#F4F1E9]">
+                  <h3 className="text-2xl font-semibold text-[#F2EDD8]">
                     Thank you!
                   </h3>
-                  <p className="mt-4 text-[#8FA0B5] max-w-xs mx-auto">
+                  <p className="mt-4 text-[rgba(242,237,216,0.58)] max-w-xs mx-auto">
                     We have received your message and will get back to you shortly.
                   </p>
                   <Button
                     onClick={() => setSuccess(false)}
                     variant="outline"
-                    className="mt-8 border-[#3A2A12] bg-transparent text-[#F4F1E9] hover:bg-[#1C1B18] hover:text-[#F4F1E9]"
+                    className="mt-8 border-white/10 bg-transparent text-[#F2EDD8] hover:bg-[#1E1C15] hover:text-[#F2EDD8]"
                   >
                     Send another message
                   </Button>
@@ -208,53 +204,53 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-[#F4F1E9]">Full Name</Label>
+                      <Label className="text-[#F2EDD8]">Full Name</Label>
                       <Input
                         value={form.name}
                         onChange={(e) => update("name", e.target.value)}
                         placeholder="Your name"
-                        className="border-[#3A2A12] bg-[#11100D] text-[#F4F1E9] placeholder:text-[#6F7D8F] focus-visible:ring-[#D99A25] focus-visible:border-[#D99A25]"
+                        className="border-white/10 bg-[#0E0D09] text-[#F2EDD8] placeholder:text-[rgba(242,237,216,0.32)] focus-visible:ring-[#C9A84C] focus-visible:border-[#C9A84C]"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-[#F4F1E9]">Email</Label>
+                      <Label className="text-[#F2EDD8]">Email</Label>
                       <Input
                         type="email"
                         value={form.email}
                         onChange={(e) => update("email", e.target.value)}
                         placeholder="your@email.com"
-                        className="border-[#3A2A12] bg-[#11100D] text-[#F4F1E9] placeholder:text-[#6F7D8F] focus-visible:ring-[#D99A25] focus-visible:border-[#D99A25]"
+                        className="border-white/10 bg-[#0E0D09] text-[#F2EDD8] placeholder:text-[rgba(242,237,216,0.32)] focus-visible:ring-[#C9A84C] focus-visible:border-[#C9A84C]"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[#F4F1E9]">Phone Number</Label>
+                    <Label className="text-[#F2EDD8]">Phone Number</Label>
                     <Input
                       value={form.mobile}
                       onChange={(e) => update("mobile", e.target.value)}
                       placeholder="10-digit mobile number"
-                      className="border-[#3A2A12] bg-[#11100D] text-[#F4F1E9] placeholder:text-[#6F7D8F] focus-visible:ring-[#D99A25] focus-visible:border-[#D99A25]"
+                      className="border-white/10 bg-[#0E0D09] text-[#F2EDD8] placeholder:text-[rgba(242,237,216,0.32)] focus-visible:ring-[#C9A84C] focus-visible:border-[#C9A84C]"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[#F4F1E9]">Enter Your Message</Label>
+                    <Label className="text-[#F2EDD8]">Enter Your Message</Label>
                     <Textarea
                       value={form.reason}
                       onChange={(e) => update("reason", e.target.value)}
                       rows={6}
                       placeholder="How can we help you?"
-                      className="border-[#3A2A12] bg-[#11100D] text-[#F4F1E9] placeholder:text-[#6F7D8F] focus-visible:ring-[#D99A25] focus-visible:border-[#D99A25]"
+                      className="border-white/10 bg-[#0E0D09] text-[#F2EDD8] placeholder:text-[rgba(242,237,216,0.32)] focus-visible:ring-[#C9A84C] focus-visible:border-[#C9A84C]"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[#F4F1E9]">Captcha</Label>
+                    <Label className="text-[#F2EDD8]">Captcha</Label>
 
-                    <div className="flex items-center gap-4">
-                      <div className="px-4 py-2 bg-[#11100D] border border-[#3A2A12] rounded font-mono text-lg tracking-widest text-[#D99A25]">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+                      <div className="px-4 py-2 bg-[#0E0D09] border border-white/10 rounded font-mono text-lg tracking-widest text-[#C9A84C] text-center shrink-0">
                         {captcha}
                       </div>
 
@@ -265,7 +261,7 @@ export default function ContactPage() {
                           setCaptcha(generateCaptcha());
                           setCaptchaInput("");
                         }}
-                        className="border-[#3A2A12] bg-transparent text-[#F4F1E9] hover:bg-[#1C1B18] hover:text-[#F4F1E9]"
+                        className="border-white/10 bg-transparent text-[#F2EDD8] hover:bg-[#1E1C15] hover:text-[#F2EDD8]"
                       >
                         Refresh
                       </Button>
@@ -275,7 +271,7 @@ export default function ContactPage() {
                       value={captchaInput}
                       onChange={(e) => setCaptchaInput(e.target.value.toLowerCase())}
                       placeholder="Enter captcha"
-                      className="border-[#3A2A12] bg-[#11100D] text-[#F4F1E9] placeholder:text-[#6F7D8F] focus-visible:ring-[#D99A25] focus-visible:border-[#D99A25]"
+                      className="border-white/10 bg-[#0E0D09] text-[#F2EDD8] placeholder:text-[rgba(242,237,216,0.32)] focus-visible:ring-[#C9A84C] focus-visible:border-[#C9A84C]"
                     />
 
                     {!captchaValid && captchaInput && (
@@ -291,7 +287,7 @@ export default function ContactPage() {
                   <Button
                     type="submit"
                     disabled={submitting || !captchaValid}
-                    className="w-full bg-[#D99A25] hover:bg-[#F2B84B] text-[#11100D] font-bold disabled:opacity-50"
+                    className="w-full bg-[#C9A84C] hover:bg-[#E8D08A] text-[#0E0D09] font-bold disabled:opacity-50"
                   >
                     {submitting ? (
                       <>
@@ -307,19 +303,7 @@ export default function ContactPage() {
             </div>
           </div>
         </section>
-
-        {/* <button
-          onClick={() => {
-            router.push("/");
-          }}
-          className="fixed top-10 left-6 z-50
-                     bg-white/80 backdrop-blur-sm border border-gray-200 text-
-                     hover:bg-gray-100 hover:text-black
-                     px-4 py-2 rounded-full shadow-sm transition-all flex items-center gap-2"
-        >
-          <MoveLeft size={16} /> Back
-        </button> */}
       </div>
-    </>
+    </div>
   );
 }

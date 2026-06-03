@@ -10,6 +10,7 @@ import { Mail, ArrowLeft } from "lucide-react";
 
 import Navigation from "@/components/home/Navigation";
 import LoginImage from "@/components/login-image";
+import PortalDeviceGuard from "@/components/portal/PortalDeviceGuard";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -32,8 +33,8 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white">
-            {/* Top Navigation */}
+        <PortalDeviceGuard>
+        <div className="dark min-h-screen bg-surface-gradient">
             <Navigation />
 
             <main className="pt-32 pb-8 flex items-center justify-center p-4">
@@ -152,5 +153,6 @@ export default function ForgotPasswordPage() {
                 </div>
             </main>
         </div>
+        </PortalDeviceGuard>
     );
 }

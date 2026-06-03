@@ -11,6 +11,7 @@ import { Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
 
 import Navigation from "@/components/home/Navigation";
 import LoginImage from "@/components/login-image";
+import PortalDeviceGuard from "@/components/portal/PortalDeviceGuard";
 
 export default function ResetPasswordPage() {
     const searchParams = useSearchParams();
@@ -72,7 +73,8 @@ export default function ResetPasswordPage() {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-white">
+            <PortalDeviceGuard>
+            <div className="dark min-h-screen bg-surface-gradient">
                 <Navigation />
 
                 <main className="pt-20 pb-8 flex items-center justify-center p-4">
@@ -107,11 +109,13 @@ export default function ResetPasswordPage() {
                     </div>
                 </main>
             </div>
+            </PortalDeviceGuard>
         );
     }
 
     return (
-        <div className="min-h-screen bg-white">
+        <PortalDeviceGuard>
+        <div className="dark min-h-screen bg-surface-gradient">
             <Navigation />
 
             <main className="pt-34 pb-8 flex items-center justify-center p-4">
@@ -214,5 +218,6 @@ export default function ResetPasswordPage() {
                 </div>
             </main>
         </div>
+        </PortalDeviceGuard>
     );
 }

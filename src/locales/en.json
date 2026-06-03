@@ -84,6 +84,14 @@
     "organizationAccess": "Organization Access",
     "switchToOrganizationPortal": "Switch to Organization Portal"
   },
+  "portal": {
+    "mobileTitle": "Desktop & tablet only",
+    "mobileDescription": "Splash AI Studio portal is built for larger screens. Please sign in from a tablet (landscape recommended), laptop, or desktop for the full experience.",
+    "mobileSupportedDevices": "Supported devices",
+    "mobileTablet": "iPad and Android tablets (768px width and up)",
+    "mobileDesktop": "Laptops and desktop computers",
+    "mobileBackToWebsite": "Back to website"
+  },
   "legal": {
     "legalDocument": "Legal Document",
     "readCarefully": "Please read the following content carefully",

@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { switchToOrganizationPortal } from "@/lib/portalSwitch";
 
-export function Topbar({ collapsed }) {
+export function Topbar({ collapsed, sidebarExpanded }) {
     const { token, user, logout, isGenerating } = useAuth();
     const { t } = useLanguage();
     const router = useRouter();
@@ -196,16 +196,16 @@ export function Topbar({ collapsed }) {
     /* ======================= JSX ======================= */
     return (
         <header
-            className={`fixed top-0 right-0 z-30 h-16 flex items-center bg-card/90 backdrop-blur-md border-b border-border text-foreground px-6 transition-all ${
-                collapsed ? "left-16" : "left-64"
+            className={`fixed top-0 right-0 z-30 h-14 md:h-16 flex items-center bg-card/90 backdrop-blur-md border-b border-border text-foreground px-3 sm:px-4 lg:px-6 transition-all ${
+                sidebarExpanded ?? !collapsed ? "left-64" : "left-20"
             }`}
         >
             {/* Organization */}
             {!loadingOrg && organizationInfo && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-secondary/80 border border-border rounded-lg">
-                    <Building2 className="text-gold-solid" />
-                    <span className="font-semibold">{organizationInfo.name}</span>
-                    <Badge className={getRoleBadgeColor(organizationInfo.role)}>
+                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 lg:px-4 lg:py-2 bg-secondary/80 border border-border rounded-lg min-w-0 max-w-[min(100%,280px)]">
+                    <Building2 className="text-gold-solid shrink-0" />
+                    <span className="font-semibold truncate">{organizationInfo.name}</span>
+                    <Badge className={`shrink-0 ${getRoleBadgeColor(organizationInfo.role)}`}>
                         {organizationInfo.role}
                     </Badge>
                 </div>
@@ -214,7 +214,7 @@ export function Topbar({ collapsed }) {
             <div className="flex-1" />
 
             {/* Right Section */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
 
                
                 <div className="relative" ref={notificationRef}>
@@ -232,7 +232,7 @@ export function Topbar({ collapsed }) {
                     </button>
 
                     {showNotifications && (
-                        <div className="absolute right-0 mt-2 w-96 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+                        <div className="absolute right-0 mt-2 w-[min(100vw-1.5rem,24rem)] sm:w-96 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
                             <div className="px-4 py-3 border-b border-border bg-secondary/50 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Mail className="w-4 h-4 text-gold-solid" />
@@ -310,14 +310,15 @@ export function Topbar({ collapsed }) {
 
                 {/* Live credits */}
                 {token && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-card/50 border border-gold-muted rounded-lg">
+                    <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-card/50 border border-gold-muted rounded-lg">
                         {creditsLoading ? (
                             <Loader2 className="w-4 h-4 text-gold-solid animate-spin" />
                         ) : (
                             <>
                                 <Coins className="w-4 h-4 text-gold-solid" />
-                                <span className="text-sm font-semibold text-gold-solid">
-                                    {liveCredits != null ? liveCredits.toLocaleString() : "—"} credits
+                                <span className="text-xs sm:text-sm font-semibold text-gold-solid whitespace-nowrap">
+                                    {liveCredits != null ? liveCredits.toLocaleString() : "—"}
+                                    <span className="hidden sm:inline"> credits</span>
                                 </span>
                             </>
                         )}

@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import LoginForm from "@/components/login-form"
 import LoginImage from "@/components/login-image"
 import Navigation from "@/components/home/Navigation";
+import PortalDeviceGuard from "@/components/portal/PortalDeviceGuard";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -36,19 +37,19 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="dark min-h-screen bg-surface-gradient">
-            <Navigation />
-            <main className="pt-20 pb-8 flex items-center justify-center p-4">
-                <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-                    {/* Left side - Form */}
-                    <LoginForm />
+        <PortalDeviceGuard>
+            <div className="dark min-h-screen bg-surface-gradient">
+                <Navigation />
+                <main className="pt-20 pb-8 flex items-center justify-center p-4 md:p-6 lg:p-8">
+                    <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
+                        <LoginForm />
 
-                    {/* Right side - Images */}
-                    <div className="hidden lg:block">
-                        <LoginImage />
+                        <div className="hidden md:block">
+                            <LoginImage />
+                        </div>
                     </div>
-                </div>
-            </main>
-        </div>
+                </main>
+            </div>
+        </PortalDeviceGuard>
     )
 }

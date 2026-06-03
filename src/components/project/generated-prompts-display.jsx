@@ -24,12 +24,12 @@ export function GeneratedPromptsDisplay({ collectionData }) {
         white_background: {
             title: "White Background",
             description: "Clean product shots with white background",
-            color: "bg-blue-50 border-blue-200 text-blue-700"
+            color: "bg-accent border-border text-muted-foreground"
         },
         background_replace: {
             title: "Background Replace",
             description: "Product with themed backgrounds",
-            color: "bg-purple-50 border-purple-200 text-purple-700"
+            color: "bg-accent border-gold-muted text-gold-solid"
         },
         model_image: {
             title: "Model Image",
@@ -44,45 +44,45 @@ export function GeneratedPromptsDisplay({ collectionData }) {
     }
 
     return (
-        <div className="mt-8 border-2 border-[#884cff]/20 rounded-lg overflow-hidden">
+        <div className="mt-8 border-2 border-gold-solid/20 rounded-lg overflow-hidden">
             {/* Header */}
             <div
-                className="bg-gradient-to-r from-[#884cff]/10 to-[#884cff]/5 p-4 flex items-center justify-between cursor-pointer hover:from-[#884cff]/15 hover:to-[#884cff]/10 transition-colors"
+                className="bg-gradient-to-r from-gold-solid/10 to-gold-solid/5 p-4 flex items-center justify-between cursor-pointer hover:from-gold-solid/15 hover:to-gold-solid/10 transition-colors"
                 onClick={() => setExpanded(!expanded)}
             >
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#884cff] rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gold-solid rounded-lg flex items-center justify-center">
                         <Sparkles className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <h3 className="font-bold text-[#1a1a1a] flex items-center gap-2">
+                        <h3 className="font-bold text-foreground flex items-center gap-2">
                             AI Generated Prompts
                             <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
                                 Ready
                             </span>
                         </h3>
-                        <p className="text-sm text-[#708090]">
+                        <p className="text-sm text-muted-foreground">
                             {Object.keys(prompts).length} image generation prompts created
                         </p>
                     </div>
                 </div>
                 <Button variant="ghost" size="sm">
                     {expanded ? (
-                        <ChevronUp className="w-5 h-5 text-[#708090]" />
+                        <ChevronUp className="w-5 h-5 text-muted-foreground" />
                     ) : (
-                        <ChevronDown className="w-5 h-5 text-[#708090]" />
+                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
                     )}
                 </Button>
             </div>
 
             {/* Prompt Cards */}
             {expanded && (
-                <div className="p-6 space-y-4 bg-white">
+                <div className="p-6 space-y-4 bg-card">
                     {Object.entries(prompts).map(([key, promptText]) => {
                         const promptType = promptTypes[key] || {
                             title: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
                             description: "Custom prompt",
-                            color: "bg-gray-50 border-gray-200 text-gray-700"
+                            color: "bg-muted border-border text-muted-foreground"
                         }
 
                         return (
@@ -95,7 +95,7 @@ export function GeneratedPromptsDisplay({ collectionData }) {
                                         <h4 className={`font-semibold ${promptType.color.split(' ')[2]}`}>
                                             {promptType.title}
                                         </h4>
-                                        <p className="text-xs text-[#708090] mt-0.5">
+                                        <p className="text-xs text-muted-foreground mt-0.5">
                                             {promptType.description}
                                         </p>
                                     </div>
@@ -118,15 +118,15 @@ export function GeneratedPromptsDisplay({ collectionData }) {
                                         )}
                                     </Button>
                                 </div>
-                                <p className="text-sm text-[#1a1a1a] leading-relaxed">
+                                <p className="text-sm text-foreground leading-relaxed">
                                     {promptText}
                                 </p>
                             </div>
                         )
                     })}
 
-                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-xs text-blue-700">
+                    <div className="mt-4 p-3 bg-accent border border-border rounded-lg">
+                        <p className="text-xs text-muted-foreground">
                             💡 <strong>Tip:</strong> These prompts will be used to generate your final product images in Step 4.
                             They are automatically created based on your selected themes, backgrounds, poses, and colors.
                         </p>

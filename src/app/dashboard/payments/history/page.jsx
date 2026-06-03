@@ -38,20 +38,20 @@ export default function PaymentHistoryPage() {
   const getStatusChip = (status) => {
     if (status === "completed") {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gold-solid/10 text-gold-solid">
           <Check className="w-3 h-3" /> {t("status.completed") || "Completed"}
         </span>
       );
     }
     if (status === "pending") {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gold-muted text-foreground">
           {t("status.pending") || "Pending"}
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-destructive/10 text-destructive">
         <X className="w-3 h-3" /> {t("status.failed") || "Failed"}
       </span>
     );
@@ -59,8 +59,8 @@ export default function PaymentHistoryPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      <div className="flex items-center justify-center h-64 min-h-[16rem]">
+        <Loader2 className="w-8 h-8 animate-spin text-gold-solid" />
       </div>
     );
   }
@@ -68,52 +68,52 @@ export default function PaymentHistoryPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Payment History</h1>
-        <p className="text-gray-600 text-sm">
+        <h1 className="text-2xl font-bold text-foreground">Payment History</h1>
+        <p className="text-muted-foreground text-sm">
           View all your plan and credit purchases.
         </p>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         {payments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-            <CreditCard className="w-10 h-10 mb-3 text-gray-400" />
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <CreditCard className="w-10 h-10 mb-3 text-muted-foreground" />
             <p>No payments found yet.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     Date
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     Plan / Credits
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     Amount
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     Credits
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     Transaction ID
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-border">
                 {payments.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50">
+                  <tr key={p.id} className="hover:bg-accent">
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2 text-gray-700">
-                        <Calendar className="w-4 h-4 text-gray-400" />
+                      <div className="flex items-center gap-2 text-foreground">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
                         <span>
                           {p.created_at
                             ? new Date(p.created_at).toLocaleDateString()
@@ -121,20 +121,20 @@ export default function PaymentHistoryPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-800">
+                    <td className="px-4 py-3 text-foreground">
                       {p.plan_name || "Credit Purchase"}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 text-gray-800">
-                        <DollarSign className="w-4 h-4 text-gray-400" />
+                      <div className="flex items-center gap-1 text-foreground">
+                        <DollarSign className="w-4 h-4 text-muted-foreground" />
                         <span>₹{p.total_amount?.toFixed(2) || p.amount?.toFixed(2) || "0.00"}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-800">
+                    <td className="px-4 py-3 text-foreground">
                       {p.credits ?? 0}
                     </td>
                     <td className="px-4 py-3">{getStatusChip(p.status)}</td>
-                    <td className="px-4 py-3 text-xs text-gray-500 font-mono">
+                    <td className="px-4 py-3 text-xs text-muted-foreground font-mono">
                       {p.razorpay_payment_id || p.razorpay_order_id || p.id}
                     </td>
                     <td className="px-4 py-3">
@@ -144,13 +144,13 @@ export default function PaymentHistoryPage() {
                             setInvoicePaymentData(p);
                             setSelectedInvoice(p.id);
                           }}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gold-solid hover:text-gold-solid hover:bg-accent rounded-lg transition-colors"
                         >
                           <FileText className="w-4 h-4" />
                           View Invoice
                         </button>
                       ) : (
-                        <span className="text-gray-400 text-sm">-</span>
+                        <span className="text-muted-foreground text-sm">-</span>
                       )}
                     </td>
                   </tr>
@@ -175,4 +175,3 @@ export default function PaymentHistoryPage() {
     </div>
   );
 }
-

@@ -150,9 +150,9 @@ export default function Dashboard() {
                                     <div className="text-2xl font-bold text-gold-solid">
                                         {userCredits.balance.toLocaleString()}
                                     </div>
-                                    {/* <div className="w-full bg-gray-200 h-2 rounded-full mt-2">
+                                    {/* <div className="w-full bg-muted h-2 rounded-full mt-2">
                                         <div 
-                                            className="bg-indigo-500 h-2 rounded-full transition-all"
+                                            className="bg-gold-gradient h-2 rounded-full transition-all"
                                             style={{ 
                                                 width: userCredits.balance && userCredits.balance > 0 
                                                     ? `${Math.min((userCredits.balance / 10000) * 100, 100)}%` 
@@ -166,11 +166,11 @@ export default function Dashboard() {
                                 </>
                             ) : (
                                 <>
-                                    <div className="text-2xl font-bold text-gray-900">0</div>
-                                    <div className="w-full bg-gray-200 h-2 rounded-full mt-2">
-                                        <div className="bg-indigo-500 h-2 rounded-full w-0" />
+                                    <div className="text-2xl font-bold text-foreground">0</div>
+                                    <div className="w-full bg-muted h-2 rounded-full mt-2">
+                                        <div className="bg-gold-gradient h-2 rounded-full w-0" />
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-xs text-muted-foreground mt-1">
                                         {t("dashboard.noOrganizationAssigned")}
                                     </p>
                                 </>
@@ -216,12 +216,12 @@ export default function Dashboard() {
             {/* ✅ Pending Invitations Section */}
             {/* <div className="space-y-4">
                 <div className="flex items-center gap-3 mb-2">
-                    <Mail className="w-6 h-6 text-indigo-500" />
+                    <Mail className="w-6 h-6 text-gold-solid" />
                     <div>
                         <h2 className="text-xl font-bold bg-[linear-gradient(135deg,hsl(250,70%,60%),hsl(260,75%,65%))] bg-clip-text text-transparent">
                             Pending Invitations
                         </h2>
-                        <p className="text-gray-500 text-sm">Review and respond to project invitations</p>
+                        <p className="text-muted-foreground text-sm">Review and respond to project invitations</p>
                     </div>
                 </div>
 
@@ -302,7 +302,7 @@ export default function Dashboard() {
                                     return (
                                         <div
                                             key={image.id}
-                                            className="aspect-square overflow-hidden rounded-xl bg-gray-100 border border-gray-200 hover:shadow-md transition-all cursor-pointer"
+                                            className="aspect-square overflow-hidden rounded-xl bg-secondary border border-border hover:shadow-md transition-all cursor-pointer"
                                         >
                                             <img
                                                 src={imageSrc}

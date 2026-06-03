@@ -355,7 +355,7 @@ export default function GalleryPage() {
                                     className="group cursor-pointer"
                                 >
                                     {/* Image */}
-                                    <div className="relative w-75 h-75 bg-white rounded-lg overflow-hidden mb-2">
+                                    <div className="relative w-75 h-75 bg-card rounded-lg overflow-hidden mb-2">
                                     <Image 
   src={`${image.generated_image_url}?v=${image.id}`}
   alt={image.prompt || "Generated image"}
@@ -522,9 +522,9 @@ export default function GalleryPage() {
 
                             {/* Original Prompt */}
                             {/* {regenerateModal.image.original_prompt && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                    <p className="text-xs font-semibold text-blue-900 mb-2">Original Prompt:</p>
-                                    <p className="text-sm text-blue-700">
+                                <div className="bg-accent border border-border rounded-xl p-4">
+                                    <p className="text-xs font-semibold text-foreground mb-2">Original Prompt:</p>
+                                    <p className="text-sm text-muted-foreground">
                                         {regenerateModal.image.original_prompt}
                                     </p>
                                 </div>

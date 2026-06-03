@@ -224,7 +224,7 @@ export default function PromptMasterPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-solid mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading prompts...</p>
         </div>
       </div>
@@ -253,7 +253,7 @@ export default function PromptMasterPage() {
           </Button>
           <Button
             onClick={() => setShowCreateForm(true)}
-            className="bg-[#884cff] hover:bg-[#884cff]/90"
+            className="bg-gold-solid hover:bg-gold-solid/90"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Prompt
@@ -408,7 +408,7 @@ export default function PromptMasterPage() {
               </Button>
               <Button
                 onClick={() => editingId ? handleUpdate(editingId) : handleCreate()}
-                className="bg-[#884cff] hover:bg-[#884cff]/90"
+                className="bg-gold-solid hover:bg-gold-solid/90"
               >
                 <Save className="w-4 h-4 mr-2" />
                 {editingId ? 'Update' : 'Create'} Prompt

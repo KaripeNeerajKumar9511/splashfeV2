@@ -30,7 +30,7 @@ export function WorkflowSteps({ activeStep, setActiveStep, savedSteps, setSavedS
                                             ? "bg-gold-solid"
                                             : isActive
                                                 ? "bg-gold-solid border-2 border-gold-muted"
-                                                : "bg-gray-200"
+                                                : "bg-muted"
                                             } ${canClick ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}
                                         onClick={() => {
                                             if (canClick) {

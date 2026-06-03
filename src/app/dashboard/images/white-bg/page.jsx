@@ -385,7 +385,7 @@ const PlainBackgroundForm = () => {
                                     <div className="w-3 h-3 rounded-full bg-gold-gradient"></div>
                                     Background Color
                                 </label>
-                                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-[#f8f7ff] to-[#f5f3ff] rounded-2xl border border-border">
+                                <div className="flex items-center gap-4 p-4 bg-accent rounded-2xl border border-border">
                                     <div className="relative">
                                         <input
                                             type="color"
@@ -501,7 +501,7 @@ const PlainBackgroundForm = () => {
                                         <button
                                             type="button"
                                             onClick={handleRegenerate}
-                                            className="px-4 py-3 border-2 border-gold-muted text-gold-solid rounded-xl font-semibold hover:bg-[#f0e6ff] transition-all flex items-center justify-center gap-2"
+                                            className="px-4 py-3 border-2 border-gold-muted text-gold-solid rounded-xl font-semibold hover:bg-accent transition-all flex items-center justify-center gap-2"
                                         >
                                             <RefreshCw size={16} />
                                             {t("images.regenerate")}
@@ -518,8 +518,8 @@ const PlainBackgroundForm = () => {
                                             {t("images.newImage")}
                                         </button>
                                     </div>
-                                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                        <p className="text-blue-700 text-sm flex items-center gap-2">
+                                    <div className="bg-accent border border-border rounded-xl p-4">
+                                        <p className="text-muted-foreground text-sm flex items-center gap-2">
                                             <Sparkles className="w-4 h-4" />
                                             {t("images.clickRegenerateToModify")}
                                         </p>
@@ -582,9 +582,9 @@ const PlainBackgroundForm = () => {
 
                             {/* Original Prompt
                             {result.prompt && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                    <p className="text-xs font-semibold text-blue-900 mb-2">Original Prompt:</p>
-                                    <p className="text-sm text-blue-700">{result.prompt}</p>
+                                <div className="bg-accent border border-border rounded-xl p-4">
+                                    <p className="text-xs font-semibold text-foreground mb-2">Original Prompt:</p>
+                                    <p className="text-sm text-muted-foreground">{result.prompt}</p>
                                 </div>
                             )} */}
 

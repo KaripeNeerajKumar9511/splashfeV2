@@ -159,15 +159,15 @@ export function InvoiceView({ transactionId, onClose, paymentData }) {
     }, []);
 
     return (
-        <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
             {/* Header Bar with Actions */}
-            <div className="invoice-header-bar sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
-                <h2 className="text-2xl font-bold text-gray-900">Invoice</h2>
+            <div className="invoice-header-bar sticky top-0 z-10 bg-card border-b border-border px-6 py-4 flex items-center justify-between shadow-sm">
+                <h2 className="text-2xl font-bold text-foreground">Invoice</h2>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={downloadPDF}
                         disabled={downloading || loading || !invoiceData}
-                        className="px-4 py-2 bg-[#8f6ae1] hover:bg-[#7a5bc7] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-4 py-2 bg-gold-solid hover:bg-gold-to text-primary-foreground rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                         {downloading ? (
                             <>
@@ -183,7 +183,7 @@ export function InvoiceView({ transactionId, onClose, paymentData }) {
                     </button>
                     <button
                         onClick={onClose}
-                        className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                        className="p-2 border border-border rounded-lg hover:bg-accent"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -194,11 +194,11 @@ export function InvoiceView({ transactionId, onClose, paymentData }) {
             <div className="flex justify-center py-8 px-4">
                 {loading ? (
                     <div className="flex items-center justify-center py-12">
-                        <Loader2 className="w-8 h-8 animate-spin text-[#8f6ae1]" />
+                        <Loader2 className="w-8 h-8 animate-spin text-gold-solid" />
                     </div>
                 ) : error ? (
                     <div className="text-center py-12">
-                        <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                         <p className="text-red-600">{error}</p>
                     </div>
                 ) : invoiceData ? (

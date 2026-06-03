@@ -34,8 +34,8 @@ export function ImageGrid({ project, collectionData: initialCollectionData, onDa
         return (
             <div className="mb-12">
                 <div className="text-center py-12 border-2 border-dashed border-gold-muted rounded-lg">
-                    <p className="text-[#708090] mb-2">No images generated yet</p>
-                    <p className="text-sm text-[#708090]">
+                    <p className="text-muted-foreground mb-2">No images generated yet</p>
+                    <p className="text-sm text-muted-foreground">
                         Click "Generate Product Images" above to create your final images
                     </p>
                 </div>
@@ -51,8 +51,8 @@ export function ImageGrid({ project, collectionData: initialCollectionData, onDa
         return (
             <div className="mb-12">
                 <div className="text-center py-12 border-2 border-dashed border-gold-muted rounded-lg">
-                    <p className="text-[#708090] mb-2">No images generated yet</p>
-                    <p className="text-sm text-[#708090]">
+                    <p className="text-muted-foreground mb-2">No images generated yet</p>
+                    <p className="text-sm text-muted-foreground">
                         Click "Generate Product Images" above to create your final images
                     </p>
                 </div>

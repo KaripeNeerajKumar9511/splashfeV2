@@ -130,7 +130,7 @@ export const ProfileInfo = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#884cff]" />
+        <Loader2 className="w-8 h-8 animate-spin text-gold-solid" />
       </div>
     );
   }
@@ -250,7 +250,7 @@ export const ProfileInfo = () => {
           <CardContent>
             <Button 
               onClick={switchToOrganizationPortal}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
+              className="w-full bg-gold-gradient hover:opacity-90 text-primary-foreground"
             >
               <Building2 className="w-4 h-4 mr-2" />
               {t('profile.switchToOrganizationPortal')}

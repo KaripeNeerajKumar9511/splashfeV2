@@ -21,13 +21,13 @@ export function ReferenceImagesModal({ open, onOpenChange }) {
         <DialogHeader>
           <DialogTitle className="text-lg">Reference images</DialogTitle>
         </DialogHeader>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           Upload the product image which is captured in the similar way as the reference images for better result.
           <br /> <span className="font-bold">Examples:</span>
         </p>
         <div className="grid grid-cols-2 gap-4">
           {REFERENCE_IMAGES.map((img, index) => (
-            <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+            <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-border bg-muted">
               <Image
                 src={img.src}
                 alt={img.alt}

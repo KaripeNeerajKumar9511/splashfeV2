@@ -191,13 +191,13 @@ export function OrganizationsTab() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Organizations</h2>
-                    <p className="text-sm text-gray-500 mt-1">Manage organizations and their settings</p>
+                    <h2 className="text-2xl font-bold text-foreground">Organizations</h2>
+                    <p className="text-sm text-muted-foreground mt-1">Manage organizations and their settings</p>
                 </div>
                 {isAdmin && (
                     <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                            <Button className="bg-gold-solid hover:bg-gold-to text-white">
                                 <Plus className="w-4 h-4 mr-2" />
                                 Create Organization
                             </Button>
@@ -208,7 +208,7 @@ export function OrganizationsTab() {
                             </DialogHeader>
                             <div className="space-y-4 mt-4">
                                 <div>
-                                    <label className="text-sm font-medium text-gray-900">Organization Name</label>
+                                    <label className="text-sm font-medium text-foreground">Organization Name</label>
                                     <Input
                                         value={createForm.name}
                                         onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
@@ -217,7 +217,7 @@ export function OrganizationsTab() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-900">Owner Email</label>
+                                    <label className="text-sm font-medium text-foreground">Owner Email</label>
                                     <Input
                                         type="email"
                                         value={createForm.owner_email}
@@ -227,7 +227,7 @@ export function OrganizationsTab() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-900">Initial Credits</label>
+                                    <label className="text-sm font-medium text-foreground">Initial Credits</label>
                                     <Input
                                         type="number"
                                         value={createForm.initial_credits}
@@ -241,7 +241,7 @@ export function OrganizationsTab() {
                                 )}
                                 <Button
                                     onClick={handleCreateOrganization}
-                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                                    className="w-full bg-gold-solid hover:bg-gold-to text-white"
                                 >
                                     Create Organization
                                 </Button>
@@ -280,12 +280,12 @@ export function OrganizationsTab() {
                     filteredOrganizations.map((org) => (
                         <div
                             key={org.id}
-                            className="bg-white rounded-lg border border-[#e6e6e6] p-6 hover:shadow-md transition-shadow"
+                            className="bg-card rounded-lg border border-[#e6e6e6] p-6 hover:shadow-md transition-shadow"
                         >
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-2">
-                                        <Building2 className="w-5 h-5 text-[#884cff]" />
+                                        <Building2 className="w-5 h-5 text-gold-solid" />
                                         <h3 className="text-lg font-semibold text-[#1a1a1a]">{org.name}</h3>
                                     </div>
                                     <div className="grid grid-cols-3 gap-4 mt-4">
@@ -317,7 +317,7 @@ export function OrganizationsTab() {
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => openEditDialog(org)}
-                                            className="text-[#884cff] hover:text-[#7a3ff0]"
+                                            className="text-gold-solid hover:text-gold-to"
                                             title="Edit"
                                         >
                                             <Edit className="w-4 h-4" />
@@ -360,7 +360,7 @@ export function OrganizationsTab() {
                         )}
                         <Button
                             onClick={handleUpdateOrganization}
-                            className="w-full bg-[#884cff] hover:bg-[#7a3ff0] text-white"
+                            className="w-full bg-gold-solid hover:bg-gold-to text-white"
                         >
                             Update Organization
                         </Button>
@@ -399,7 +399,7 @@ export function OrganizationsTab() {
                         )}
                         <Button
                             onClick={handleAddCredits}
-                            className="w-full bg-[#884cff] hover:bg-[#7a3ff0] text-white"
+                            className="w-full bg-gold-solid hover:bg-gold-to text-white"
                         >
                             Add Credits
                         </Button>

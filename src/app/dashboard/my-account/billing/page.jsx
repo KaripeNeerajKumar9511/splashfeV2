@@ -275,7 +275,7 @@ export const SubscriptionBilling = () => {
           contact: billingDetails.billing_phone || '',
         },
         theme: {
-          color: '#884cff',
+          color: '#cd9639',
         },
         modal: {
           ondismiss: function () {
@@ -296,7 +296,7 @@ export const SubscriptionBilling = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-gold-solid" />
       </div>
     );
   }
@@ -311,27 +311,27 @@ export const SubscriptionBilling = () => {
       
       <div className="p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Subscription & Billing</h1>
-          <p className="text-gray-600">Purchase credits and manage your subscription</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Subscription & Billing</h1>
+          <p className="text-muted-foreground">Purchase credits and manage your subscription</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+        <div className="bg-card rounded-xl shadow-sm border border-border mb-6">
           <div className="p-6">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Plans & Subscriptions</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Plans & Subscriptions</h2>
               
               {currentPlan && (
-                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="mb-6 p-4 bg-accent border border-border rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-blue-700 font-medium">Current Plan</p>
-                      <p className="text-lg font-bold text-blue-900">{currentPlan.name}</p>
-                      <p className="text-sm text-blue-600">
+                      <p className="text-sm text-muted-foreground font-medium">Current Plan</p>
+                      <p className="text-lg font-bold text-foreground">{currentPlan.name}</p>
+                      <p className="text-sm text-gold-solid">
                         {currentPlan.credits_per_month?.toLocaleString() || 0} credits/month • 
                         {(currentPlan.currency === 'INR' ? '₹' : '$')}{currentPlan.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{currentPlan.billing_cycle === 'yearly' ? 'year' : 'month'}
                       </p>
                     </div>  
-                    <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">
+                    <span className="px-3 py-1 bg-gold-solid text-primary-foreground rounded-full text-sm font-medium">
                       Active
                     </span>
                   </div>
@@ -347,13 +347,13 @@ export const SubscriptionBilling = () => {
 
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                  <span className="ml-3 text-gray-600">Loading plans...</span>
+                  <Loader2 className="w-8 h-8 animate-spin text-gold-solid" />
+                  <span className="ml-3 text-muted-foreground">Loading plans...</span>
                 </div>
               ) : plans.length === 0 ? (
                 <div className="text-center py-12">
-                  <CreditCard className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No plans available at the moment.</p>
+                  <CreditCard className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No plans available at the moment.</p>
                 </div>
               ) : (
                 <div className="flex justify-center">
@@ -390,12 +390,12 @@ export const SubscriptionBilling = () => {
                           key={plan.id}
                           className={`border-2 rounded-xl p-6 relative ${
                             isPro
-                              ? "border-purple-200 bg-gradient-to-b from-purple-50 to-white shadow-lg"
+                              ? "border-gold-muted bg-gradient-to-b from-accent to-card shadow-lg"
                               : isEnterprise
-                              ? "border-gray-200 bg-white shadow-lg"
+                              ? "border-border bg-card shadow-lg"
                               : isCurrentPlan
                               ? "border-green-500 shadow-md"
-                              : "border-gray-200 hover:shadow-md"
+                              : "border-border hover:shadow-md"
                           }`}
                         >
                           {isCurrentPlan && (
@@ -406,22 +406,22 @@ export const SubscriptionBilling = () => {
                             </div>
                           )}
                           <div className="text-center mb-6">
-                            <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                            <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
                             {plan.description && (
-                              <p className="text-gray-600 mt-1 text-sm">{plan.description}</p>
+                              <p className="text-muted-foreground mt-1 text-sm">{plan.description}</p>
                             )}
                             <div className="mt-4">
                               {displayAmount !== null ? (
                                 <div className="flex items-baseline justify-center gap-2">
-                                  <span className="text-4xl font-bold text-gray-900">
+                                  <span className="text-4xl font-bold text-foreground">
                                     {(plan.currency === 'INR' ? '₹' : '$')}{displayAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </span>
                                   {amountLabel && (
-                                    <span className="text-gray-600">{amountLabel}</span>
+                                    <span className="text-muted-foreground">{amountLabel}</span>
                                   )}
                                 </div>
                               ) : (
-                                <span className="text-3xl font-bold text-gray-900">{amountLabel}</span>
+                                <span className="text-3xl font-bold text-foreground">{amountLabel}</span>
                               )}
                             </div>
                           </div>
@@ -429,13 +429,13 @@ export const SubscriptionBilling = () => {
                           {/* Credit options dropdown for Pro plan */}
                           {isPro && creditOptions.length > 0 && (
                             <div className="mb-4">
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                              <label className="block text-sm font-medium text-muted-foreground mb-2">
                                 Choose credits
                               </label>
                               <select
                                 value={selectedCreditOption}
                                 onChange={(e) => setSelectedCreditOption(Number(e.target.value))}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-border rounded-lg bg-card text-foreground focus:ring-2 focus:ring-ring focus:border-transparent"
                               >
                                 {creditOptions.map((opt, index) => (
                                   <option key={index} value={index}>
@@ -451,7 +451,7 @@ export const SubscriptionBilling = () => {
                               {plan.features.map((feature, index) => (
                                 <li key={index} className="flex items-start gap-2">
                                   <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                  <span className="text-gray-700">{feature}</span>
+                                  <span className="text-muted-foreground">{feature}</span>
                                 </li>
                               ))}
                             </ul>
@@ -462,7 +462,7 @@ export const SubscriptionBilling = () => {
                               type="button"
                               onClick={() => setShowContactSalesModal(true)}
                               disabled={isCurrentPlan}
-                              className={`w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 border-2 border-gray-300 text-gray-900 hover:bg-gray-50 ${
+                              className={`w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 border-2 border-border text-foreground hover:bg-muted ${
                                 isCurrentPlan ? "opacity-50 cursor-not-allowed" : ""
                               }`}
                             >
@@ -474,10 +474,10 @@ export const SubscriptionBilling = () => {
                               disabled={processingPayment || !razorpayLoaded || isCurrentPlan}
                               className={`w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
                                 isCurrentPlan
-                                  ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                                  ? "bg-muted text-muted-foreground cursor-not-allowed"
                                   : isPro
-                                  ? "bg-purple-600 text-white hover:bg-purple-700"
-                                  : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+                                  ? "bg-gold-solid text-primary-foreground hover:bg-gold-to"
+                                  : "bg-secondary text-foreground hover:bg-muted"
                               } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                               {processingPayment ? (
@@ -506,9 +506,9 @@ export const SubscriptionBilling = () => {
         {/* Billing Details Modal */}
         {showBillingModal && selectedPlan && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 space-y-4">
+            <div className="bg-card rounded-lg shadow-xl max-w-lg w-full p-6 space-y-4">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-foreground">
                   Billing Details
                 </h3>
                 <button
@@ -516,19 +516,19 @@ export const SubscriptionBilling = () => {
                     setShowBillingModal(false);
                     setProcessingPayment(false);
                   }}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-muted-foreground hover:text-muted-foreground"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Please enter billing details required for GST invoice.
               </p>
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-muted-foreground">
                     Billing Name
                   </label>
                   <input
@@ -540,11 +540,11 @@ export const SubscriptionBilling = () => {
                         billing_name: e.target.value,
                       }))
                     }
-                    className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-muted-foreground">
                     Billing Address
                   </label>
                   <textarea
@@ -556,11 +556,11 @@ export const SubscriptionBilling = () => {
                       }))
                     }
                     rows={3}
-                    className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-muted-foreground">
                     Billing Phone
                   </label>
                   <input
@@ -572,11 +572,11 @@ export const SubscriptionBilling = () => {
                         billing_phone: e.target.value,
                       }))
                     }
-                    className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-muted-foreground">
                     GST Number (optional)
                   </label>
                   <input
@@ -588,13 +588,13 @@ export const SubscriptionBilling = () => {
                         billing_gst_number: e.target.value,
                       }))
                     }
-                    className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <span className="block text-sm font-medium text-gray-700 mb-1">
+                <span className="block text-sm font-medium text-muted-foreground mb-1">
                   Billing Type
                 </span>
                 <div className="flex gap-4 text-sm">
@@ -632,11 +632,11 @@ export const SubscriptionBilling = () => {
               </div>
 
               {/* GST Summary */}
-              <div className="mt-2 rounded-md bg-gray-50 border border-gray-200 p-3 text-sm">
-                <p className="font-semibold text-gray-800 mb-1">
+              <div className="mt-2 rounded-md bg-muted border border-border p-3 text-sm">
+                <p className="font-semibold text-foreground mb-1">
                   Order Summary
                 </p>
-                <div className="flex justify-between text-gray-700">
+                <div className="flex justify-between text-muted-foreground">
                   <span>Plan amount</span>
                   <span className="font-semibold">
                     ${(() => {
@@ -650,7 +650,7 @@ export const SubscriptionBilling = () => {
                     })()}
                   </span>
                 </div>
-                <div className="flex justify-between text-gray-700 mt-1">
+                <div className="flex justify-between text-muted-foreground mt-1">
                   <span>
                     GST ({invoiceConfig?.tax_rate ?? 18}%)
                   </span>
@@ -666,7 +666,7 @@ export const SubscriptionBilling = () => {
                     })()}
                   </span>
                 </div>
-                <div className="flex justify-between text-gray-900 font-semibold mt-2 border-t border-gray-200 pt-2">
+                <div className="flex justify-between text-foreground font-semibold mt-2 border-t border-border pt-2">
                   <span>Total payable</span>
                   <span>
                     $
@@ -690,14 +690,14 @@ export const SubscriptionBilling = () => {
                     setShowBillingModal(false);
                     setProcessingPayment(false);
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-border rounded-lg text-muted-foreground hover:bg-muted"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={startPaymentWithBilling}
                   disabled={processingPayment}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-gold-solid text-primary-foreground rounded-lg hover:bg-gold-to disabled:opacity-50"
                 >
                   {processingPayment ? (
                     <>

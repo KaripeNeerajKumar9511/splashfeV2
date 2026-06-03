@@ -614,7 +614,7 @@ const submitRegenerate = async () => {
                                     <div className="w-2 h-2 bg-gold-solid rounded-full"></div>
                                     {t("images.ornamentImages")}<span className="text-red-500 ml-1">*</span>
                                     <span className="text-xs text-muted-foreground font-normal">upload the product image which is captured with the help of scale for better measurements.</span>
-                                    <button type="button" onClick={(e) => { e.preventDefault(); setShowReferenceModal(true); }} className="text-xs text-blue-600 hover:underline font-medium">(View reference)</button>
+                                    <button type="button" onClick={(e) => { e.preventDefault(); setShowReferenceModal(true); }} className="text-xs text-gold-solid hover:underline font-medium">(View reference)</button>
                                     {uploadErrors.ornamentImages && (
   <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
     <AlertCircle className="w-4 h-4" />
@@ -873,7 +873,7 @@ const submitRegenerate = async () => {
                                 <div ref={generateSectionRef} className="flex flex-col items-end gap-2">
                                     {showCostNote && numImages > 1 && (
                                         <div className="flex items-center gap-2 px-4 py-3 
-bg-gray-100/80 
+bg-secondary/80 
 border border-border 
 rounded-xl 
 text-foreground text-sm">
@@ -969,8 +969,8 @@ text-foreground text-sm">
                                                 <button onClick={() => handleRegenerate(result)} className="px-4 py-3 border-2 border-gold-muted text-gold-solid hover:bg-gold-solid/10 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"><RefreshCw size={16} />{t("images.regenerate")}</button>
                                             </div>
                                             <button onClick={() => { setResult(null); setFormData({ modelType: "ai_model", modelImage: null, ornamentImages: [], ornamentNames: [], ornamentTypes: [], ornamentMeasurements: [], themeImages: [], prompt: "", dimension: "1:1" }); setModelPreview(null); setOrnamentPreviews([]); setThemePreviews([]); setThemeReferenceAnalyses([]); }} className="w-full px-4 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/30">{t("images.newCampaign")}</button>
-                                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                                <p className="text-blue-700 text-sm flex items-center gap-2"><Sparkles className="w-4 h-4" />{t("images.clickRegenerateToModify")}</p>
+                                            <div className="bg-accent border border-border rounded-xl p-4">
+                                                <p className="text-muted-foreground text-sm flex items-center gap-2"><Sparkles className="w-4 h-4" />{t("images.clickRegenerateToModify")}</p>
                                             </div>
                                         </div>
                                     </>
@@ -1034,9 +1034,9 @@ text-foreground text-sm">
 
                             {/* Original Prompt
                             {result.prompt && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                    <p className="text-xs font-semibold text-blue-900 mb-2">{t("images.originalPrompt")}:</p>
-                                    <p className="text-sm text-blue-700">{result.prompt}</p>
+                                <div className="bg-accent border border-border rounded-xl p-4">
+                                    <p className="text-xs font-semibold text-foreground mb-2">{t("images.originalPrompt")}:</p>
+                                    <p className="text-sm text-muted-foreground">{result.prompt}</p>
                                 </div>
                             )} */}
 

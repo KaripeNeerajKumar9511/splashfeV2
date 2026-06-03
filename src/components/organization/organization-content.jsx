@@ -12,11 +12,11 @@ export function OrganizationContent() {
     const [activeTab, setActiveTab] = useState("organizations")
 
     return (
-        <div className="flex-1 overflow-auto bg-gray-50">
+        <div className="flex-1 overflow-auto bg-muted">
             <div className="max-w-7xl mx-auto p-6">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">Organizations</h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage organizations, users, projects, and credit usage</p>
+                    <h1 className="text-3xl font-bold text-foreground">Organizations</h1>
+                    <p className="text-sm text-muted-foreground mt-1">Manage organizations, users, projects, and credit usage</p>
                 </div>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

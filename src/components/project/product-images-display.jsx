@@ -244,7 +244,7 @@ export function ProductImagesDisplay({
     if (!collectionData?.items?.[0]?.product_images) {
         return (
             <div className="mb-12">
-                <div className="text-center py-16 border-2 border-dashed border-border rounded-xl bg-gray-50/50">
+                <div className="text-center py-16 border-2 border-dashed border-border rounded-xl bg-muted/50">
                     <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
                         <ImageIcon className="w-8 h-8 text-muted-foreground/70" />
                     </div>
@@ -679,7 +679,7 @@ export function ProductImagesDisplay({
                                                                 <p className={`text-xs font-medium ${currentIndex === 0
                                                                     ? "text-muted-foreground"
                                                                     : versionType === 'enhanced'
-                                                                        ? "text-blue-600"
+                                                                        ? "text-gold-solid"
                                                                         : "text-green-600"
                                                                     }`}>
                                                                     {currentIndex === 0
@@ -690,7 +690,7 @@ export function ProductImagesDisplay({
                                                                     }
                                                                 </p>
                                                                 {currentIndex > 0 && (
-                                                                    <p className={`text-xs ${versionType === 'enhanced' ? 'text-blue-500' : 'text-green-500'}`}>
+                                                                    <p className={`text-xs ${versionType === 'enhanced' ? 'text-gold-solid' : 'text-green-500'}`}>
                                                                         ✓ {versionType === 'enhanced' ? 'Enhanced' : 'Improved'}
                                                                     </p>
                                                                 )}
@@ -801,7 +801,7 @@ export function ProductImagesDisplay({
                         />
                         <button
                             onClick={() => setZoomedImage(null)}
-                            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors bg-black/50 rounded-full p-2"
+                            className="absolute top-4 right-4 text-white hover:text-muted-foreground transition-colors bg-black/50 rounded-full p-2"
                         >
                             <X className="w-6 h-6" />
                         </button>
@@ -835,14 +835,14 @@ export function ProductImagesDisplay({
                         </div>
 
                         {/* Info Box */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                        <div className="bg-accent border border-border rounded-xl p-4 mb-6">
                             <div className="flex items-start gap-3">
-                                <Sparkles className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                                <Sparkles className="w-5 h-5 text-gold-solid mt-0.5 flex-shrink-0" />
                                 <div>
-                                    <p className="text-blue-800 font-medium text-sm">
+                                    <p className="text-foreground font-medium text-sm">
                                         How Regeneration works
                                     </p>
-                                    <p className="text-blue-700 text-sm mt-1">
+                                    <p className="text-muted-foreground text-sm mt-1">
                                         The AI will use your original product image, the original style prompt, and your new modifications
                                         to create an improved version. Just describe what you want to change!
                                     </p>
@@ -915,19 +915,19 @@ export function ProductImagesDisplay({
 
                         {/* Current Model Information */}
                         {/* {showPromptModal.generatedImage.model_used && (
-                            <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                                <p className="text-sm font-semibold text-blue-900 mb-2">📊 Current Model Information</p>
+                            <div className="mb-6 p-4 bg-accent rounded-xl border border-border">
+                                <p className="text-sm font-semibold text-foreground mb-2">📊 Current Model Information</p>
                                 <div className="flex items-center gap-4 text-sm">
                                     <div>
-                                        <span className="text-blue-700">Type:</span>{' '}
+                                        <span className="text-muted-foreground">Type:</span>{' '}
                                         <span className={`font-medium px-2 py-1 rounded ${showPromptModal.generatedImage.model_used.type === 'ai' ? 'bg-gold-solid/15 text-gold-solid' : 'bg-green-100 text-green-700'}`}>
                                             {showPromptModal.generatedImage.model_used.type === 'ai' ? 'AI Model' : 'Real Model'}
                                         </span>
                                     </div>
                                     {showPromptModal.generatedImage.model_used.name && (
                                         <div>
-                                            <span className="text-blue-700">Name:</span>{' '}
-                                            <span className="font-medium text-blue-900">{showPromptModal.generatedImage.model_used.name}</span>
+                                            <span className="text-muted-foreground">Name:</span>{' '}
+                                            <span className="font-medium text-foreground">{showPromptModal.generatedImage.model_used.name}</span>
                                         </div>
                                     )}
                                 </div>
@@ -935,7 +935,7 @@ export function ProductImagesDisplay({
                         )} */}
 
                         {/* Model Selection Option */}
-                        <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-border">
+                        <div className="mb-6 p-4 bg-muted rounded-xl border border-border">
                             <div className="flex items-center gap-3 mb-3">
                                 <input
                                     type="checkbox"
@@ -1078,7 +1078,7 @@ export function ProductImagesDisplay({
 
                         {/* Example Prompts - Only show when not using different model */}
                         {!useDifferentModel && (
-                            <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-border">
+                            <div className="mb-6 p-4 bg-muted rounded-xl border border-border">
                                 <p className="text-xs font-semibold text-foreground mb-3">💡 Quick Enhancement Ideas:</p>
                                 <div className="flex flex-wrap gap-2">
                                     {[
@@ -1141,7 +1141,7 @@ export function ProductImagesDisplay({
                                 className="p-1 rounded hover:bg-muted"
                                 aria-label="Close comments"
                             >
-                                <X className="w-4 h-4 text-[#666]" />
+                                <X className="w-4 h-4 text-muted-foreground" />
                             </button>
                         </div>
 
@@ -1154,15 +1154,15 @@ export function ProductImagesDisplay({
                                         <div key={comment.id} className="border border-border rounded-md p-2 bg-muted">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="min-w-0">
-                                                    <p className="text-xs font-medium text-[#444]">
+                                                    <p className="text-xs font-medium text-muted-foreground">
                                                         {(comment.authorName || "Member")} • {formatRelativeCommentTime(comment.createdAt, nowMs)}
                                                     </p>
                                                     <p className="text-sm text-foreground break-words">{comment.comment}</p>
                                                     {Array.isArray(comment.replies) && comment.replies.length > 0 && (
                                                         <div className="mt-2 pl-3 border-l border-border space-y-2">
                                                             {comment.replies.map((reply) => (
-                                                                <div key={reply.id} className="bg-card border border-[#f0f0f0] rounded p-2">
-                                                                    <p className="text-xs font-medium text-[#555]">
+                                                                <div key={reply.id} className="bg-card border border-border rounded p-2">
+                                                                    <p className="text-xs font-medium text-muted-foreground">
                                                                         {(reply.authorName || "Member")} • {formatRelativeCommentTime(reply.createdAt, nowMs)}
                                                                     </p>
                                                                     <p className="text-sm text-foreground break-words">{reply.comment}</p>
@@ -1175,7 +1175,7 @@ export function ProductImagesDisplay({
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleStartReply(comment.id)}
-                                                                className="text-xs text-gold-solid hover:text-[#7a3ff0]"
+                                                                className="text-xs text-gold-solid hover:text-gold-to"
                                                             >
                                                                 {replyingToCommentId === comment.id ? "Replying..." : "Reply"}
                                                             </button>
@@ -1193,7 +1193,7 @@ export function ProductImagesDisplay({
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setReplyingToCommentId(null)}
-                                                                    className="px-2 py-1 text-xs rounded-md border border-[#dcdcdc] text-[#555] hover:bg-gray-50"
+                                                                    className="px-2 py-1 text-xs rounded-md border border-border text-muted-foreground hover:bg-muted"
                                                                 >
                                                                     Cancel
                                                                 </button>

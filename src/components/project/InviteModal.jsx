@@ -24,24 +24,24 @@ export default function InviteModal({ isOpen, onClose, onInvite, loading, projec
             label: "Owner",
             icon: Crown,
             description: "Full access and can manage team",
-            color: "text-[#D99A25]",
-            bgColor: "bg-[#2A2114]",
+            color: "text-gold-solid",
+            bgColor: "bg-accent",
         },
         {
             value: "editor",
             label: "Editor",
             icon: Edit3,
             description: "Can edit and contribute",
-            color: "text-[#D99A25]",
-            bgColor: "bg-[#2A2114]",
+            color: "text-gold-solid",
+            bgColor: "bg-accent",
         },
         {
             value: "viewer",
             label: "Viewer",
             icon: Eye,
             description: "Can only view the project",
-            color: "text-[#8FA0B5]",
-            bgColor: "bg-[#1C1B18]",
+            color: "text-muted-foreground",
+            bgColor: "bg-accent",
         },
     ]
 
@@ -105,93 +105,93 @@ export default function InviteModal({ isOpen, onClose, onInvite, loading, projec
 
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-3xl bg-[#171613] border border-[#3A2A12] rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <Card className="w-full max-w-3xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
                 {/* Header */}
-                <div className="bg-[#171613] border-b border-[#3A2A12] p-6 text-[#F4F1E9]">
+                <div className="bg-card border-b border-border p-6 text-foreground">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-[#2A2114] rounded-xl flex items-center justify-center">
-                                <UserPlus className="w-6 h-6 text-[#D99A25]" />
+                            <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+                                <UserPlus className="w-6 h-6 text-gold-solid" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-[#F4F1E9]">Invite Team Member</h2>
-                                <p className="text-[#8FA0B5] text-sm mt-1">
+                                <h2 className="text-2xl font-bold text-foreground">Invite Team Member</h2>
+                                <p className="text-muted-foreground text-sm mt-1">
                                     Select an existing user to invite to this project
                                 </p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="w-8 h-8 rounded-lg bg-[#2A2114] hover:bg-[#3A2A12] flex items-center justify-center transition-colors"
+                            className="w-8 h-8 rounded-lg bg-accent hover:bg-border flex items-center justify-center transition-colors"
                         >
-                            <X className="w-5 h-5 text-[#D99A25]" />
+                            <X className="w-5 h-5 text-gold-solid" />
                         </button>
                     </div>
                 </div>
 
                 {/* Content */}
                 <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-                    <div className="p-6 space-y-6 flex-1 overflow-y-auto bg-[#171613]">
+                    <div className="p-6 space-y-6 flex-1 overflow-y-auto bg-card">
                         {/* Search Users */}
                         <div>
-                            <label htmlFor="search-input" className="block text-sm font-medium text-[#F4F1E9] mb-2">
+                            <label htmlFor="search-input" className="block text-sm font-medium text-foreground mb-2">
                                 Search Users
                             </label>
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8FA0B5]" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                                 <input
                                     id="search-input"
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Search by name or email..."
-                                    className="w-full pl-11 pr-4 py-3 bg-[#11100D] text-[#F4F1E9] placeholder:text-[#6F7D8F] border border-[#3A2A12] rounded-xl focus:ring-2 focus:ring-[#D99A25] focus:border-transparent outline-none transition-all"
+                                    className="w-full pl-11 pr-4 py-3 bg-secondary text-foreground placeholder:text-muted-foreground border border-border rounded-xl focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition-all"
                                 />
                             </div>
                         </div>
 
                         {/* Available Users List */}
                         <div>
-                            <div className="block text-sm font-medium text-[#F4F1E9] mb-3">
+                            <div className="block text-sm font-medium text-foreground mb-3">
                                 Available Users ({filteredUsers.length})
                             </div>
-                            <div className="border border-[#3A2A12] rounded-xl max-h-64 overflow-y-auto bg-[#11100D]">
+                            <div className="border border-border rounded-xl max-h-64 overflow-y-auto bg-secondary">
                                 {loadingUsers ? (
                                     <div className="flex items-center justify-center p-8">
-                                        <Loader2 className="w-6 h-6 animate-spin text-[#D99A25]" />
+                                        <Loader2 className="w-6 h-6 animate-spin text-gold-solid" />
                                     </div>
                                 ) : filteredUsers.length === 0 ? (
-                                    <div className="p-8 text-center text-[#8FA0B5]">
+                                    <div className="p-8 text-center text-muted-foreground">
                                         {searchQuery ? "No users found matching your search" : "No available users to invite"}
                                     </div>
                                 ) : (
-                                    <div className="divide-y divide-[#3A2A12]">
+                                    <div className="divide-y divide-border">
                                         {filteredUsers.map((user) => (
                                             <button
                                                 key={user.id}
                                                 type="button"
                                                 onClick={() => setSelectedUser(user)}
-                                                className={`w-full p-4 flex items-center gap-3 hover:bg-[#1C1B18] transition-colors text-left ${selectedUser?.id === user.id ? "bg-[#2A2114] border-l-4 border-[#D99A25]" : ""
+                                                className={`w-full p-4 flex items-center gap-3 hover:bg-accent transition-colors text-left ${selectedUser?.id === user.id ? "bg-accent border-l-4 border-gold-solid" : ""
                                                     }`}
                                             >
-                                                <Avatar className="w-10 h-10 border border-[#D99A25]/20">
+                                                <Avatar className="w-10 h-10 border border-gold-solid/20">
                                                     <AvatarImage
                                                         src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
                                                     />
-                                                    <AvatarFallback className="bg-[#2A2114] text-[#D99A25]">
+                                                    <AvatarFallback className="bg-accent text-gold-solid">
                                                         {getInitials(user.full_name || user.username)}
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex-1">
-                                                    <p className="font-medium text-[#F4F1E9]">
+                                                    <p className="font-medium text-foreground">
                                                         {user.full_name || user.username}
                                                     </p>
-                                                    <p className="text-xs text-[#8FA0B5]">
+                                                    <p className="text-xs text-muted-foreground">
                                                         {user.email}
                                                     </p>
                                                 </div>
                                                 {selectedUser?.id === user.id && (
-                                                    <Badge className="bg-[#D99A25] text-[#11100D] text-xs">
+                                                    <Badge className="bg-gold-solid text-primary-foreground text-xs">
                                                         Selected
                                                     </Badge>
                                                 )}
@@ -214,7 +214,7 @@ export default function InviteModal({ isOpen, onClose, onInvite, loading, projec
                         {/* Role Selection */}
                         {selectedUser && (
                             <div>
-                                <div className="block text-sm font-medium text-[#F4F1E9] mb-3">
+                                <div className="block text-sm font-medium text-foreground mb-3">
                                     Select Role for {selectedUser.full_name || selectedUser.username}
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">
@@ -226,21 +226,21 @@ export default function InviteModal({ isOpen, onClose, onInvite, loading, projec
                                                 type="button"
                                                 onClick={() => setSelectedRole(role.value)}
                                                 className={`p-4 rounded-xl border-2 transition-all text-left ${selectedRole === role.value
-                                                    ? "border-[#D99A25] bg-[#2A2114] shadow-md scale-105"
-                                                    : "border-[#3A2A12] bg-[#11100D] hover:border-[#D99A25]/50"
+                                                    ? "border-gold-solid bg-accent shadow-md scale-105"
+                                                    : "border-border bg-secondary hover:border-gold-solid/50"
                                                     }`}
                                             >
                                                 <div className={`w-10 h-10 rounded-lg ${role.bgColor} flex items-center justify-center mb-3`}>
                                                     <Icon className={`w-5 h-5 ${role.color}`} />
                                                 </div>
-                                                <h3 className="font-bold text-[#F4F1E9] mb-1">
+                                                <h3 className="font-bold text-foreground mb-1">
                                                     {role.label}
                                                 </h3>
-                                                <p className="text-xs text-[#8FA0B5]">
+                                                <p className="text-xs text-muted-foreground">
                                                     {role.description}
                                                 </p>
                                                 {selectedRole === role.value && (
-                                                    <Badge className="mt-2 bg-[#D99A25] text-[#11100D] text-xs">
+                                                    <Badge className="mt-2 bg-gold-solid text-primary-foreground text-xs">
                                                         Selected
                                                     </Badge>
                                                 )}
@@ -253,23 +253,23 @@ export default function InviteModal({ isOpen, onClose, onInvite, loading, projec
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="p-6 border-t border-[#3A2A12] bg-[#171613] flex gap-3">
+                    <div className="p-6 border-t border-border bg-card flex gap-3">
                         <Button
                             type="button"
                             onClick={onClose}
                             variant="outline"
-                            className="flex-1 py-3 bg-transparent border-[#3A2A12] text-[#F4F1E9] hover:bg-[#1C1B18] hover:text-[#F4F1E9]"
+                            className="flex-1 py-3 bg-transparent border-border text-foreground hover:bg-accent hover:text-foreground"
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             disabled={loading || !selectedUser}
-                            className="flex-1 py-3 bg-[#D99A25] hover:bg-[#F2B84B] text-[#11100D] gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 py-3 bg-gold-solid hover:bg-gold-to text-primary-foreground gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? (
                                 <>
-                                    <div className="w-4 h-4 border-2 border-[#11100D] border-t-transparent rounded-full animate-spin" />
+                                    <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
                                     Sending...
                                 </>
                             ) : (

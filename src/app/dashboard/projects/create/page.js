@@ -111,13 +111,13 @@ const CreateProjectPage = () => {
 
                         {/* Category Field */}
                         {/* <div>
-                            <label className="block text-lg font-semibold text-gray-900 mb-3">
+                            <label className="block text-lg font-semibold text-foreground mb-3">
                                 Category
                             </label>
                             <select
                                 value={category}
                                 onChange={(e) => setCategory(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-white text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition appearance-none cursor-pointer"
+                                className="w-full px-4 py-3 border border-border rounded-lg bg-card text-foreground shadow-sm focus:ring-2 focus:ring-ring focus:border-ring transition appearance-none cursor-pointer"
                                 disabled={loading}
                             >
                                 <option value="">Select Category (Optional)</option>

@@ -132,7 +132,7 @@ export function UsersTab() {
                 {isAdmin && (
                     <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button className="bg-[#884cff] hover:bg-[#7a3ff0] text-white">
+                            <Button className="bg-gold-solid hover:bg-gold-to text-white">
                                 <Plus className="w-4 h-4 mr-2" />
                                 Add User
                             </Button>
@@ -184,7 +184,7 @@ export function UsersTab() {
                                 )}
                                 <Button
                                     onClick={handleAddUser}
-                                    className="w-full bg-[#884cff] hover:bg-[#7a3ff0] text-white"
+                                    className="w-full bg-gold-solid hover:bg-gold-to text-white"
                                 >
                                     Add User
                                 </Button>
@@ -239,11 +239,11 @@ export function UsersTab() {
                     filteredUsers.map((user) => (
                         <div
                             key={user.id}
-                            className="bg-white rounded-lg border border-[#e6e6e6] p-6 hover:shadow-md transition-shadow"
+                            className="bg-card rounded-lg border border-[#e6e6e6] p-6 hover:shadow-md transition-shadow"
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-[#884cff] rounded-full flex items-center justify-center text-white font-semibold">
+                                    <div className="w-12 h-12 bg-gold-solid rounded-full flex items-center justify-center text-white font-semibold">
                                         {user.email.charAt(0).toUpperCase()}
                                     </div>
                                     <div>
@@ -258,7 +258,7 @@ export function UsersTab() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="flex items-center gap-2 px-3 py-1 bg-[#f9f6f2] rounded-full">
-                                        <Shield className="w-4 h-4 text-[#884cff]" />
+                                        <Shield className="w-4 h-4 text-gold-solid" />
                                         <span className="text-sm font-medium text-[#1a1a1a] capitalize">
                                             {user.organization_role || "member"}
                                         </span>

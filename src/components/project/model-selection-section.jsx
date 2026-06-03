@@ -516,7 +516,7 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
                     {/* Card Header - Clickable to switch tab */}
                     <div
                         onClick={() => setActiveTab('real')}
-                        className="p-6 border-b border-gray-100 cursor-pointer"
+                        className="p-6 border-b border-border cursor-pointer"
                     >
                         <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${activeTab === 'real' ? 'bg-gold-solid' : 'bg-muted'
@@ -569,7 +569,7 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
                     {/* Card Header - Clickable to switch tab */}
                     <div
                         onClick={() => setActiveTab('ai')}
-                        className="p-6 border-b border-gray-100 cursor-pointer"
+                        className="p-6 border-b border-border cursor-pointer"
                     >
                         <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${activeTab === 'ai' ? 'bg-gold-solid' : 'bg-muted'
@@ -616,7 +616,7 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
                                 className="p-1 rounded hover:bg-muted"
                                 aria-label="Close comments"
                             >
-                                <X className="w-4 h-4 text-[#666]" />
+                                <X className="w-4 h-4 text-muted-foreground" />
                             </button>
                         </div>
 
@@ -626,18 +626,18 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
                                     <p className="text-xs text-muted-foreground">No comments yet.</p>
                                 ) : (
                                     currentComments.map((comment) => (
-                                        <div key={comment.id} className="border border-border rounded-md p-2 bg-[#fafafa]">
+                                        <div key={comment.id} className="border border-border rounded-md p-2 bg-muted">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="min-w-0">
-                                                    <p className="text-xs font-medium text-[#444]">
+                                                    <p className="text-xs font-medium text-muted-foreground">
                                                         {(comment.authorName || "Member")} • {formatRelativeCommentTime(comment.createdAt, nowMs)}
                                                     </p>
                                                     <p className="text-sm text-foreground break-words">{comment.comment}</p>
                                                     {Array.isArray(comment.replies) && comment.replies.length > 0 && (
                                                         <div className="mt-2 pl-3 border-l border-border space-y-2">
                                                             {comment.replies.map((reply) => (
-                                                                <div key={reply.id} className="bg-card border border-[#f0f0f0] rounded p-2">
-                                                                    <p className="text-xs font-medium text-[#555]">
+                                                                <div key={reply.id} className="bg-card border border-border rounded p-2">
+                                                                    <p className="text-xs font-medium text-muted-foreground">
                                                                         {(reply.authorName || "Member")} • {formatRelativeCommentTime(reply.createdAt, nowMs)}
                                                                     </p>
                                                                     <p className="text-sm text-foreground break-words">{reply.comment}</p>
@@ -650,7 +650,7 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleStartReply(comment.id)}
-                                                                className="text-xs text-gold-solid hover:text-[#7a3ff0]"
+                                                                className="text-xs text-gold-solid hover:text-gold-to"
                                                             >
                                                                 {replyingToCommentId === comment.id ? "Replying..." : "Reply"}
                                                             </button>
@@ -668,7 +668,7 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setReplyingToCommentId(null)}
-                                                                    className="px-2 py-1 text-xs rounded-md border border-[#dcdcdc] text-[#555] hover:bg-muted"
+                                                                    className="px-2 py-1 text-xs rounded-md border border-border text-muted-foreground hover:bg-muted"
                                                                 >
                                                                     Cancel
                                                                 </button>
@@ -937,7 +937,7 @@ function AIModelsTab({
                                                 <CheckCircle className="w-4 h-4 text-white" />
                                             </div>
                                         )}
-                                        <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded z-10">
+                                        <div className="absolute top-2 left-2 bg-gold-solid text-white text-xs px-2 py-1 rounded z-10">
                                             New
                                         </div>
                                         {/* Hover overlay with View and Select buttons */}

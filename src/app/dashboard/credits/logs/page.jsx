@@ -38,8 +38,8 @@ export default function CreditLogsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      <div className="flex items-center justify-center h-64 min-h-[16rem]">
+        <Loader2 className="w-8 h-8 animate-spin text-gold-solid" />
       </div>
     );
   }
@@ -47,48 +47,48 @@ export default function CreditLogsPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-foreground">
           {t("credits.logsTitle") || "Credits Usage"}
         </h1>
-        <p className="text-gray-600 text-sm">
+        <p className="text-muted-foreground text-sm">
           {t("credits.logsSubtitle") ||
             "See how your credits are being consumed for image generation."}
         </p>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         {logs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-            <Zap className="w-10 h-10 mb-3 text-gray-400" />
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <Zap className="w-10 h-10 mb-3 text-muted-foreground" />
             <p>{t("credits.noLogs") || "No credit usage found yet."}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     {t("credits.date") || "Date"}
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     {t("credits.change") || "Change"}
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     {t("credits.balance") || "Balance After"}
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                     {t("credits.reason") || "Reason"}
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-border">
                 {logs.map((entry) => {
                   const isDebit = entry.change_type === "debit";
                   return (
-                    <tr key={entry.id} className="hover:bg-gray-50">
+                    <tr key={entry.id} className="hover:bg-accent">
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <Calendar className="w-4 h-4 text-gray-400" />
+                        <div className="flex items-center gap-2 text-foreground">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
                           <span>
                             {(entry.date ?? entry.created_at)
                               ? new Date(entry.date ?? entry.created_at).toLocaleString()
@@ -100,8 +100,8 @@ export default function CreditLogsPage() {
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                             isDebit
-                              ? "bg-red-50 text-red-700"
-                              : "bg-green-50 text-green-700"
+                              ? "bg-destructive/10 text-destructive"
+                              : "bg-gold-solid/10 text-gold-solid"
                           }`}
                         >
                           {isDebit ? (
@@ -113,10 +113,10 @@ export default function CreditLogsPage() {
                           {entry.credits_changed}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-800">
+                      <td className="px-4 py-3 text-foreground">
                         {entry.balance_after}
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {entry.reason || "-"}
                       </td>
                     </tr>
@@ -130,4 +130,3 @@ export default function CreditLogsPage() {
     </div>
   );
 }
-

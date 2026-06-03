@@ -51,7 +51,7 @@ export function AllTools() {
     const getStatusBadge = (status) => {
         const styles = {
             active: "bg-green-500/10 text-green-400 border-green-500/30",
-            new: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+            new: "bg-gold-solid/10 text-gold-solid border-gold-muted",
             coming: "bg-secondary text-muted-foreground border-border"
         }
 

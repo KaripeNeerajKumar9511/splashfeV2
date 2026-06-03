@@ -315,15 +315,15 @@ export function OrnamentSelection({
             {/* Fitting Rules Display */}
             {/* {selectedOrnament && (
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-purple-600" />
+                    <label className="block text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-gold-solid" />
                         Fitting Guidelines
                     </label>
-                    <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-                        <p className="text-sm text-gray-700 leading-relaxed">
+                    <div className="bg-accent border border-gold-muted rounded-xl p-4">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
                             {getFittingRules(selectedOrnament.id)}
                         </p>
-                        <p className="text-xs text-purple-600 mt-2 font-medium">
+                        <p className="text-xs text-gold-solid mt-2 font-medium">
                             ✨ These guidelines will be automatically applied to ensure realistic ornament fitting
                         </p>
                     </div>

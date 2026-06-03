@@ -88,7 +88,7 @@ export default function ContactPage() {
               Contact Us
             </h1>
 
-            <p className="text-lg md:text-xl text-[#8FA0B5] max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               We'd love to hear from you. Please fill out the form below or reach
               out to us directly.
             </p>
@@ -100,21 +100,21 @@ export default function ContactPage() {
           <div className="max-w-screen-xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16">
             {/* Contact Details */}
             <div>
-              <h2 className="text-3xl font-bold mb-10 text-[#F4F1E9]">
+              <h2 className="text-3xl font-bold mb-10 text-foreground">
                 Get in Touch
               </h2>
 
               <div className="space-y-8">
                 <div className="flex items-start gap-4">
-                  <MapPin className="w-6 h-6 text-[#D99A25] mt-1 shrink-0" />
+                  <MapPin className="w-6 h-6 text-gold-solid mt-1 shrink-0" />
                   <div>
-                    <h3 className="text-lg font-semibold text-[#F4F1E9]">
+                    <h3 className="text-lg font-semibold text-foreground">
                       Office Address
                     </h3>
-                    <p className="text-[#8FA0B5] mt-1 leading-relaxed">
+                    <p className="text-muted-foreground mt-1 leading-relaxed">
                       <a
                         href="https://maps.app.goo.gl/3tMuX7F4xemYYrxH6"
-                        className="hover:text-[#D99A25] transition-colors"
+                        className="hover:text-gold-solid transition-colors"
                         target="_blank"
                       >
                         501, Manjeera Majestic Commercial Complex,
@@ -126,40 +126,40 @@ export default function ContactPage() {
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <Phone className="w-6 h-6 text-[#D99A25] mt-1 shrink-0" />
+                  <Phone className="w-6 h-6 text-gold-solid mt-1 shrink-0" />
                   <div>
-                    <h3 className="text-lg font-semibold text-[#F4F1E9]">
+                    <h3 className="text-lg font-semibold text-foreground">
                       Contact Number
                     </h3>
-                    <p className="text-[#8FA0B5] mt-1">
+                    <p className="text-muted-foreground mt-1">
                       <a
                         href="tel:+918790900881"
-                        className="hover:text-[#D99A25] transition-colors"
+                        className="hover:text-gold-solid transition-colors"
                       >
                         +91 8790900881
                       </a>
                     </p>
-                    <p className="text-sm text-[#6F7D8F] mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Assistance hours: Monday - Sunday 24/7 Hours
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <Mail className="w-6 h-6 text-[#D99A25] mt-1 shrink-0" />
+                  <Mail className="w-6 h-6 text-gold-solid mt-1 shrink-0" />
                   <div>
-                    <h3 className="text-lg font-semibold text-[#F4F1E9]">
+                    <h3 className="text-lg font-semibold text-foreground">
                       Email Address
                     </h3>
-                    <p className="text-[#8FA0B5] mt-1">
+                    <p className="text-muted-foreground mt-1">
                       <a
                         href="mailto:support@gosplash.ai"
-                        className="hover:text-[#D99A25] transition-colors"
+                        className="hover:text-gold-solid transition-colors"
                       >
                         support@gosplash.ai
                       </a>
                     </p>
-                    <p className="text-sm text-[#6F7D8F] mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Assistance hours: Monday - Sunday 24/7 Hours
                     </p>
                   </div>
@@ -167,7 +167,7 @@ export default function ContactPage() {
               </div>
 
               {/* Google Map Embed */}
-              <div className="mt-10 h-64 w-full bg-[#171613] rounded-lg overflow-hidden border border-[#3A2A12] shadow-[0_16px_42px_rgba(0,0,0,0.28)]">
+              <div className="mt-10 h-64 w-full bg-card rounded-lg overflow-hidden border border-border shadow-[0_16px_42px_rgba(0,0,0,0.28)]">
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3805.323180100733!2d78.39097917516732!3d17.492079483413075!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb910057424ed5%3A0x199dce60198e6b9b!2sTechsprout%20AI%20Labs%20Pvt.%20Ltd.!5e0!3m2!1sen!2sin!4v1770624140087!5m2!1sen!2sin"
                   width="100%"
@@ -182,24 +182,24 @@ export default function ContactPage() {
             </div>
 
             {/* Contact Form */}
-            <div className="bg-[#171613] rounded-2xl p-8 md:p-10 border border-[#3A2A12] shadow-[0_16px_42px_rgba(0,0,0,0.28)]">
-              <h2 className="text-3xl font-bold mb-8 text-[#F4F1E9]">
+            <div className="bg-card rounded-2xl p-8 md:p-10 border border-border shadow-[0_16px_42px_rgba(0,0,0,0.28)]">
+              <h2 className="text-3xl font-bold mb-8 text-foreground">
                 Have any query?
               </h2>
 
               {success ? (
                 <div className="py-12 text-center">
-                  <CheckCircle className="mx-auto h-16 w-16 text-[#22C55E] mb-6" />
-                  <h3 className="text-2xl font-semibold text-[#F4F1E9]">
+                  <CheckCircle className="mx-auto h-16 w-16 text-gold-solid mb-6" />
+                  <h3 className="text-2xl font-semibold text-foreground">
                     Thank you!
                   </h3>
-                  <p className="mt-4 text-[#8FA0B5] max-w-xs mx-auto">
+                  <p className="mt-4 text-muted-foreground max-w-xs mx-auto">
                     We have received your message and will get back to you shortly.
                   </p>
                   <Button
                     onClick={() => setSuccess(false)}
                     variant="outline"
-                    className="mt-8 border-[#3A2A12] bg-transparent text-[#F4F1E9] hover:bg-[#1C1B18] hover:text-[#F4F1E9]"
+                    className="mt-8 border-border bg-transparent text-foreground hover:bg-accent hover:text-foreground"
                   >
                     Send another message
                   </Button>
@@ -208,53 +208,53 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-[#F4F1E9]">Full Name</Label>
+                      <Label className="text-foreground">Full Name</Label>
                       <Input
                         value={form.name}
                         onChange={(e) => update("name", e.target.value)}
                         placeholder="Your name"
-                        className="border-[#3A2A12] bg-[#11100D] text-[#F4F1E9] placeholder:text-[#6F7D8F] focus-visible:ring-[#D99A25] focus-visible:border-[#D99A25]"
+                        className="border-border bg-secondary text-foreground placeholder:text-muted-foreground focus-visible:ring-gold-solid focus-visible:border-gold-solid"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-[#F4F1E9]">Email</Label>
+                      <Label className="text-foreground">Email</Label>
                       <Input
                         type="email"
                         value={form.email}
                         onChange={(e) => update("email", e.target.value)}
                         placeholder="your@email.com"
-                        className="border-[#3A2A12] bg-[#11100D] text-[#F4F1E9] placeholder:text-[#6F7D8F] focus-visible:ring-[#D99A25] focus-visible:border-[#D99A25]"
+                        className="border-border bg-secondary text-foreground placeholder:text-muted-foreground focus-visible:ring-gold-solid focus-visible:border-gold-solid"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[#F4F1E9]">Phone Number</Label>
+                    <Label className="text-foreground">Phone Number</Label>
                     <Input
                       value={form.mobile}
                       onChange={(e) => update("mobile", e.target.value)}
                       placeholder="10-digit mobile number"
-                      className="border-[#3A2A12] bg-[#11100D] text-[#F4F1E9] placeholder:text-[#6F7D8F] focus-visible:ring-[#D99A25] focus-visible:border-[#D99A25]"
+                      className="border-border bg-secondary text-foreground placeholder:text-muted-foreground focus-visible:ring-gold-solid focus-visible:border-gold-solid"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[#F4F1E9]">Enter Your Message</Label>
+                    <Label className="text-foreground">Enter Your Message</Label>
                     <Textarea
                       value={form.reason}
                       onChange={(e) => update("reason", e.target.value)}
                       rows={6}
                       placeholder="How can we help you?"
-                      className="border-[#3A2A12] bg-[#11100D] text-[#F4F1E9] placeholder:text-[#6F7D8F] focus-visible:ring-[#D99A25] focus-visible:border-[#D99A25]"
+                      className="border-border bg-secondary text-foreground placeholder:text-muted-foreground focus-visible:ring-gold-solid focus-visible:border-gold-solid"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[#F4F1E9]">Captcha</Label>
+                    <Label className="text-foreground">Captcha</Label>
 
                     <div className="flex items-center gap-4">
-                      <div className="px-4 py-2 bg-[#11100D] border border-[#3A2A12] rounded font-mono text-lg tracking-widest text-[#D99A25]">
+                      <div className="px-4 py-2 bg-secondary border border-border rounded font-mono text-lg tracking-widest text-gold-solid">
                         {captcha}
                       </div>
 
@@ -265,7 +265,7 @@ export default function ContactPage() {
                           setCaptcha(generateCaptcha());
                           setCaptchaInput("");
                         }}
-                        className="border-[#3A2A12] bg-transparent text-[#F4F1E9] hover:bg-[#1C1B18] hover:text-[#F4F1E9]"
+                        className="border-border bg-transparent text-foreground hover:bg-accent hover:text-foreground"
                       >
                         Refresh
                       </Button>
@@ -275,12 +275,12 @@ export default function ContactPage() {
                       value={captchaInput}
                       onChange={(e) => setCaptchaInput(e.target.value.toLowerCase())}
                       placeholder="Enter captcha"
-                      className="border-[#3A2A12] bg-[#11100D] text-[#F4F1E9] placeholder:text-[#6F7D8F] focus-visible:ring-[#D99A25] focus-visible:border-[#D99A25]"
+                      className="border-border bg-secondary text-foreground placeholder:text-muted-foreground focus-visible:ring-gold-solid focus-visible:border-gold-solid"
                     />
 
                     {!captchaValid && captchaInput && (
                       <p
-                        className="text-sm text-[#FF6565]"
+                        className="text-sm text-destructive"
                         style={{ fontSize: "12px" }}
                       >
                         Captcha does not match
@@ -291,7 +291,7 @@ export default function ContactPage() {
                   <Button
                     type="submit"
                     disabled={submitting || !captchaValid}
-                    className="w-full bg-[#D99A25] hover:bg-[#F2B84B] text-[#11100D] font-bold disabled:opacity-50"
+                    className="w-full bg-gold-solid hover:bg-gold-to text-primary-foreground font-bold disabled:opacity-50"
                   >
                     {submitting ? (
                       <>
@@ -313,8 +313,8 @@ export default function ContactPage() {
             router.push("/");
           }}
           className="fixed top-10 left-6 z-50
-                     bg-white/80 backdrop-blur-sm border border-gray-200 text-
-                     hover:bg-gray-100 hover:text-black
+                     bg-card/80 backdrop-blur-sm border border-border text-
+                     hover:bg-secondary hover:text-black
                      px-4 py-2 rounded-full shadow-sm transition-all flex items-center gap-2"
         >
           <MoveLeft size={16} /> Back

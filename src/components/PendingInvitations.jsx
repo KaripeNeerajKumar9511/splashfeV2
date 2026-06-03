@@ -72,13 +72,13 @@ export default function PendingInvitations() {
     const getRoleBadgeColor = (role) => {
         switch (role) {
             case "owner":
-                return "bg-[#a020f0] text-white"
+                return "bg-gold-solid text-primary-foreground"
             case "editor":
-                return "bg-[#7753ff] text-white"
+                return "bg-gold-to text-primary-foreground"
             case "viewer":
-                return "bg-[#708090] text-white"
+                return "bg-muted text-foreground"
             default:
-                return "bg-gray-500 text-white"
+                return "bg-secondary text-foreground"
         }
     }
 
@@ -105,9 +105,9 @@ export default function PendingInvitations() {
 
     if (loading) {
         return (
-            <Card className="p-8 border-2 border-purple-100">
+            <Card className="p-8 border-2 border-border">
                 <div className="flex items-center justify-center">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#a020f0]" />
+                    <Loader2 className="w-6 h-6 animate-spin text-gold-solid" />
                 </div>
             </Card>
         )
@@ -115,9 +115,9 @@ export default function PendingInvitations() {
 
     if (invites.length === 0) {
         return (
-            <Card className="p-8 border-2 border-purple-100 text-center">
-                <Mail className="w-12 h-12 text-[#708090] mx-auto mb-3 opacity-50" />
-                <p className="text-[#708090] text-sm">{t("dashboard.noPendingInvitations")}</p>
+            <Card className="p-8 border-2 border-border text-center">
+                <Mail className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                <p className="text-muted-foreground text-sm">{t("dashboard.noPendingInvitations")}</p>
             </Card>
         )
     }
@@ -126,18 +126,18 @@ export default function PendingInvitations() {
         <div className="space-y-4">
             {/* Success/Error Messages */}
             {successMessage && (
-                <Card className="p-4 bg-green-50 border-2 border-green-200">
+                <Card className="p-4 bg-gold-solid/10 border-2 border-gold-muted">
                     <div className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                        <span className="text-green-800 font-medium">{successMessage}</span>
+                        <CheckCircle className="w-5 h-5 text-gold-solid" />
+                        <span className="text-foreground font-medium">{successMessage}</span>
                     </div>
                 </Card>
             )}
             {errorMessage && (
-                <Card className="p-4 bg-red-50 border-2 border-red-200">
+                <Card className="p-4 bg-destructive/10 border-2 border-destructive/30">
                     <div className="flex items-center gap-3">
-                        <XCircle className="w-5 h-5 text-red-600" />
-                        <span className="text-red-800 font-medium">{errorMessage}</span>
+                        <XCircle className="w-5 h-5 text-destructive" />
+                        <span className="text-destructive font-medium">{errorMessage}</span>
                     </div>
                 </Card>
             )}
@@ -146,11 +146,11 @@ export default function PendingInvitations() {
             {invites.map((invite) => (
                 <Card
                     key={invite.id}
-                    className="p-6 border-2 border-purple-100 hover:border-purple-300 hover:shadow-lg transition-all duration-300"
+                    className="p-6 border-2 border-border hover:border-gold-muted hover:shadow-lg transition-all duration-300"
                 >
                     <div className="flex items-start gap-4">
                         {/* Project Avatar */}
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#a020f0] to-[#7753ff] flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                        <div className="w-12 h-12 rounded-xl bg-gold-gradient flex items-center justify-center text-primary-foreground font-bold text-lg shadow-lg">
                             {getInitials(invite.project_name)}
                         </div>
 
@@ -158,18 +158,18 @@ export default function PendingInvitations() {
                         <div className="flex-1">
                             <div className="flex items-start justify-between mb-2">
                                 <div>
-                                    <h3 className="text-lg font-bold text-[#1a1a2e]">
+                                    <h3 className="text-lg font-bold text-foreground">
                                         {invite.project_name}
                                     </h3>
-                                    <p className="text-sm text-[#708090]">
-                                        {t("dashboard.invitedBy")} <span className="font-medium text-[#1a1a2e]">{invite.inviter_name}</span>
+                                    <p className="text-sm text-muted-foreground">
+                                        {t("dashboard.invitedBy")} <span className="font-medium text-foreground">{invite.inviter_name}</span>
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Badge className={getRoleBadgeColor(invite.role)}>
                                         {invite.role}
                                     </Badge>
-                                    <div className="flex items-center gap-1 text-xs text-[#708090]">
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                         <Clock className="w-3 h-3" />
                                         {getTimeAgo(invite.created_at)}
                                     </div>
@@ -186,7 +186,7 @@ export default function PendingInvitations() {
                                         {getInitials(invite.inviter_name)}
                                     </AvatarFallback>
                                 </Avatar>
-                                <span className="text-xs text-[#708090]">
+                                <span className="text-xs text-muted-foreground">
                                     {invite.inviter_email}
                                 </span>
                             </div>
@@ -196,7 +196,7 @@ export default function PendingInvitations() {
                                 <Button
                                     onClick={() => handleAccept(invite.id, invite.project_name)}
                                     disabled={processingInvite === invite.id}
-                                    className="flex-1 bg-gradient-to-r from-[#a020f0] to-[#7753ff] hover:from-[#8f1cda] hover:to-[#6642e6] text-white gap-2"
+                                    className="flex-1 bg-gold-gradient hover:opacity-90 text-primary-foreground gap-2"
                                 >
                                     {processingInvite === invite.id ? (
                                         <>
@@ -214,7 +214,7 @@ export default function PendingInvitations() {
                                     onClick={() => handleReject(invite.id)}
                                     disabled={processingInvite === invite.id}
                                     variant="outline"
-                                    className="flex-1 border-[#e6e6e6] hover:bg-red-50 hover:border-red-300 hover:text-red-600 gap-2"
+                                    className="flex-1 border-border hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive gap-2"
                                 >
                                     <X className="w-4 h-4" />
                                     {t("dashboard.decline")}
@@ -222,7 +222,7 @@ export default function PendingInvitations() {
                                 <Link href={`/dashboard/projects/${invite.project_id}`}>
                                     <Button
                                         variant="outline"
-                                        className="border-[#e6e6e6] hover:bg-[#f0e6ff] hover:border-[#a020f0]"
+                                        className="border-border hover:bg-accent hover:border-gold-muted"
                                     >
                                         View Project
                                     </Button>

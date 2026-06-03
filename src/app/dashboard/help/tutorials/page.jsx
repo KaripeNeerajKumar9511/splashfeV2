@@ -70,11 +70,11 @@ export const Tutorials = () => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex items-center justify-center">
                 {tutorial.type === 'video' ? (
-                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 rounded-full bg-card/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
                     <PlayCircle className="w-10 h-10 text-white" />
                   </div>
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 rounded-full bg-card/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
                     <FileText className="w-10 h-10 text-white" />
                   </div>
                 )}

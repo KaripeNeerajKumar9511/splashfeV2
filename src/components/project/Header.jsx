@@ -239,7 +239,7 @@ export function Header({ project, onProjectUpdate }) {
 
                         <Button
                             size="sm"
-                            className="gap-2 bg-[#f05656] hover:bg-[#e04545] text-white"
+                            className="gap-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                             onClick={handleDeleteProject}
                             disabled={isDeleting}
                         >
@@ -261,12 +261,12 @@ export function Header({ project, onProjectUpdate }) {
 
             {/* Edit Project Modal */}
             <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-    <DialogContent className="sm:max-w-[500px] border border-[#3A2A12] bg-[#171613] text-[#F4F1E9] shadow-2xl rounded-2xl">
+    <DialogContent className="sm:max-w-[500px] border border-border bg-card text-foreground shadow-2xl rounded-2xl">
         <DialogHeader>
-            <DialogTitle className="text-[#F4F1E9] text-2xl font-bold">
+            <DialogTitle className="text-foreground text-2xl font-bold">
                 Edit Project
             </DialogTitle>
-            <DialogDescription className="text-[#8FA0B5]">
+            <DialogDescription className="text-muted-foreground">
                 {t("images.updateProjectDetails")}
             </DialogDescription>
         </DialogHeader>
@@ -275,7 +275,7 @@ export function Header({ project, onProjectUpdate }) {
             <div className="grid gap-2">
                 <label
                     htmlFor="project-name"
-                    className="text-sm font-medium text-[#F4F1E9]"
+                    className="text-sm font-medium text-foreground"
                 >
                     {t("images.projectName")}
                 </label>
@@ -285,14 +285,14 @@ export function Header({ project, onProjectUpdate }) {
                     onChange={(e) => setEditName(e.target.value)}
                     placeholder={t("images.enterProjectName")}
                     disabled={isSaving}
-                    className="border-[#3A2A12] bg-[#11100D] text-[#F4F1E9] placeholder:text-[#6F7D8F] focus-visible:ring-[#D99A25] focus-visible:border-[#D99A25]"
+                    className="border-border bg-secondary text-foreground placeholder:text-muted-foreground focus-visible:ring-ring focus-visible:border-gold-solid"
                 />
             </div>
 
             <div className="grid gap-2">
                 <label
                     htmlFor="project-description"
-                    className="text-sm font-medium text-[#F4F1E9]"
+                    className="text-sm font-medium text-foreground"
                 >
                     {t("images.projectDescription")}
                 </label>
@@ -303,7 +303,7 @@ export function Header({ project, onProjectUpdate }) {
                     placeholder={t("images.enterProjectDescription")}
                     rows={4}
                     disabled={isSaving}
-                    className="border-[#3A2A12] bg-[#11100D] text-[#F4F1E9] placeholder:text-[#6F7D8F] focus-visible:ring-[#D99A25] focus-visible:border-[#D99A25]"
+                    className="border-border bg-secondary text-foreground placeholder:text-muted-foreground focus-visible:ring-ring focus-visible:border-gold-solid"
                 />
             </div>
         </div>
@@ -313,7 +313,7 @@ export function Header({ project, onProjectUpdate }) {
                 variant="outline"
                 onClick={() => setIsEditModalOpen(false)}
                 disabled={isSaving}
-                className="border-[#3A2A12] bg-transparent text-[#F4F1E9] hover:bg-[#1C1B18] hover:text-[#F4F1E9]"
+                className="border-border bg-transparent text-foreground hover:bg-accent hover:text-foreground"
             >
                 {t("images.cancel")}
             </Button>
@@ -321,7 +321,7 @@ export function Header({ project, onProjectUpdate }) {
             <Button
                 onClick={handleSaveProject}
                 disabled={isSaving || !editName.trim()}
-                className="bg-[#D99A25] text-[#11100D] hover:bg-[#F2B84B] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-gold-solid text-primary-foreground hover:bg-gold-to disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 {isSaving ? (
                     <>

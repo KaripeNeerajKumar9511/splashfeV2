@@ -80,30 +80,30 @@ export default function RecentPage() {
     const getImageTypeIcon = (imageType) => {
         switch (imageType) {
             case 'white_background':
-                return <ImageIcon className="w-4 h-4 text-blue-500" />;
+                return <ImageIcon className="w-4 h-4 text-gold-solid" />;
             case 'model_with_ornament':
             case 'real_model_with_ornament':
-                return <Sparkles className="w-4 h-4 text-purple-500" />;
+                return <Sparkles className="w-4 h-4 text-gold-solid" />;
             case 'campaign_shot_advanced':
                 return <ImageIcon className="w-4 h-4 text-green-500" />;
             case 'background_change':
                 return <RefreshCw className="w-4 h-4 text-orange-500" />;
             // Project-based image types
             case 'project_white_background':
-                return <ImageIcon className="w-4 h-4 text-blue-600" />;
+                return <ImageIcon className="w-4 h-4 text-gold-solid" />;
             case 'project_background_replace':
                 return <RefreshCw className="w-4 h-4 text-orange-600" />;
             case 'project_model_image':
             case 'project_ai_model_generation':
-                return <Sparkles className="w-4 h-4 text-purple-600" />;
+                return <Sparkles className="w-4 h-4 text-gold-solid" />;
             case 'project_campaign_image':
                 return <ImageIcon className="w-4 h-4 text-green-600" />;
             case 'project_model_selection':
-                return <Sparkles className="w-4 h-4 text-indigo-500" />;
+                return <Sparkles className="w-4 h-4 text-gold-solid" />;
             case 'project_product_upload':
                 return <ImageIcon className="w-4 h-4 text-cyan-500" />;
             default:
-                return <ImageIcon className="w-4 h-4 text-gray-500" />;
+                return <ImageIcon className="w-4 h-4 text-muted-foreground" />;
         }
     };
 
@@ -148,10 +148,10 @@ export default function RecentPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+            <div className="min-h-[50vh] p-6">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex items-center justify-center h-64">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-solid"></div>
                     </div>
                 </div>
             </div>
@@ -160,7 +160,7 @@ export default function RecentPage() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+            <div className="min-h-[50vh] p-6">
                 <div className="max-w-7xl mx-auto">
                     <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
                         <p className="text-red-600">{error}</p>
@@ -177,25 +177,25 @@ export default function RecentPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <div className="p-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
                     <div className="flex items-center gap-3 mb-4">
-                        <Clock className="w-8 h-8 text-purple-600" />
-                        <h1 className="text-3xl font-bold text-gray-900">Recent Activity</h1>
+                        <Clock className="w-8 h-8 text-gold-solid" />
+                        <h1 className="text-3xl font-bold text-foreground">Recent Activity</h1>
                     </div>
-                    <p className="text-gray-600">Track your recent image generation and project activity</p>
+                    <p className="text-muted-foreground">Track your recent image generation and project activity</p>
                 </div>
 
                 {/* Time Filter */}
                 <div className="mb-6">
                     <div className="flex items-center gap-4">
-                        <span className="text-sm font-medium text-gray-700">Show activity from:</span>
+                        <span className="text-sm font-medium text-muted-foreground">Show activity from:</span>
                         <select
                             value={timeFilter}
                             onChange={(e) => setTimeFilter(Number(e.target.value))}
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            className="px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
                         >
                             <option value={7}>Last 7 days</option>
                             <option value={30}>Last 30 days</option>
@@ -206,7 +206,7 @@ export default function RecentPage() {
 
                 {/* Tabs */}
                 <div className="mb-6">
-                    <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+                    <div className="flex space-x-1 bg-secondary p-1 rounded-lg w-fit">
                         {[
                             { id: 'all', label: 'All Activity', count: history.length },
                             { id: 'projects', label: 'Projects', count: history.filter(h => h.type === 'project_image').length },
@@ -216,8 +216,8 @@ export default function RecentPage() {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === tab.id
-                                    ? 'bg-white text-purple-600 shadow-sm'
-                                    : 'text-gray-600 hover:text-gray-900'
+                                    ? 'bg-card text-gold-solid shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
                                     }`}
                             >
                                 {tab.label} ({tab.count})
@@ -230,29 +230,29 @@ export default function RecentPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Activity Feed */}
                     <div className="lg:col-span-2">
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div className="p-6 border-b border-gray-200">
-                                <h2 className="text-xl font-semibold text-gray-900">Recent Activity</h2>
+                        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+                            <div className="p-6 border-b border-border">
+                                <h2 className="text-xl font-semibold text-foreground">Recent Activity</h2>
                             </div>
                             <div className="divide-y divide-gray-200">
                                 {filteredHistory.length === 0 ? (
-                                    <div className="p-8 text-center text-gray-500">
-                                        <Clock className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                                    <div className="p-8 text-center text-muted-foreground">
+                                        <Clock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                                         <p>No recent activity found</p>
                                         <p className="text-sm">Start creating images to see your activity here</p>
                                     </div>
                                 ) : (
                                     filteredHistory.map((item) => (
-                                        <div key={item.id} className="p-6 hover:bg-gray-50 transition-colors">
+                                        <div key={item.id} className="p-6 hover:bg-muted transition-colors">
                                             <div className="flex items-start gap-4">
                                                 <div className="flex-shrink-0">
-                                                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                                                    <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
                                                         {getImageTypeIcon(item.image_type)}
                                                     </div>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 mb-2">
-                                                        <span className="text-sm font-medium text-gray-900">
+                                                        <span className="text-sm font-medium text-foreground">
                                                             {getImageTypeLabel(item.image_type)}
                                                         </span>
                                                         {item.parent_image_id && (
@@ -261,15 +261,15 @@ export default function RecentPage() {
                                                             </span>
                                                         )}
                                                         {item.project && (
-                                                            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                                                            <span className="px-2 py-1 text-xs bg-accent text-foreground rounded-full">
                                                                 {item.project.name}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                                                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                                                         {item.prompt || 'No prompt available'}
                                                     </p>
-                                                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                                                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                                                         <span className="flex items-center gap-1" title={formatDetailedDate(item.created_at)}>
                                                             <Calendar className="w-3 h-3" />
                                                             {formatDate(item.created_at)}
@@ -280,7 +280,7 @@ export default function RecentPage() {
                                                     <img
                                                         src={item.image_url}
                                                         alt="Generated content"
-                                                        className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                                                        className="w-16 h-16 object-cover rounded-lg border border-border"
                                                         onError={(e) => {
                                                             e.target.src = '/placeholder-image.png';
                                                         }}
@@ -297,24 +297,24 @@ export default function RecentPage() {
                     {/* Projects Sidebar */}
                     <div className="space-y-6">
                         {/* Recent Projects */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div className="p-6 border-b border-gray-200">
-                                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                    <FolderOpen className="w-5 h-5 text-blue-500" />
+                        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+                            <div className="p-6 border-b border-border">
+                                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                                    <FolderOpen className="w-5 h-5 text-gold-solid" />
                                     Recent Projects
                                 </h3>
                             </div>
                             <div className="divide-y divide-gray-200">
                                 {projects.length === 0 ? (
-                                    <div className="p-6 text-center text-gray-500">
-                                        <FolderOpen className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                                    <div className="p-6 text-center text-muted-foreground">
+                                        <FolderOpen className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                                         <p className="text-sm">No recent projects</p>
                                     </div>
                                 ) : (
                                     projects.map((project) => (
-                                        <div key={project.id} className="p-4 hover:bg-gray-50 transition-colors">
+                                        <div key={project.id} className="p-4 hover:bg-muted transition-colors">
                                             <div className="flex items-start justify-between mb-2">
-                                                <h4 className="font-medium text-gray-900 line-clamp-1">
+                                                <h4 className="font-medium text-foreground line-clamp-1">
                                                     {project.name}
                                                 </h4>
                                                 <span className={`px-2 py-1 text-xs rounded-full ${project.status === 'completed'
@@ -325,29 +325,29 @@ export default function RecentPage() {
                                                 </span>
                                             </div>
                                             {project.about && (
-                                                <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                                                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                                                     {project.about}
                                                 </p>
                                             )}
-                                            <div className="flex items-center justify-between text-xs text-gray-500">
+                                            <div className="flex items-center justify-between text-xs text-muted-foreground">
                                                 <span>{project.total_images} images</span>
                                                 <span title={formatDetailedDate(project.updated_at)}>{formatDate(project.updated_at)}</span>
                                             </div>
                                             {project.recent_activity.length > 0 && (
-                                                <div className="mt-3 pt-3 border-t border-gray-100">
-                                                    <p className="text-xs text-gray-500 mb-2">Recent activity:</p>
+                                                <div className="mt-3 pt-3 border-t border-border">
+                                                    <p className="text-xs text-muted-foreground mb-2">Recent activity:</p>
                                                     <div className="space-y-2">
                                                         {project.recent_activity.slice(0, 2).map((activity) => (
                                                             <div key={activity.id} className="flex items-center gap-2">
                                                                 <img
                                                                     src={activity.image_url}
                                                                     alt="Recent activity"
-                                                                    className="w-6 h-6 object-cover rounded border border-gray-200"
+                                                                    className="w-6 h-6 object-cover rounded border border-border"
                                                                     onError={(e) => {
                                                                         e.target.src = '/placeholder-image.png';
                                                                     }}
                                                                 />
-                                                                <span className="text-xs text-gray-600 line-clamp-1">
+                                                                <span className="text-xs text-muted-foreground line-clamp-1">
                                                                     {getImageTypeLabel(activity.image_type)}
                                                                 </span>
                                                             </div>
@@ -362,22 +362,22 @@ export default function RecentPage() {
                         </div>
 
                         {/* Quick Stats */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
+                        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+                            <h3 className="text-lg font-semibold text-foreground mb-4">Quick Stats</h3>
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">Total Images</span>
-                                    <span className="font-semibold text-gray-900">{history.length}</span>
+                                    <span className="text-sm text-muted-foreground">Total Images</span>
+                                    <span className="font-semibold text-foreground">{history.length}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">Active Projects</span>
-                                    <span className="font-semibold text-gray-900">
+                                    <span className="text-sm text-muted-foreground">Active Projects</span>
+                                    <span className="font-semibold text-foreground">
                                         {projects.filter(p => p.status === 'progress').length}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">Regenerated</span>
-                                    <span className="font-semibold text-gray-900">
+                                    <span className="text-sm text-muted-foreground">Regenerated</span>
+                                    <span className="font-semibold text-foreground">
                                         {history.filter(h => h.parent_image_id).length}
                                     </span>
                                 </div>

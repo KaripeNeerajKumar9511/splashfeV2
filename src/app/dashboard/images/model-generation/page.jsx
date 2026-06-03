@@ -696,7 +696,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                                         <div className="w-2 h-2 bg-gold-solid rounded-full"></div>
                                         {t("images.ornamentProductImage")}<span className="text-red-500 ml-1">*</span> <br />
                                         <span className="text-xs text-muted-foreground font-normal">upload the product image which is captured with the help of scale for better measurements.</span>
-                                        <button type="button" onClick={(e) => { e.preventDefault(); setShowReferenceModal(true); }} className="text-xs text-blue-600 hover:underline font-medium">(View reference)</button>
+                                        <button type="button" onClick={(e) => { e.preventDefault(); setShowReferenceModal(true); }} className="text-xs text-gold-solid hover:underline font-medium">(View reference)</button>
                                         {aiUploadErrors.ornamentImage && (
   <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
     <AlertCircle className="w-4 h-4" />
@@ -865,7 +865,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                                 <div ref={generateSectionRef} className="flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto">
                                     {showCostNote && numImages > 1 && (
                                         <div className="flex items-start gap-2 px-4 py-3 w-full sm:max-w-md
-bg-gray-100/80 
+bg-secondary/80 
 border border-border 
 rounded-xl 
 text-foreground text-sm leading-snug">
@@ -954,7 +954,7 @@ text-foreground text-sm leading-snug">
                                         <div className="w-2 h-2 bg-gold-solid rounded-full"></div>
                                         {t("images.ornamentProductImage")}<span className="text-red-500 ml-1">*</span> <br />
                                         <span className="text-xs text-muted-foreground font-normal">upload the product image which is captured with the help of scale for better measurements.</span>
-                                        <button type="button" onClick={(e) => { e.preventDefault(); setShowReferenceModal(true); }} className="text-xs text-blue-600 hover:underline font-medium">(View reference)</button>
+                                        <button type="button" onClick={(e) => { e.preventDefault(); setShowReferenceModal(true); }} className="text-xs text-gold-solid hover:underline font-medium">(View reference)</button>
                                         {realUploadErrors.ornamentImage && (
   <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
     <AlertCircle className="w-4 h-4" />
@@ -1138,7 +1138,7 @@ text-foreground text-sm leading-snug">
                                 <div ref={generateSectionRef} className="flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto">
                                     {showCostNote && numImages > 1 && (
                                         <div className="flex items-start gap-2 px-4 py-3 w-full sm:max-w-md
-bg-gray-100/80 
+bg-secondary/80 
 border border-border 
 rounded-xl 
 text-foreground text-sm leading-snug">
@@ -1237,8 +1237,8 @@ text-foreground text-sm leading-snug">
                                                 <button onClick={activeTab === "ai_model" ? handleAiRegenerate : handleRealRegenerate} className="px-4 py-3 border-2 border-gold-muted text-gold-solid hover:bg-gold-solid/10 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"><RefreshCw size={16} />{t("images.regenerate")}</button>
                                             </div>
                                             <button onClick={() => { if (activeTab === "ai_model") { setAiResult(null); setAiFormData({ ornamentImage: null, poseImage: null, prompt: "", measurements: "", dimension: "1:1" }); setAiOrnamentType(""); setAiOrnamentMeasurements({}); setAiOrnamentPreview(null); setAiPosePreview(null); } else { setRealResult(null); setRealFormData({ modelImage: null, ornamentImage: null, poseImage: null, prompt: "", measurements: "", dimension: "1:1" }); setRealOrnamentType(""); setRealOrnamentMeasurements({}); setRealModelPreview(null); setRealOrnamentPreview(null); setRealPosePreview(null); } }} className="w-full px-4 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/30">{activeTab === "ai_model" ? t("images.newModel") : t("images.newImage")}</button>
-                                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                                <p className="text-blue-700 text-sm flex items-center gap-2"><Sparkles className="w-4 h-4" />{activeTab === "ai_model" ? t("images.clickRegenerateToModifyAIModel") : t("images.clickRegenerateToModify")}</p>
+                                            <div className="bg-accent border border-border rounded-xl p-4">
+                                                <p className="text-muted-foreground text-sm flex items-center gap-2"><Sparkles className="w-4 h-4" />{activeTab === "ai_model" ? t("images.clickRegenerateToModifyAIModel") : t("images.clickRegenerateToModify")}</p>
                                             </div>
                                         </div>
                                     </>
@@ -1311,9 +1311,9 @@ text-foreground text-sm leading-snug">
                             </div>
 {/* 
                             {aiResult?.prompt && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                    <p className="text-xs font-semibold text-blue-900 mb-2">{t("images.originalPrompt")}:</p>
-                                    <p className="text-sm text-blue-700">{aiResult.prompt}</p>
+                                <div className="bg-accent border border-border rounded-xl p-4">
+                                    <p className="text-xs font-semibold text-foreground mb-2">{t("images.originalPrompt")}:</p>
+                                    <p className="text-sm text-muted-foreground">{aiResult.prompt}</p>
                                 </div>
                             )} */}
 
@@ -1422,9 +1422,9 @@ text-foreground text-sm leading-snug">
                             </div>
 {/* 
                             {realResult?.prompt && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                    <p className="text-xs font-semibold text-blue-900 mb-2">{t("images.originalPrompt")}:</p>
-                                    <p className="text-sm text-blue-700">{realResult.prompt}</p>
+                                <div className="bg-accent border border-border rounded-xl p-4">
+                                    <p className="text-xs font-semibold text-foreground mb-2">{t("images.originalPrompt")}:</p>
+                                    <p className="text-sm text-muted-foreground">{realResult.prompt}</p>
                                 </div>
                             )} */}
 

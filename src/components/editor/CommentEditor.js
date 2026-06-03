@@ -138,7 +138,7 @@ export default function CommentEditor() {
 
       {contextMenu && (
         <div
-          className="absolute bg-white shadow-lg border rounded p-2"
+          className="absolute bg-card shadow-lg border border-border rounded p-2"
           style={{
             top: contextMenu.y,
             left: contextMenu.x,

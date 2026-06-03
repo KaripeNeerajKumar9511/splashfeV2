@@ -490,7 +490,7 @@ export default function OverviewTab({ project }) {
                                         {item.picked_colors.map((color, idx) => (
                                             <div key={idx} className="flex items-center gap-2">
                                                 <div
-                                                    className="w-8 h-8 rounded-full border-2 border-gray-300"
+                                                    className="w-8 h-8 rounded-full border-2 border-border"
                                                     style={{ backgroundColor: color }}
                                                     title={color}
                                                 />

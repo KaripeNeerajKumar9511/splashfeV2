@@ -142,12 +142,12 @@ export function ProjectsTab() {
                     filteredProjects.map((project) => (
                         <div
                             key={project.id}
-                            className="bg-white rounded-lg border border-[#e6e6e6] p-6 hover:shadow-md transition-shadow"
+                            className="bg-card rounded-lg border border-[#e6e6e6] p-6 hover:shadow-md transition-shadow"
                         >
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-2">
-                                        <FolderKanban className="w-5 h-5 text-[#884cff]" />
+                                        <FolderKanban className="w-5 h-5 text-gold-solid" />
                                         <h3 className="text-lg font-semibold text-[#1a1a1a]">{project.name}</h3>
                                     </div>
                                     {project.about && (
@@ -167,8 +167,8 @@ export function ProjectsTab() {
                                                 project.status === "active"
                                                     ? "bg-green-100 text-green-700"
                                                     : project.status === "completed"
-                                                    ? "bg-blue-100 text-blue-700"
-                                                    : "bg-gray-100 text-gray-700"
+                                                    ? "bg-accent text-muted-foreground"
+                                                    : "bg-secondary text-muted-foreground"
                                             }`}>
                                                 {project.status || "active"}
                                             </span>
@@ -179,7 +179,7 @@ export function ProjectsTab() {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="text-[#884cff] hover:text-[#7a3ff0]"
+                                        className="text-gold-solid hover:text-gold-to"
                                     >
                                         <ExternalLink className="w-4 h-4 mr-2" />
                                         View

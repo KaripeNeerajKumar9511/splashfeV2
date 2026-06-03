@@ -128,7 +128,7 @@ export function CoinUsageTab() {
             {/* Summary Cards */}
             {usageData && (
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-white rounded-lg border border-[#e6e6e6] p-6">
+                    <div className="bg-card rounded-lg border border-[#e6e6e6] p-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-[#737373]">Current Balance</p>
@@ -136,10 +136,10 @@ export function CoinUsageTab() {
                                     {usageData.organization?.current_balance || 0}
                                 </p>
                             </div>
-                            <Coins className="w-8 h-8 text-[#884cff]" />
+                            <Coins className="w-8 h-8 text-gold-solid" />
                         </div>
                     </div>
-                    <div className="bg-white rounded-lg border border-[#e6e6e6] p-6">
+                    <div className="bg-card rounded-lg border border-[#e6e6e6] p-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-[#737373]">Total Credits</p>
@@ -150,7 +150,7 @@ export function CoinUsageTab() {
                             <TrendingUp className="w-8 h-8 text-green-600" />
                         </div>
                     </div>
-                    <div className="bg-white rounded-lg border border-[#e6e6e6] p-6">
+                    <div className="bg-card rounded-lg border border-[#e6e6e6] p-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-[#737373]">Total Debits</p>
@@ -161,7 +161,7 @@ export function CoinUsageTab() {
                             <TrendingDown className="w-8 h-8 text-red-600" />
                         </div>
                     </div>
-                    <div className="bg-white rounded-lg border border-[#e6e6e6] p-6">
+                    <div className="bg-card rounded-lg border border-[#e6e6e6] p-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-[#737373]">Net Usage</p>
@@ -178,7 +178,7 @@ export function CoinUsageTab() {
             )}
 
             {/* Filters */}
-            <div className="bg-white rounded-lg border border-[#e6e6e6] p-4">
+            <div className="bg-card rounded-lg border border-[#e6e6e6] p-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label className="text-sm font-medium text-[#1a1a1a] mb-2 block">Start Date</label>
@@ -242,10 +242,10 @@ export function CoinUsageTab() {
             )}
 
             {/* Usage Table */}
-            <div className="bg-white rounded-lg border border-[#e6e6e6] overflow-hidden">
+            <div className="bg-card rounded-lg border border-[#e6e6e6] overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-[#e6e6e6]">
+                        <thead className="bg-muted border-b border-[#e6e6e6]">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-[#1a1a1a]">Date</th>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-[#1a1a1a]">Type</th>
@@ -264,7 +264,7 @@ export function CoinUsageTab() {
                                 </tr>
                             ) : (
                                 filteredUsageData.map((entry) => (
-                                    <tr key={entry.id} className="hover:bg-gray-50">
+                                    <tr key={entry.id} className="hover:bg-muted">
                                         <td className="px-6 py-4 text-sm text-[#1a1a1a]">
                                             {entry.date
                                                 ? new Date(entry.date).toLocaleDateString()

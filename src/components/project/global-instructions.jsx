@@ -279,10 +279,10 @@ export function GlobalInstructions({
                             <button
                                 type="button"
                                 onClick={closeComments}
-                                className="p-1 rounded hover:bg-gray-100"
+                                className="p-1 rounded hover:bg-secondary"
                                 aria-label="Close comments"
                             >
-                                <X className="w-4 h-4 text-[#666]" />
+                                <X className="w-4 h-4 text-muted-foreground" />
                             </button>
                         </div>
 
@@ -292,18 +292,18 @@ export function GlobalInstructions({
                                     <p className="text-xs text-muted-foreground">No comments yet.</p>
                                 ) : (
                                     currentComments.map((comment) => (
-                                        <div key={comment.id} className="border border-border rounded-md p-2 bg-[#fafafa]">
+                                        <div key={comment.id} className="border border-border rounded-md p-2 bg-muted">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="min-w-0">
-                                                    <p className="text-xs font-medium text-[#444]">
+                                                    <p className="text-xs font-medium text-muted-foreground">
                                                         {(comment.authorName || "Member")} • {formatRelativeCommentTime(comment.createdAt, nowMs)}
                                                     </p>
                                                     <p className="text-sm text-foreground break-words">{comment.comment}</p>
                                                     {Array.isArray(comment.replies) && comment.replies.length > 0 && (
                                                         <div className="mt-2 pl-3 border-l border-border space-y-2">
                                                             {comment.replies.map((reply) => (
-                                                                <div key={reply.id} className="bg-card border border-[#f0f0f0] rounded p-2">
-                                                                    <p className="text-xs font-medium text-[#555]">
+                                                                <div key={reply.id} className="bg-card border border-border rounded p-2">
+                                                                    <p className="text-xs font-medium text-muted-foreground">
                                                                         {(reply.authorName || "Member")} • {formatRelativeCommentTime(reply.createdAt, nowMs)}
                                                                     </p>
                                                                     <p className="text-sm text-foreground break-words">{reply.comment}</p>
@@ -316,7 +316,7 @@ export function GlobalInstructions({
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleStartReply(comment.id)}
-                                                                className="text-xs text-gold-solid hover:text-[#7a3ff0]"
+                                                                className="text-xs text-gold-solid hover:text-gold-to"
                                                             >
                                                                 {replyingToCommentId === comment.id ? "Replying..." : "Reply"}
                                                             </button>
@@ -334,7 +334,7 @@ export function GlobalInstructions({
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setReplyingToCommentId(null)}
-                                                                    className="px-2 py-1 text-xs rounded-md border border-[#dcdcdc] text-[#555] hover:bg-gray-50"
+                                                                    className="px-2 py-1 text-xs rounded-md border border-border text-muted-foreground hover:bg-muted"
                                                                 >
                                                                     Cancel
                                                                 </button>

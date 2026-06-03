@@ -172,13 +172,13 @@ export default function CollaborationPage({ projectId, projectData }) {
     const getRoleBadgeColor = (role) => {
         switch (role) {
             case "owner":
-                return "border-[#D99A25]/45 bg-[#2B2112] text-[#F2B84B]"
+                return "border-gold-solid/45 bg-[#2B2112] text-[gold-to]"
             case "editor":
-                return "border-[#D99A25]/35 bg-[#231E15] text-[#D99A25]"
+                return "border-gold-solid/35 bg-[#231E15] text-gold-solid"
             case "viewer":
-                return "border-[#7B7567]/40 bg-[#1C1B18] text-[#A7A092]"
+                return "border-[#7B7567]/40 bg-accent text-[#A7A092]"
             default:
-                return "border-[#7B7567]/40 bg-[#1C1B18] text-[#A7A092]"
+                return "border-[#7B7567]/40 bg-accent text-[#A7A092]"
         }
     }
 
@@ -217,24 +217,24 @@ export default function CollaborationPage({ projectId, projectData }) {
         : "N/A"
 
     const cardClass =
-        "rounded-2xl border border-[#3A2A12] bg-[#171613] shadow-[0_0_0_1px_rgba(217,154,37,0.04)] transition-all duration-200 hover:border-[#D99A25]/55 hover:shadow-[0_16px_42px_rgba(0,0,0,0.34)]"
+        "rounded-2xl border border-border bg-card shadow-[0_0_0_1px_rgba(217,154,37,0.04)] transition-all duration-200 hover:border-gold-solid/55 hover:shadow-[0_16px_42px_rgba(0,0,0,0.34)]"
 
     const iconBoxClass =
-        "flex h-12 w-12 items-center justify-center rounded-xl bg-[#2A2114] text-[#D99A25]"
+        "flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-gold-solid"
 
-    const mutedText = "text-[#8FA0B5]"
-    const titleText = "text-[#F4F1E9]"
+    const mutedText = "text-muted-foreground"
+    const titleText = "text-foreground"
 
     if (loading) {
         return (
-            <div className="flex min-h-[420px] items-center justify-center bg-[#11100D] p-12">
-                <Loader2 className="h-8 w-8 animate-spin text-[#D99A25]" />
+            <div className="flex min-h-[420px] items-center justify-center bg-secondary p-12">
+                <Loader2 className="h-8 w-8 animate-spin text-gold-solid" />
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-[#11100D] text-[#F4F1E9]">
+        <div className="min-h-screen bg-secondary text-foreground">
             <InviteModal
                 isOpen={isInviteModalOpen}
                 onClose={() => setIsInviteModalOpen(false)}
@@ -261,7 +261,7 @@ export default function CollaborationPage({ projectId, projectData }) {
                                 <Users className="h-5 w-5" />
                             </div>
                         </div>
-                        <div className="text-5xl font-bold tracking-tight text-[#D99A25]">
+                        <div className="text-5xl font-bold tracking-tight text-gold-solid">
                             {totalMembers}
                         </div>
                     </Card>
@@ -275,7 +275,7 @@ export default function CollaborationPage({ projectId, projectData }) {
                                 <Calendar className="h-5 w-5" />
                             </div>
                         </div>
-                        <div className="text-4xl font-bold tracking-tight text-[#D99A25]">
+                        <div className="text-4xl font-bold tracking-tight text-gold-solid">
                             {createdDate}
                         </div>
                     </Card>
@@ -289,7 +289,7 @@ export default function CollaborationPage({ projectId, projectData }) {
                                 <Mail className="h-5 w-5" />
                             </div>
                         </div>
-                        <div className="text-5xl font-bold tracking-tight text-[#D99A25]">
+                        <div className="text-5xl font-bold tracking-tight text-gold-solid">
                             {pendingInvites.length}
                         </div>
                     </Card>
@@ -309,7 +309,7 @@ export default function CollaborationPage({ projectId, projectData }) {
                         {isOwner && (
                             <Button
                                 onClick={() => setIsInviteModalOpen(true)}
-                                className="gap-2 rounded-xl border border-[#D99A25]/40 bg-[#D99A25] px-5 py-5 font-semibold text-[#11100D] shadow-[0_10px_24px_rgba(217,154,37,0.22)] hover:bg-[#F2B84B]"
+                                className="gap-2 rounded-xl border border-gold-solid/40 bg-gold-solid px-5 py-5 font-semibold text-primary-foreground shadow-[0_10px_24px_rgba(217,154,37,0.22)] hover:bg-gold-to"
                             >
                                 <UserPlus className="h-4 w-4" />
                                 Invite Team Member
@@ -351,11 +351,11 @@ export default function CollaborationPage({ projectId, projectData }) {
                                             >
                                                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                                     <div className="flex min-w-0 items-center gap-4">
-                                                        <Avatar className="h-12 w-12 border border-[#D99A25]/20 bg-[#2A2114]">
+                                                        <Avatar className="h-12 w-12 border border-gold-solid/20 bg-accent">
                                                             <AvatarImage
                                                                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.user_email}`}
                                                             />
-                                                            <AvatarFallback className="bg-[#2A2114] text-[#D99A25]">
+                                                            <AvatarFallback className="bg-accent text-gold-solid">
                                                                 {getInitials(
                                                                     member.user_name ||
                                                                         member.user_email
@@ -364,11 +364,11 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                         </Avatar>
 
                                                         <div className="min-w-0">
-                                                            <p className="truncate font-semibold text-[#F4F1E9]">
+                                                            <p className="truncate font-semibold text-foreground">
                                                                 {member.user_name ||
                                                                     "Unknown User"}
                                                             </p>
-                                                            <p className="truncate text-sm text-[#8FA0B5]">
+                                                            <p className="truncate text-sm text-muted-foreground">
                                                                 {member.user_email}
                                                             </p>
                                                         </div>
@@ -393,7 +393,7 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                         </Badge>
 
                                                         {member.role === "owner" && (
-                                                            <Star className="h-5 w-5 fill-[#D99A25] text-[#D99A25]" />
+                                                            <Star className="h-5 w-5 fill-gold-solid text-gold-solid" />
                                                         )}
 
                                                         {canManageMember && (
@@ -402,7 +402,7 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                                     <Button
                                                                         size="sm"
                                                                         variant="ghost"
-                                                                        className="h-9 w-9 rounded-lg p-0 text-[#8FA0B5] hover:bg-[#2A2114] hover:text-[#D99A25]"
+                                                                        className="h-9 w-9 rounded-lg p-0 text-muted-foreground hover:bg-accent hover:text-gold-solid"
                                                                         disabled={
                                                                             isMemberActionLoading
                                                                         }
@@ -417,14 +417,14 @@ export default function CollaborationPage({ projectId, projectData }) {
 
                                                                 <DropdownMenuContent
                                                                     align="end"
-                                                                    className="w-48 border-[#3A2A12] bg-[#171613] text-[#F4F1E9]"
+                                                                    className="w-48 border-border bg-card text-foreground"
                                                                 >
                                                                     <DropdownMenuSub>
-                                                                        <DropdownMenuSubTrigger className="cursor-pointer hover:bg-[#2A2114] focus:bg-[#2A2114]">
+                                                                        <DropdownMenuSubTrigger className="cursor-pointer hover:bg-accent focus:bg-accent">
                                                                             Change Role
                                                                         </DropdownMenuSubTrigger>
 
-                                                                        <DropdownMenuSubContent className="w-44 border-[#3A2A12] bg-[#171613] text-[#F4F1E9]">
+                                                                        <DropdownMenuSubContent className="w-44 border-border bg-card text-foreground">
                                                                             <DropdownMenuItem
                                                                                 onClick={() =>
                                                                                     handleRoleChange(
@@ -437,13 +437,13 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                                                     member.role ===
                                                                                     "owner"
                                                                                 }
-                                                                                className="cursor-pointer hover:bg-[#2A2114] focus:bg-[#2A2114]"
+                                                                                className="cursor-pointer hover:bg-accent focus:bg-accent"
                                                                             >
-                                                                                <Crown className="mr-2 h-4 w-4 text-[#D99A25]" />
+                                                                                <Crown className="mr-2 h-4 w-4 text-gold-solid" />
                                                                                 <span>Owner</span>
                                                                                 {member.role ===
                                                                                     "owner" && (
-                                                                                    <CheckCircle className="ml-auto h-4 w-4 text-[#D99A25]" />
+                                                                                    <CheckCircle className="ml-auto h-4 w-4 text-gold-solid" />
                                                                                 )}
                                                                             </DropdownMenuItem>
 
@@ -459,13 +459,13 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                                                     member.role ===
                                                                                     "editor"
                                                                                 }
-                                                                                className="cursor-pointer hover:bg-[#2A2114] focus:bg-[#2A2114]"
+                                                                                className="cursor-pointer hover:bg-accent focus:bg-accent"
                                                                             >
-                                                                                <Edit3 className="mr-2 h-4 w-4 text-[#D99A25]" />
+                                                                                <Edit3 className="mr-2 h-4 w-4 text-gold-solid" />
                                                                                 <span>Editor</span>
                                                                                 {member.role ===
                                                                                     "editor" && (
-                                                                                    <CheckCircle className="ml-auto h-4 w-4 text-[#D99A25]" />
+                                                                                    <CheckCircle className="ml-auto h-4 w-4 text-gold-solid" />
                                                                                 )}
                                                                             </DropdownMenuItem>
 
@@ -481,7 +481,7 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                                                     member.role ===
                                                                                     "viewer"
                                                                                 }
-                                                                                className="cursor-pointer hover:bg-[#2A2114] focus:bg-[#2A2114]"
+                                                                                className="cursor-pointer hover:bg-accent focus:bg-accent"
                                                                             >
                                                                                 <Eye className="mr-2 h-4 w-4 text-[#A7A092]" />
                                                                                 <span>Viewer</span>
@@ -493,7 +493,7 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                                         </DropdownMenuSubContent>
                                                                     </DropdownMenuSub>
 
-                                                                    <DropdownMenuSeparator className="bg-[#3A2A12]" />
+                                                                    <DropdownMenuSeparator className="bg-border" />
 
                                                                     <DropdownMenuItem
                                                                         onClick={() =>
@@ -535,7 +535,7 @@ export default function CollaborationPage({ projectId, projectData }) {
                                         className={`${cardClass} flex min-h-[220px] flex-col items-center justify-center p-10 text-center`}
                                     >
                                         <Mail className="mb-5 h-16 w-16 text-[#566171]" />
-                                        <p className="text-lg font-medium text-[#8FA0B5]">
+                                        <p className="text-lg font-medium text-muted-foreground">
                                             No pending invitations
                                         </p>
                                     </Card>
@@ -552,11 +552,11 @@ export default function CollaborationPage({ projectId, projectData }) {
                                             >
                                                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                                     <div className="flex min-w-0 items-center gap-4">
-                                                        <Avatar className="h-12 w-12 border border-[#D99A25]/20 bg-[#2A2114]">
+                                                        <Avatar className="h-12 w-12 border border-gold-solid/20 bg-accent">
                                                             <AvatarImage
                                                                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${invite.invitee}`}
                                                             />
-                                                            <AvatarFallback className="bg-[#2A2114] text-[#D99A25]">
+                                                            <AvatarFallback className="bg-accent text-gold-solid">
                                                                 {getInitials(
                                                                     invite.invitee ||
                                                                         "User"
@@ -565,10 +565,10 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                         </Avatar>
 
                                                         <div className="min-w-0">
-                                                            <p className="truncate font-semibold text-[#F4F1E9]">
+                                                            <p className="truncate font-semibold text-foreground">
                                                                 {invite.invitee}
                                                             </p>
-                                                            <p className="truncate text-sm text-[#8FA0B5]">
+                                                            <p className="truncate text-sm text-muted-foreground">
                                                                 Invited by{" "}
                                                                 {invite.inviter}
                                                             </p>
@@ -578,14 +578,14 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                     <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                                                         <Badge
                                                             variant="outline"
-                                                            className="rounded-full border-[#D99A25]/35 bg-[#231E15] px-3 py-1 text-[#D99A25]"
+                                                            className="rounded-full border-gold-solid/35 bg-[#231E15] px-3 py-1 text-gold-solid"
                                                         >
                                                             {invite.role}
                                                         </Badge>
 
                                                         <Badge
                                                             variant="outline"
-                                                            className="rounded-full border-[#D99A25]/35 bg-[#2A2114] px-3 py-1 text-[#F2B84B]"
+                                                            className="rounded-full border-gold-solid/35 bg-accent px-3 py-1 text-[gold-to]"
                                                         >
                                                             Pending
                                                         </Badge>
@@ -596,7 +596,7 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                                     <Button
                                                                         size="sm"
                                                                         variant="ghost"
-                                                                        className="h-9 w-9 rounded-lg p-0 text-[#8FA0B5] hover:bg-[#2A2114] hover:text-[#D99A25]"
+                                                                        className="h-9 w-9 rounded-lg p-0 text-muted-foreground hover:bg-accent hover:text-gold-solid"
                                                                         disabled={
                                                                             isInviteLoading
                                                                         }
@@ -611,14 +611,14 @@ export default function CollaborationPage({ projectId, projectData }) {
 
                                                                 <DropdownMenuContent
                                                                     align="end"
-                                                                    className="w-52 border-[#3A2A12] bg-[#171613] text-[#F4F1E9]"
+                                                                    className="w-52 border-border bg-card text-foreground"
                                                                 >
                                                                     <DropdownMenuSub>
-                                                                        <DropdownMenuSubTrigger className="cursor-pointer hover:bg-[#2A2114] focus:bg-[#2A2114]">
+                                                                        <DropdownMenuSubTrigger className="cursor-pointer hover:bg-accent focus:bg-accent">
                                                                             Change Role
                                                                         </DropdownMenuSubTrigger>
 
-                                                                        <DropdownMenuSubContent className="w-44 border-[#3A2A12] bg-[#171613] text-[#F4F1E9]">
+                                                                        <DropdownMenuSubContent className="w-44 border-border bg-card text-foreground">
                                                                             <DropdownMenuItem
                                                                                 onClick={() =>
                                                                                     handlePendingInviteRoleChange(
@@ -630,13 +630,13 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                                                     invite.role ===
                                                                                     "owner"
                                                                                 }
-                                                                                className="cursor-pointer hover:bg-[#2A2114] focus:bg-[#2A2114]"
+                                                                                className="cursor-pointer hover:bg-accent focus:bg-accent"
                                                                             >
-                                                                                <Crown className="mr-2 h-4 w-4 text-[#D99A25]" />
+                                                                                <Crown className="mr-2 h-4 w-4 text-gold-solid" />
                                                                                 <span>Owner</span>
                                                                                 {invite.role ===
                                                                                     "owner" && (
-                                                                                    <CheckCircle className="ml-auto h-4 w-4 text-[#D99A25]" />
+                                                                                    <CheckCircle className="ml-auto h-4 w-4 text-gold-solid" />
                                                                                 )}
                                                                             </DropdownMenuItem>
 
@@ -651,13 +651,13 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                                                     invite.role ===
                                                                                     "editor"
                                                                                 }
-                                                                                className="cursor-pointer hover:bg-[#2A2114] focus:bg-[#2A2114]"
+                                                                                className="cursor-pointer hover:bg-accent focus:bg-accent"
                                                                             >
-                                                                                <Edit3 className="mr-2 h-4 w-4 text-[#D99A25]" />
+                                                                                <Edit3 className="mr-2 h-4 w-4 text-gold-solid" />
                                                                                 <span>Editor</span>
                                                                                 {invite.role ===
                                                                                     "editor" && (
-                                                                                    <CheckCircle className="ml-auto h-4 w-4 text-[#D99A25]" />
+                                                                                    <CheckCircle className="ml-auto h-4 w-4 text-gold-solid" />
                                                                                 )}
                                                                             </DropdownMenuItem>
 
@@ -672,7 +672,7 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                                                     invite.role ===
                                                                                     "viewer"
                                                                                 }
-                                                                                className="cursor-pointer hover:bg-[#2A2114] focus:bg-[#2A2114]"
+                                                                                className="cursor-pointer hover:bg-accent focus:bg-accent"
                                                                             >
                                                                                 <Eye className="mr-2 h-4 w-4 text-[#A7A092]" />
                                                                                 <span>Viewer</span>
@@ -684,7 +684,7 @@ export default function CollaborationPage({ projectId, projectData }) {
                                                                         </DropdownMenuSubContent>
                                                                     </DropdownMenuSub>
 
-                                                                    <DropdownMenuSeparator className="bg-[#3A2A12]" />
+                                                                    <DropdownMenuSeparator className="bg-border" />
 
                                                                     <DropdownMenuItem
                                                                         onClick={() =>

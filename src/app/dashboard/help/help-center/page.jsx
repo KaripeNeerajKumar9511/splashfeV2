@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, HelpCircle, Book, Zap, CreditCard, Shield, Mail } from 'lucide-react';
+import { Search, HelpCircle, Book, Zap, CreditCard, Shield } from 'lucide-react';
 import Link from 'next/link';
 
 export const HelpCenter = () => {
@@ -54,51 +54,23 @@ export const HelpCenter = () => {
   ];
 
   return (
-    <div
-      className="space-y-8 animate-fade-in"
-    >
+    <div className="space-y-8 animate-fade-in">
       {/* Header Section */}
-      <div style={{ textAlign: 'center', maxWidth: '42rem', margin: '0 auto' }}>
-        <h1
-          style={{
-            fontSize: '2.25rem',
-            fontWeight: 700,
-            color: '#F4F1E9',
-            marginBottom: '1rem'
-          }}
-        >
+      <div className="text-center max-w-2xl mx-auto">
+        <h1 className="text-4xl font-bold text-foreground mb-4">
           How can we help you?
         </h1>
 
-        <p style={{ color: '#8FA0B5', marginBottom: '1.5rem' }}>
+        <p className="text-muted-foreground mb-6">
           Search our knowledge base or browse categories below
         </p>
 
-        <div style={{ position: 'relative' }}>
-          <Search
-            style={{
-              position: 'absolute',
-              left: '1rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: '1.25rem',
-              height: '1.25rem',
-              color: '#8FA0B5'
-            }}
-          />
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
 
           <Input
             placeholder="Search for articles, guides, or FAQs..."
-            className="pl-12 h-12 text-base"
-            style={{
-              paddingLeft: '3rem',
-              height: '3rem',
-              fontSize: '1rem',
-              borderColor: '#3A2A12',
-              backgroundColor: '#171613',
-              color: '#F4F1E9',
-              borderRadius: '0.75rem'
-            }}
+            className="pl-12 h-12 text-base border-border bg-card text-foreground rounded-xl"
           />
         </div>
       </div>
@@ -108,71 +80,22 @@ export const HelpCenter = () => {
         {categories.map((category, idx) => (
           <Card
             key={idx}
-            className="transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
-            style={{
-              boxShadow: '0 16px 42px rgba(0, 0, 0, 0.28)',
-              borderRadius: '0.75rem',
-              backgroundColor: '#171613',
-              border: '1px solid #3A2A12',
-              transition: 'all 0.3s ease',
-            }}
+            className="transition-all duration-300 hover:-translate-y-1 cursor-pointer group shadow-[0_16px_42px_rgba(0,0,0,0.28)] rounded-xl bg-card border border-border"
           >
-            <CardContent
-              style={{
-                padding: '1.5rem',
-                textAlign: 'left',
-              }}
-            >
-              <div
-                style={{
-                  width: '3rem',
-                  height: '3rem',
-                  borderRadius: '0.75rem',
-                  background: '#2A2114',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '1rem',
-                  boxShadow: '0 8px 22px rgba(217, 154, 37, 0.16)',
-                  border: '1px solid rgba(217, 154, 37, 0.35)',
-                }}
-              >
-                <category.icon
-                  style={{
-                    width: '1.5rem',
-                    height: '1.5rem',
-                    color: '#D99A25'
-                  }}
-                />
+            <CardContent className="p-6 text-left">
+              <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center mb-4 shadow-[0_8px_22px_rgba(205,150,57,0.16)] border border-gold-muted">
+                <category.icon className="w-6 h-6 text-gold-solid" />
               </div>
 
-              <h3
-                style={{
-                  fontWeight: 600,
-                  color: '#F4F1E9',
-                  marginBottom: '0.5rem'
-                }}
-              >
+              <h3 className="font-semibold text-foreground mb-2">
                 {category.title}
               </h3>
 
-              <p
-                style={{
-                  fontSize: '0.875rem',
-                  color: '#8FA0B5',
-                  marginBottom: '0.75rem'
-                }}
-              >
+              <p className="text-sm text-muted-foreground mb-3">
                 {category.description}
               </p>
 
-              <p
-                style={{
-                  fontSize: '0.75rem',
-                  color: '#D99A25',
-                  fontWeight: 500
-                }}
-              >
+              <p className="text-xs text-gold-solid font-medium">
                 {category.articles} articles
               </p>
             </CardContent>
@@ -181,20 +104,13 @@ export const HelpCenter = () => {
       </div>
 
       {/* FAQ Section */}
-      <Card
-        style={{
-          boxShadow: '0 16px 42px rgba(0, 0, 0, 0.28)',
-          borderRadius: '0.75rem',
-          backgroundColor: '#171613',
-          border: '1px solid #3A2A12',
-        }}
-      >
+      <Card className="shadow-[0_16px_42px_rgba(0,0,0,0.28)] rounded-xl bg-card border border-border">
         <CardHeader>
-          <CardTitle style={{ color: '#F4F1E9' }}>
+          <CardTitle className="text-foreground">
             Frequently Asked Questions
           </CardTitle>
 
-          <CardDescription style={{ color: '#8FA0B5' }}>
+          <CardDescription className="text-muted-foreground">
             Quick answers to common questions
           </CardDescription>
         </CardHeader>
@@ -203,51 +119,19 @@ export const HelpCenter = () => {
           {faqs.map((faq, idx) => (
             <div
               key={idx}
-              style={{
-                paddingBottom: '1.5rem',
-                borderBottom: idx !== faqs.length - 1 ? '1px solid #3A2A12' : 'none',
-              }}
+              className={`pb-6 ${idx !== faqs.length - 1 ? 'border-b border-border' : ''}`}
             >
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                <div
-                  style={{
-                    width: '2rem',
-                    height: '2rem',
-                    borderRadius: '0.5rem',
-                    backgroundColor: '#2A2114',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginTop: '0.25rem',
-                    border: '1px solid rgba(217, 154, 37, 0.35)',
-                  }}
-                >
-                  <HelpCircle
-                    style={{
-                      width: '1rem',
-                      height: '1rem',
-                      color: '#D99A25'
-                    }}
-                  />
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center mt-1 border border-gold-muted">
+                  <HelpCircle className="w-4 h-4 text-gold-solid" />
                 </div>
 
-                <div style={{ flex: 1 }}>
-                  <h4
-                    style={{
-                      fontWeight: 600,
-                      color: '#F4F1E9',
-                      marginBottom: '0.5rem'
-                    }}
-                  >
+                <div className="flex-1">
+                  <h4 className="font-semibold text-foreground mb-2">
                     {faq.question}
                   </h4>
 
-                  <p
-                    style={{
-                      fontSize: '0.875rem',
-                      color: '#8FA0B5'
-                    }}
-                  >
+                  <p className="text-sm text-muted-foreground">
                     {faq.answer}
                   </p>
                 </div>
@@ -258,35 +142,18 @@ export const HelpCenter = () => {
       </Card>
 
       {/* Support Card */}
-      <Card
-        style={{
-          boxShadow: '0 16px 42px rgba(0, 0, 0, 0.28)',
-          borderRadius: '0.75rem',
-          background: 'linear-gradient(to bottom right, rgba(217, 154, 37, 0.12), #171613)',
-          border: '1px solid rgba(217, 154, 37, 0.35)',
-        }}
-      >
-        <CardContent style={{ padding: '2rem', textAlign: 'center' }}>
-          <h3
-            style={{
-              fontSize: '1.25rem',
-              fontWeight: 600,
-              color: '#F4F1E9',
-              marginBottom: '0.5rem'
-            }}
-          >
+      <Card className="shadow-[0_16px_42px_rgba(0,0,0,0.28)] rounded-xl bg-gradient-to-br from-gold-solid/10 to-card border border-gold-muted">
+        <CardContent className="p-8 text-center">
+          <h3 className="text-xl font-semibold text-foreground mb-2">
             Still need help?
           </h3>
 
-          <p style={{ color: '#8FA0B5', marginBottom: '1rem' }}>
+          <p className="text-muted-foreground mb-4">
             Our support team is here to assist you
           </p>
 
-          <Button
-            className= "bg-gold-gradient hover:bg-gold-gradient/90"
-          >
+          <Button className="bg-gold-gradient hover:bg-gold-gradient/90 text-primary-foreground">
             <Link href="/dashboard/help/contact">
-             
               Contact Support
             </Link>
           </Button>

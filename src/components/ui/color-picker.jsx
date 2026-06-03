@@ -88,12 +88,12 @@ export function ColorPicker({ selectedColors = [], onColorsChange, disabled = fa
             </Button>
 
             {isOpen && (
-                <div className="absolute top-full left-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-4">
+                <div className="absolute top-full left-0 mt-2 w-80 bg-card border border-border rounded-lg shadow-lg z-50 p-4">
                     <div className="space-y-4">
                         {/* Selected Colors Display */}
                         {tempColors.length > 0 && (
                             <div>
-                                <p className="text-sm font-medium text-gray-700 mb-2">Selected Colors:</p>
+                                <p className="text-sm font-medium text-muted-foreground mb-2">Selected Colors:</p>
                                 <div className="flex flex-wrap gap-2">
                                     {tempColors.map((color, index) => (
                                         <div key={index} className="relative group">
@@ -120,13 +120,13 @@ export function ColorPicker({ selectedColors = [], onColorsChange, disabled = fa
 
                         {/* Predefined Colors Grid */}
                         <div>
-                            <p className="text-sm font-medium text-gray-700 mb-2">Choose Colors:</p>
+                            <p className="text-sm font-medium text-muted-foreground mb-2">Choose Colors:</p>
                             <div className="grid grid-cols-8 gap-2">
                                 {predefinedColors.map((color, index) => (
                                     <button
                                         key={index}
                                         className={`w-8 h-8 rounded border-2 transition-all ${tempColors.includes(color)
-                                            ? 'border-blue-500 ring-2 ring-blue-200'
+                                            ? 'border-gold-solid ring-2 ring-gold-muted'
                                             : 'border-gray-300 hover:border-gray-400'
                                             }`}
                                         style={{ backgroundColor: color }}
@@ -140,7 +140,7 @@ export function ColorPicker({ selectedColors = [], onColorsChange, disabled = fa
 
                         {/* Custom Color Input */}
                         <div>
-                            <p className="text-sm font-medium text-gray-700 mb-2">Add Custom Color:</p>
+                            <p className="text-sm font-medium text-muted-foreground mb-2">Add Custom Color:</p>
                             <div className="flex gap-2">
                                 <input
                                     ref={colorInputRef}
@@ -162,7 +162,7 @@ export function ColorPicker({ selectedColors = [], onColorsChange, disabled = fa
                         {/* Gradient Color Picker */}
                         <div>
                             <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-medium text-gray-700">Add Gradient:</p>
+                                <p className="text-sm font-medium text-muted-foreground">Add Gradient:</p>
                                 <Button
                                     type="button"
                                     size="sm"
@@ -187,7 +187,7 @@ export function ColorPicker({ selectedColors = [], onColorsChange, disabled = fa
                                                     className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
                                                     disabled={disabled}
                                                 />
-                                                <span className="text-xs text-gray-500">{index + 1}</span>
+                                                <span className="text-xs text-muted-foreground">{index + 1}</span>
                                             </div>
                                         ))}
                                     </div>

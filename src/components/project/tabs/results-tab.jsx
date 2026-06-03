@@ -626,7 +626,7 @@ export default function ResultsTab({ project }) {
                     // Show skeleton loaders instead of 0 values
                     <>
                         {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="bg-card border-2 border-[#e6e6e6] rounded-lg p-6 animate-pulse">
+                            <div key={i} className="bg-card border-2 border-border rounded-lg p-6 animate-pulse">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-10 h-10 bg-muted rounded-lg"></div>
                                     <div className="h-4 bg-muted rounded w-24"></div>
@@ -643,7 +643,7 @@ export default function ResultsTab({ project }) {
                                 <div className="w-10 h-10 bg-gold-solid/10 rounded-lg flex items-center justify-center">
                                     <ImageIcon className="w-5 h-5 text-gold-solid" />
                                 </div>
-                                <p className="text-sm text-[#708090]">Total Images</p>
+                                <p className="text-sm text-muted-foreground">Total Images</p>
                             </div>
                             <p className="text-3xl font-bold text-gold-solid">{modelStats?.total_generations ?? 0}</p>
                         </div>
@@ -653,7 +653,7 @@ export default function ResultsTab({ project }) {
                                 <div className="w-10 h-10 bg-gold-solid/10 rounded-lg flex items-center justify-center">
                                     <span className="text-xl"><Box className="w-5 h-5 text-gold-solid" /></span>
                                 </div>
-                                <p className="text-sm text-[#708090]">Products</p>
+                                <p className="text-sm text-muted-foreground">Products</p>
                             </div>
                             <p className="text-3xl font-bold text-gold-solid">{stats?.products ?? 0}</p>
                         </div>
@@ -663,7 +663,7 @@ export default function ResultsTab({ project }) {
                                 <div className="w-10 h-10 bg-gold-solid/10 rounded-lg flex items-center justify-center">
                                     <span className="text-xl"><User className="w-5 h-5 text-gold-solid" /></span>
                                 </div>
-                                <p className="text-sm text-[#708090]">Total Models Used</p>
+                                <p className="text-sm text-muted-foreground">Total Models Used</p>
                             </div>
                             <p className="text-3xl font-bold text-gold-solid">{modelStats?.total_models_used ?? 0}</p>
                         </div>
@@ -673,7 +673,7 @@ export default function ResultsTab({ project }) {
                                 <div className="w-10 h-10 bg-gold-solid/10 rounded-lg flex items-center justify-center">
                                     <span className="text-xl"><CheckCircle className="w-5 h-5 text-gold-solid" /></span>
                                 </div>
-                                <p className="text-sm text-[#708090]">Completion</p>
+                                <p className="text-sm text-muted-foreground">Completion</p>
                             </div>
                             <p className="text-3xl font-bold text-gold-solid">{stats?.completion ?? 0}%</p>
                         </div>
@@ -734,7 +734,7 @@ export default function ResultsTab({ project }) {
                             {/* Images Grid Skeleton - Matching ProductImagesDisplay grid layout */}
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                                 {Array.from({ length: 5 }).map((_, imgIdx) => (
-                                    <div key={imgIdx} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                                    <div key={imgIdx} className="relative aspect-square rounded-xl overflow-hidden bg-secondary border border-border">
                                         <div className="w-full h-full bg-muted"></div>
                                     </div>
                                 ))}
@@ -806,8 +806,8 @@ export default function ResultsTab({ project }) {
                 }}
                 className={`rounded-lg px-4 py-2 font-medium transition-all ${
                     isActive
-                        ? "border border-[#D99A25] bg-[#D99A25] text-[#11100D] shadow-[0_8px_22px_rgba(217,154,37,0.22)]"
-                        : "border border-[#3A2A12] bg-[#171613] text-[#8FA0B5] hover:border-[#D99A25]/60 hover:bg-[#1C1B18] hover:text-[#F4F1E9]"
+                        ? "border border-gold-solid bg-gold-solid text-primary-foreground shadow-[0_8px_22px_rgba(217,154,37,0.22)]"
+                        : "border border-border bg-card text-muted-foreground hover:border-gold-solid/60 hover:bg-accent hover:text-foreground"
                 }`}
             >
                 {filter.label}
@@ -821,7 +821,7 @@ export default function ResultsTab({ project }) {
                             <>
                                 <div className="grid grid-cols-4 gap-4 mb-6">
                                     {paginatedImages.map((image, index) => (
-                                        <div key={image.id || index} className="group relative aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shadow-sm hover:shadow-md transition-all">
+                                        <div key={image.id || index} className="group relative aspect-square rounded-xl overflow-hidden bg-secondary border border-border shadow-sm hover:shadow-md transition-all">
                                             <Image
                                                 src={image.image_url}
                                                 alt="Generated"
@@ -911,15 +911,15 @@ export default function ResultsTab({ project }) {
                                 )}
 
                                 {/* Results Count */}
-                                <div className="text-center mt-4 text-sm text-gray-500">
+                                <div className="text-center mt-4 text-sm text-muted-foreground">
                                     Showing {paginatedImages.length} of {filteredImages.length} images
                                 </div>
                             </>
                         ) : (
-                            <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
-                                <ImageIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                                <p className="text-gray-600 mb-2">No images found</p>
-                                <p className="text-sm text-gray-500">
+                            <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
+                                <ImageIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                                <p className="text-muted-foreground mb-2">No images found</p>
+                                <p className="text-sm text-muted-foreground">
                                     {imageFilter !== 'all' ? 'Try a different filter' : 'No generated images available'}
                                 </p>
                             </div>
@@ -932,7 +932,7 @@ export default function ResultsTab({ project }) {
                 <div className="mt-12">
                     <div className="grid grid-cols-4 gap-4 animate-pulse">
                         {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                            <div key={i} className="aspect-square bg-gray-100 rounded-xl"></div>
+                            <div key={i} className="aspect-square bg-secondary rounded-xl"></div>
                         ))}
                     </div>
                 </div>

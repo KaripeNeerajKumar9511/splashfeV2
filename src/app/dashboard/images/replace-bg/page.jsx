@@ -430,7 +430,7 @@ const BackgroundReplaceForm = () => {
                 <div className="mb-12">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-gold-gradient rounded-2xl shadow-lg">
-                            <Sparkles className="w-8 h-8 text-primary-foreground" />
+                            <Sparkles className="w-8 h-8 text-white" />
                         </div>
                         <div>
                             <h1 className="text-4xl font-bold text-foreground">
@@ -584,11 +584,11 @@ const BackgroundReplaceForm = () => {
 
                             {/* Background Color */}
                             {/* <div>
-                                <label className="block text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-2">
-                                    <Settings className="w-5 h-5 text-[#7753ff]" />
+                                <label className="block text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                                    <Settings className="w-5 h-5 text-gold-solid" />
                                     Background Color
                                 </label>
-                                <div className="flex items-center gap-4 p-4 bg-[#f8f7ff] rounded-2xl border border-[#e6e6e6]">
+                                <div className="flex items-center gap-4 p-4 bg-accent rounded-2xl border border-border">
                                     <input
                                         type="color"
                                         value={formData.backgroundColor}
@@ -599,7 +599,7 @@ const BackgroundReplaceForm = () => {
                                         type="text"
                                         value={formData.backgroundColor}
                                         onChange={(e) => setFormData((prev) => ({ ...prev, backgroundColor: e.target.value }))}
-                                        className="flex-1 px-4 py-3 border border-[#e6e6e6] rounded-xl bg-white text-[#1a1a1a] font-mono focus:outline-none focus:ring-2 focus:ring-[#7753ff] focus:border-transparent"
+                                        className="flex-1 px-4 py-3 border border-border rounded-xl bg-secondary text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                                     />
                                 </div>
                             </div> */}

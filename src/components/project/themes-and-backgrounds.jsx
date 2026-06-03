@@ -658,7 +658,7 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
                                                     e.stopPropagation()
                                                     window.open(image.url || image.cloud_url, '_blank')
                                                 }}
-                                                className="bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600 transition-colors"
+                                                className="bg-gold-solid text-white rounded-full p-1 hover:bg-gold-solid transition-colors"
                                                 title="View image"
                                             >
                                                 <Eye className="w-3 h-3" />
@@ -771,7 +771,7 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
                                                     e.stopPropagation()
                                                     window.open(image.url || image.cloud_url, '_blank')
                                                 }}
-                                                className="bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600 transition-colors"
+                                                className="bg-gold-solid text-white rounded-full p-1 hover:bg-gold-solid transition-colors"
                                                 title="View image"
                                             >
                                                 <Eye className="w-3 h-3" />
@@ -879,7 +879,7 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
                                                     e.stopPropagation()
                                                     window.open(image.url || image.cloud_url, '_blank')
                                                 }}
-                                                className="bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600 transition-colors"
+                                                className="bg-gold-solid text-white rounded-full p-1 hover:bg-gold-solid transition-colors"
                                                 title="View image"
                                             >
                                                 <Eye className="w-3 h-3" />
@@ -983,7 +983,7 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
                                                     e.stopPropagation()
                                                     window.open(image.url || image.cloud_url, '_blank')
                                                 }}
-                                                className="bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600 transition-colors"
+                                                className="bg-gold-solid text-white rounded-full p-1 hover:bg-gold-solid transition-colors"
                                                 title="View image"
                                             >
                                                 <Eye className="w-3 h-3" />
@@ -1012,7 +1012,7 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
                             <button
                                 type="button"
                                 onClick={closeComments}
-                                className="p-1 rounded hover:bg-gray-100"
+                                className="p-1 rounded hover:bg-secondary"
                                 aria-label="Close comments"
                             >
                                 <X className="w-4 h-4 text-muted-foreground" />

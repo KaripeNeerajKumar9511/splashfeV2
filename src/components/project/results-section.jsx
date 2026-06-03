@@ -11,28 +11,28 @@ export default function ResultsSection() {
 
     return (
         <div>
-            <h2 className="text-xl font-bold text-[#1a1a1a] mb-2">Results</h2>
-            <p className="text-[#737373] text-sm mb-8">Upload product image with white or transparent background</p>
+            <h2 className="text-xl font-bold text-foreground mb-2">Results</h2>
+            <p className="text-muted-foreground text-sm mb-8">Upload product image with white or transparent background</p>
 
             {resultGroups.map((group) => (
                 <div key={group.id} className="mb-10">
                     <div className="grid grid-cols-6 gap-4">
                         {/* Original Image */}
                         <div>
-                            <p className="text-sm font-semibold text-[#1a1a1a] mb-3">Original Image</p>
-                            <div className="rounded-lg overflow-hidden border border-[#e6e6e6]">
+                            <p className="text-sm font-semibold text-foreground mb-3">Original Image</p>
+                            <div className="rounded-lg overflow-hidden border border-border">
                                 <img src="/woman-portrait-original.jpg" alt="Original" className="w-full h-24 object-cover" />
                             </div>
                         </div>
 
                         {/* Results Label */}
                         <div className="col-span-5">
-                            <p className="text-sm font-semibold text-[#1a1a1a] mb-3">Results</p>
+                            <p className="text-sm font-semibold text-foreground mb-3">Results</p>
                             <div className="grid grid-cols-5 gap-4">
                                 {resultImages.map((img, idx) => (
                                     <div
                                         key={idx}
-                                        className="rounded-lg overflow-hidden border border-[#e6e6e6] hover:shadow-md transition-shadow"
+                                        className="rounded-lg overflow-hidden border border-border hover:shadow-md transition-shadow"
                                     >
                                         <img
                                             src={img || "/placeholder.svg"}

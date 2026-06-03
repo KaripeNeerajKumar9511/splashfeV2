@@ -459,7 +459,7 @@ export function ColorPalette({ showSuggestions = false, collectionData, project,
                                         <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); window.open(image.url || image.cloud_url, "_blank") }}
-                                                className="bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600 transition-colors"
+                                                className="bg-gold-solid text-white rounded-full p-1 hover:bg-gold-solid transition-colors"
                                                 title="View image"
                                             >
                                                 <Eye className="w-3 h-3" />
@@ -535,7 +535,7 @@ export function ColorPalette({ showSuggestions = false, collectionData, project,
                                         <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); window.open(image.url || image.cloud_url, "_blank") }}
-                                                className="bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600 transition-colors"
+                                                className="bg-gold-solid text-white rounded-full p-1 hover:bg-gold-solid transition-colors"
                                                 title="View image"
                                             >
                                                 <Eye className="w-3 h-3" />
@@ -564,10 +564,10 @@ export function ColorPalette({ showSuggestions = false, collectionData, project,
                             <button
                                 type="button"
                                 onClick={closeComments}
-                                className="p-1 rounded hover:bg-gray-100"
+                                className="p-1 rounded hover:bg-secondary"
                                 aria-label="Close comments"
                             >
-                                <X className="w-4 h-4 text-[#666]" />
+                                <X className="w-4 h-4 text-muted-foreground" />
                             </button>
                         </div>
 
@@ -577,18 +577,18 @@ export function ColorPalette({ showSuggestions = false, collectionData, project,
                                     <p className="text-xs text-muted-foreground">No comments yet.</p>
                                 ) : (
                                     currentComments.map((comment) => (
-                                        <div key={comment.id} className="border border-border rounded-md p-2 bg-[#fafafa]">
+                                        <div key={comment.id} className="border border-border rounded-md p-2 bg-muted">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="min-w-0">
-                                                    <p className="text-xs font-medium text-[#444]">
+                                                    <p className="text-xs font-medium text-muted-foreground">
                                                         {(comment.authorName || "Member")} • {formatRelativeCommentTime(comment.createdAt, nowMs)}
                                                     </p>
                                                     <p className="text-sm text-foreground break-words">{comment.comment}</p>
                                                     {Array.isArray(comment.replies) && comment.replies.length > 0 && (
                                                         <div className="mt-2 pl-3 border-l border-border space-y-2">
                                                             {comment.replies.map((reply) => (
-                                                                <div key={reply.id} className="bg-card border border-[#f0f0f0] rounded p-2">
-                                                                    <p className="text-xs font-medium text-[#555]">
+                                                                <div key={reply.id} className="bg-card border border-border rounded p-2">
+                                                                    <p className="text-xs font-medium text-muted-foreground">
                                                                         {(reply.authorName || "Member")} • {formatRelativeCommentTime(reply.createdAt, nowMs)}
                                                                     </p>
                                                                     <p className="text-sm text-foreground break-words">{reply.comment}</p>
@@ -619,7 +619,7 @@ export function ColorPalette({ showSuggestions = false, collectionData, project,
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setReplyingToCommentId(null)}
-                                                                    className="px-2 py-1 text-xs rounded-md border border-border text-[#555] hover:bg-secondary"
+                                                                    className="px-2 py-1 text-xs rounded-md border border-border text-muted-foreground hover:bg-secondary"
                                                                 >
                                                                     Cancel
                                                                 </button>

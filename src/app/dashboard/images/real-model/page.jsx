@@ -502,8 +502,8 @@ export default function RealModelForm() {
                                             {t("images.newImage")}
                                         </button>
                                     </div>
-                                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                        <p className="text-blue-700 text-sm flex items-center gap-2">
+                                    <div className="bg-accent border border-border rounded-xl p-4">
+                                        <p className="text-muted-foreground text-sm flex items-center gap-2">
                                             <Sparkles className="w-4 h-4" />
                                             {t("images.clickRegenerateToModify")}
                                         </p>
@@ -566,9 +566,9 @@ export default function RealModelForm() {
 
                             {/* Original Prompt */}
                             {result.prompt && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                    <p className="text-xs font-semibold text-blue-900 mb-2">{t("images.originalPrompt")}:</p>
-                                    <p className="text-sm text-blue-700">{result.prompt}</p>
+                                <div className="bg-accent border border-border rounded-xl p-4">
+                                    <p className="text-xs font-semibold text-foreground mb-2">{t("images.originalPrompt")}:</p>
+                                    <p className="text-sm text-muted-foreground">{result.prompt}</p>
                                 </div>
                             )}
 

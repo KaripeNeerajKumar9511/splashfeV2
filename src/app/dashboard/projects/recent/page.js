@@ -145,7 +145,7 @@ export default function ProjectsRecentPage() {
             case 'white_background':
                 return 'bg-muted text-foreground';
             case 'background_replace':
-                return 'bg-blue-100 text-blue-700';
+                return 'bg-accent text-muted-foreground';
             case 'model_image':
             case 'model_with_ornament':
             case 'real_model':
@@ -235,7 +235,7 @@ export default function ProjectsRecentPage() {
                 {history.length === 0 && !loading ? (
                     <div className="text-center py-12">
                         <div className="w-24 h-24 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
-                            <Clock className="w-12 h-12 text-gray-400" />
+                            <Clock className="w-12 h-12 text-muted-foreground" />
                         </div>
                         <h3 className="text-lg font-semibold text-foreground mb-2">No recent project activity</h3>
                         <p className="text-muted-foreground mb-6">
@@ -275,7 +275,7 @@ export default function ProjectsRecentPage() {
                                                 className="w-full h-full flex items-center justify-center bg-muted"
                                                 style={{ display: item.image_url ? 'none' : 'flex' }}
                                             >
-                                                <ImageIcon className="w-8 h-8 text-gray-400" />
+                                                <ImageIcon className="w-8 h-8 text-muted-foreground" />
                                             </div>
                                         </div>
                                     </div>
@@ -289,13 +289,13 @@ export default function ProjectsRecentPage() {
                                                     {getImageTypeLabel(item.image_type)}
                                                 </div>
                                                 {item.type === 'project_image' && item.project && (
-                                                    <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium">
+                                                    <div className="flex items-center gap-1 px-2 py-1 bg-accent text-muted-foreground rounded-lg text-xs font-medium">
                                                         <FolderOpen className="w-3 h-3" />
                                                         {item.project.name}
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-1 text-sm text-gray-500">
+                                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                                 <Clock className="w-4 h-4" />
                                                 {formatDate(item.created_at)}
                                             </div>
@@ -335,7 +335,7 @@ export default function ProjectsRecentPage() {
                                                         link.download = `image-${item.id}.png`;
                                                         link.click();
                                                     }}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-gray-50 rounded-lg transition-colors"
+                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                                                 >
                                                     <Download className="w-4 h-4" />
                                                     Download
@@ -345,7 +345,7 @@ export default function ProjectsRecentPage() {
                                             {item.type === 'project_image' && item.project && (
                                                 <Link
                                                     href={`/dashboard/projects/${item.project.id}`}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-gold-solid hover:text-muted-foreground hover:bg-accent rounded-lg transition-colors"
                                                 >
                                                     <FolderOpen className="w-4 h-4" />
                                                     View Project

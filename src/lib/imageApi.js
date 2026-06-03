@@ -342,7 +342,7 @@ function ImageRegenerate({ imageId, onSuccess }) {
       <button
         onClick={handleRegenerate}
         disabled={loading || !prompt.trim()}
-        className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+        className="mt-3 px-4 py-2 bg-gold-solid text-white rounded hover:bg-gold-to disabled:bg-gray-400"
       >
         {loading ? 'Regenerating...' : 'Regenerate Image'}
       </button>
@@ -417,12 +417,12 @@ function ImageGallery() {
             />
             
             <div className="p-3">
-              <p className="text-sm text-gray-600">{image.type}</p>
-              <p className="text-xs text-gray-500 mt-1">{image.prompt}</p>
+              <p className="text-sm text-muted-foreground">{image.type}</p>
+              <p className="text-xs text-muted-foreground mt-1">{image.prompt}</p>
               
               <button
                 onClick={() => setSelectedImage(image)}
-                className="mt-2 w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="mt-2 w-full py-2 bg-gold-solid text-white rounded hover:bg-gold-to"
               >
                 Regenerate
               </button>
@@ -433,7 +433,7 @@ function ImageGallery() {
 
       {selectedImage && (
         <div className="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg max-w-lg w-full">
+          <div className="bg-card p-6 rounded-lg max-w-lg w-full">
             <h3 className="text-xl font-bold mb-4">Regenerate Image</h3>
             
             <img
@@ -442,7 +442,7 @@ function ImageGallery() {
               className="w-full h-64 object-cover rounded mb-4"
             />
             
-            <p className="text-sm text-gray-600 mb-2">
+            <p className="text-sm text-muted-foreground mb-2">
               Original prompt: {selectedImage.original_prompt || selectedImage.prompt}
             </p>
             
@@ -457,7 +457,7 @@ function ImageGallery() {
             <div className="flex gap-2">
               <button
                 onClick={() => handleRegenerate(selectedImage.id)}
-                className="flex-1 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="flex-1 py-2 bg-gold-solid text-white rounded hover:bg-gold-to"
               >
                 Regenerate
               </button>
@@ -466,7 +466,7 @@ function ImageGallery() {
                   setSelectedImage(null);
                   setRegeneratePrompt('');
                 }}
-                className="flex-1 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                className="flex-1 py-2 bg-gray-300 text-muted-foreground rounded hover:bg-gray-400"
               >
                 Cancel
               </button>

@@ -18,8 +18,8 @@ export function SelectedColorsDisplay({ collectionData, canEdit = true }) {
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-2">
-                <Palette className="w-5 h-5 text-[#884cff]" />
-                <h3 className="font-bold text-[#1a1a1a] text-lg">Selected Colors</h3>
+                <Palette className="w-5 h-5 text-gold-solid" />
+                <h3 className="font-bold text-foreground text-lg">Selected Colors</h3>
             </div>
 
             <div className="space-y-3">
@@ -27,14 +27,14 @@ export function SelectedColorsDisplay({ collectionData, canEdit = true }) {
                 {hasPickedColors && (
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                            <Palette className="w-4 h-4 text-[#884cff]" />
-                            <p className="text-sm font-medium text-[#1a1a1a]">Picked Colors ({item.picked_colors.length})</p>
+                            <Palette className="w-4 h-4 text-gold-solid" />
+                            <p className="text-sm font-medium text-foreground">Picked Colors ({item.picked_colors.length})</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {item.picked_colors.map((color, index) => (
                                 <div key={index} className="relative group">
                                     <div
-                                        className="w-8 h-8 rounded border border-gray-300"
+                                        className="w-8 h-8 rounded border border-border"
                                         style={{
                                             background: color.includes('gradient') ? color : undefined,
                                             backgroundColor: color.includes('gradient') ? 'transparent' : color
@@ -51,8 +51,8 @@ export function SelectedColorsDisplay({ collectionData, canEdit = true }) {
                 {hasUploadedColors && (
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                            <Upload className="w-4 h-4 text-[#884cff]" />
-                            <p className="text-sm font-medium text-[#1a1a1a]">Uploaded Color Images ({item.uploaded_color_images.length})</p>
+                            <Upload className="w-4 h-4 text-gold-solid" />
+                            <p className="text-sm font-medium text-foreground">Uploaded Color Images ({item.uploaded_color_images.length})</p>
                         </div>
                         <div className="grid grid-cols-4 gap-2">
                             {item.uploaded_color_images.map((image, index) => (
@@ -72,12 +72,12 @@ export function SelectedColorsDisplay({ collectionData, canEdit = true }) {
                 {hasSelectedColors && (
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                            <Palette className="w-4 h-4 text-gray-500" />
-                            <p className="text-sm font-medium text-gray-600">Selected Suggestions ({item.selected_colors.length})</p>
+                            <Palette className="w-4 h-4 text-muted-foreground" />
+                            <p className="text-sm font-medium text-muted-foreground">Selected Suggestions ({item.selected_colors.length})</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {item.selected_colors.map((color, index) => (
-                                <div key={index} className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-700">
+                                <div key={index} className="px-2 py-1 bg-secondary rounded text-xs text-muted-foreground">
                                     {color}
                                 </div>
                             ))}
@@ -88,8 +88,8 @@ export function SelectedColorsDisplay({ collectionData, canEdit = true }) {
                 {/* Color Instructions */}
                 {item.color_instructions && (
                     <div className="space-y-2">
-                        <p className="text-sm font-medium text-[#1a1a1a]">Color Instructions:</p>
-                        <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">{item.color_instructions}</p>
+                        <p className="text-sm font-medium text-foreground">Color Instructions:</p>
+                        <p className="text-sm text-muted-foreground bg-muted p-2 rounded">{item.color_instructions}</p>
                     </div>
                 )}
             </div>

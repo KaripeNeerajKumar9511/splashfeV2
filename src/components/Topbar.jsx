@@ -156,13 +156,13 @@ export function Topbar({ collapsed }) {
     const getRoleBadgeColor = (role) => {
         switch (role?.toLowerCase()) {
             case "owner":
-                return "bg-purple-600 text-white";
+                return "bg-gold-solid text-primary-foreground";
             case "admin":
-                return "bg-indigo-600 text-white";
+                return "bg-gold-to text-primary-foreground";
             case "editor":
-                return "bg-blue-600 text-white";
+                return "bg-secondary text-foreground";
             default:
-                return "bg-gray-500 text-white";
+                return "bg-muted text-muted-foreground";
         }
     };
 

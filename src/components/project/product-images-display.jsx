@@ -1078,9 +1078,9 @@ export function ProductImagesDisplay({
 
                         {/* Example Prompts - Only show when not using different model */}
                         {!useDifferentModel && (
-                            <div className="mb-6 p-4 bg-muted rounded-xl border border-border">
+                            <div className="mb-6 p-4 bg-muted rounded-xl border border-border text-foreground">
                                 <p className="text-xs font-semibold text-foreground mb-3">💡 Quick Enhancement Ideas:</p>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap gap-2  border-gold-muted text-gold-solid">
                                     {[
                                         "Make colors more vibrant and saturated",
                                         "Add soft shadows and depth",
@@ -1093,7 +1093,7 @@ export function ProductImagesDisplay({
                                         <button
                                             key={idx}
                                             onClick={() => setCustomPrompt(example)}
-                                            className="text-xs px-3 py-2 bg-card border border-input rounded-lg hover:border-gold-solid hover:text-gold-solid transition-colors font-medium"
+                                            className="text-xs px-3 py-2 bg-card border border-input rounded-lg hover:border-gold-muted hover:text-foreground transition-colors font-medium"
                                         >
                                             {example}
                                         </button>
@@ -1111,7 +1111,7 @@ export function ProductImagesDisplay({
                                     setCustomPrompt("")
                                     setError(null)
                                 }}
-                                className="px-6"
+                                className="px-6 text-foreground hover:text-gold-solid"
                             >
                                 Cancel
                             </Button>

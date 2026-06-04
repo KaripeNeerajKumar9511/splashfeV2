@@ -620,7 +620,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                     <Button
                         onClick={() => fileInputRef.current?.click()}
                         variant="outline"
-                        className="mb-4"
+                        className="mb-4 text-foreground"
                         disabled={!canEdit}
                         title={canEdit ? "" : "You need Editor or Owner role to upload products"}
                     >

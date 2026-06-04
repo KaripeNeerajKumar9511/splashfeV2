@@ -646,15 +646,15 @@ export function ProductImagesDisplay({
 
                                                                         {showRegenerate && canEdit && (
                                                                             <div className="flex gap-2 justify-center">
-                                                                                <Button
+                                                                                {/* <Button
                                                                                     size="sm"
                                                                                     className="bg-gold-solid hover:brightness-110 text-white gap-1 text-xs px-2 py-1 h-auto"
                                                                                     onClick={() => handleEnhance(product, imageToShow)}
                                                                                     disabled={isRegenerating}
                                                                                 >
-                                                                                    {/* <RefreshCw className={`w-3 h-3 ${isRegenerating ? "animate-spin" : ""}`} /> */}
+                                                                                    {/* <RefreshCw className={`w-3 h-3 ${isRegenerating ? "animate-spin" : ""}`} /> *
                                                                                     {isRegenerating ? 'Processing...' : 'Enhance'}
-                                                                                </Button>
+                                                                                </Button> */}
                                                                                 <Button
                                                                                     size="sm"
                                                                                     className="bg-gold-solid hover:brightness-110 text-white gap-1 text-xs px-2 py-1 h-auto"
@@ -682,12 +682,12 @@ export function ProductImagesDisplay({
                                                                         ? "text-gold-solid"
                                                                         : "text-green-600"
                                                                     }`}>
-                                                                    {currentIndex === 0
+                                                                    {/* {currentIndex === 0
                                                                         ? img.type?.replace("_", " ") || "Generated"
                                                                         : versionType === 'enhanced'
                                                                             ? 'Enhanced'
                                                                             : `Regenerated v${currentIndex}`
-                                                                    }
+                                                                    } */}
                                                                 </p>
                                                                 {currentIndex > 0 && (
                                                                     <p className={`text-xs ${versionType === 'enhanced' ? 'text-gold-solid' : 'text-green-500'}`}>
@@ -728,18 +728,18 @@ export function ProductImagesDisplay({
                                                                     });
 
                                                                     // Add enhanced models
-                                                                    img.enhanced_images?.forEach(enhanced => {
-                                                                        if (enhanced.model_used?.type) {
-                                                                            const modelIdentifier = enhanced.model_used.cloud || enhanced.model_used.local;
-                                                                            if (modelIdentifier) {
-                                                                                if (enhanced.model_used.type === 'ai') {
-                                                                                    uniqueAIModels.add(modelIdentifier);
-                                                                                } else if (enhanced.model_used.type === 'real') {
-                                                                                    uniqueRealModels.add(modelIdentifier);
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    });
+                                                                    // img.enhanced_images?.forEach(enhanced => {
+                                                                    //     if (enhanced.model_used?.type) {
+                                                                    //         const modelIdentifier = enhanced.model_used.cloud || enhanced.model_used.local;
+                                                                    //         if (modelIdentifier) {
+                                                                    //             if (enhanced.model_used.type === 'ai') {
+                                                                    //                 uniqueAIModels.add(modelIdentifier);
+                                                                    //             } else if (enhanced.model_used.type === 'real') {
+                                                                    //                 uniqueRealModels.add(modelIdentifier);
+                                                                    //             }
+                                                                    //         }
+                                                                    //     }
+                                                                    // });
 
                                                                     const aiCount = uniqueAIModels.size;
                                                                     const realCount = uniqueRealModels.size;

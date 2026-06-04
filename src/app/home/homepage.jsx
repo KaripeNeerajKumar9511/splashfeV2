@@ -407,6 +407,79 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   }
 }
 
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 40px 60px;
+  border-top: 1px solid rgba(201, 168, 93, 0.1);
+
+  background: #0b0805;
+}
+
+/* LOGO */
+.footer-logo {
+  flex-shrink: 0;
+}
+
+.footer-logo img {
+  width: 180px;
+  height: auto;
+  display: block;
+}
+
+/* COPYRIGHT */
+.footer-center {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* LINKS */
+.flinks {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.flinks a {
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.flinks a:hover {
+  color: #d4af37;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    flex-direction: column;
+    gap: 24px;
+
+    text-align: center;
+    padding: 32px 24px;
+  }
+
+  .footer-logo img {
+    width: 140px;
+  }
+
+  .flinks {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 18px;
+  }
+
+  .footer-center {
+    order: 3;
+  }
+}
       `}</style>
 
 {/* HERO */}
@@ -791,16 +864,28 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   <p className="cta-note">No credit card · No prompts · Just your jewelry and Splash</p>
 </section>
 
-{/* FOOTER */}
-<footer>
-  <div className="fl">Splash<span>.</span></div>
+<footer className="footer">
+  <div className="footer-logo">
+    <img src="/images/SplashLogoPNG.png" alt="Splash" />
+  </div>
+
+
+
   <ul className="flinks">
-    <li><a href="https://www.instagram.com/splash_ai_studios/">Instagram</a></li>
+    <li>
+      <a href="https://www.instagram.com/splash_ai_studios/">
+        Instagram
+      </a>
+    </li>
     <li><a href="#">Privacy</a></li>
     <li><a href="#">Terms</a></li>
     <li><a href="/contact">Contact</a></li>
   </ul>
-  <div className="fc">© 2025 Splash AI Studio</div>
+
+  <div className="footer-center">
+    © 2025 Splash AI Studio
+  </div>
+
 </footer>
     </div>
   );

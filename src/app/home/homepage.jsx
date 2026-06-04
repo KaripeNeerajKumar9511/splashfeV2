@@ -485,14 +485,15 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
       </div>
       <div className="sc-lbl">Multi-piece</div>
     </div>
-    <div className="sc c-amber">
+    {/* <div className="sc c-amber">
       <div className="sc-inner">
         <svg width="90" height="60" viewBox="0 0 90 60" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" strokeLinecap="round">
           <rect x="8" y="10" width="20" height="40" rx="3"/><rect x="34" y="16" width="20" height="34" rx="3"/><rect x="60" y="12" width="20" height="38" rx="3"/>
         </svg>
       </div>
       <div className="sc-lbl">Bulk catalog</div>
-    </div>
+      
+    </div> */}
   </div>
 </div>
 

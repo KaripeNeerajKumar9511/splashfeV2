@@ -173,7 +173,6 @@ class ApiService {
     }
 
     async register(full_name, username, email, password) {
-        console.log(full_name, username, email, password)
         return this.request('/api/register/', {
             method: 'POST',
             body: JSON.stringify({ full_name, username, email, password }),

@@ -10,7 +10,7 @@ import { usePortalDevice } from "@/hooks/usePortalDevice";
 import { Monitor, Smartphone, Tablet } from "lucide-react";
 
 const inputClassName =
-    "w-full px-4 py-3 bg-input border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
+    "w-full min-h-11 px-4 py-3 text-base sm:text-sm bg-input border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 
 export default function LoginForm() {
     const { t } = useLanguage();
@@ -19,22 +19,25 @@ export default function LoginForm() {
     const [message, setMessage] = useState("");
     const { login } = useAuth();
     const [loading, setLoading] = useState(false);
-    const [mobileBlocked, setMobileBlocked] = useState(false);
     const device = usePortalDevice();
+    const showMobileBlock = device.ready && device.isMobile;
 
     const handleSignIn = async (e) => {
         e.preventDefault();
         setMessage("");
-        setMobileBlocked(false);
 
-        if (device.ready && device.isMobile) {
-            setMobileBlocked(true);
+        if (showMobileBlock) {
+            return;
+        }
+
+        if (!email.trim() || !password) {
+            setMessage(t("auth.loginFailed"));
             return;
         }
 
         setLoading(true);
         try {
-            await login(email, password);
+            await login(email.trim(), password);
         } catch (err) {
             setMessage(t("auth.loginFailed"));
         } finally {
@@ -45,15 +48,15 @@ export default function LoginForm() {
     return (
         <div className="w-full">
             <div className="mb-6 sm:mb-8 text-left">
-                <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">
                     {t("auth.login")}
                 </h1>
-                <p className="text-base sm:text-lg text-muted-foreground">
+                <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
                     {t("auth.stayConnected")}
                 </p>
             </div>
 
-            <form onSubmit={handleSignIn} className="space-y-5 sm:space-y-6">
+            <form onSubmit={handleSignIn} className="space-y-4 sm:space-y-5 md:space-y-6">
                 <div className="space-y-2">
                     <label
                         htmlFor="email"
@@ -69,6 +72,9 @@ export default function LoginForm() {
                         onChange={(e) => setEmail(e.target.value)}
                         className={inputClassName}
                         autoComplete="email"
+                        inputMode="email"
+                        required
+                        disabled={showMobileBlock}
                     />
                 </div>
 
@@ -87,21 +93,23 @@ export default function LoginForm() {
                         onChange={(e) => setPassword(e.target.value)}
                         className={inputClassName}
                         autoComplete="current-password"
+                        required
+                        disabled={showMobileBlock}
                     />
                 </div>
 
-                {!mobileBlocked && (
+                {!showMobileBlock && (
                     <div className="text-right">
                         <Link
                             href="/forgot-password"
-                            className="text-sm font-medium text-gold-solid hover:brightness-110 transition-opacity"
+                            className="text-sm font-medium text-gold-solid hover:brightness-110 transition-opacity touch-manipulation"
                         >
                             {t("auth.forgotPassword")}
                         </Link>
                     </div>
                 )}
 
-                {mobileBlocked && (
+                {showMobileBlock && (
                     <div
                         role="alert"
                         className="rounded-xl border border-gold-muted/50 bg-card/90 p-4 sm:p-5 space-y-4"
@@ -144,15 +152,15 @@ export default function LoginForm() {
 
                 {message && (
                     <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                        <p className="text-sm text-red-400">{message}</p>
+                        <p className="text-sm text-red-400 break-words">{message}</p>
                     </div>
                 )}
 
                 <Button
                     type="submit"
                     variant="brand"
-                    className="w-full py-3 h-auto rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={loading}
+                    className="w-full min-h-11 py-3 h-auto rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-sm"
+                    disabled={loading || showMobileBlock}
                 >
                     {loading ? t("auth.signingIn") : t("auth.signin")}
                 </Button>
@@ -161,7 +169,7 @@ export default function LoginForm() {
             <div className="mt-6 sm:mt-8 text-center">
                 <p className="text-sm text-muted-foreground">
                     {t("auth.dontHaveAccount")}{" "}
-                    <Link href="/signup" className="font-semibold text-gold-solid hover:brightness-110">
+                    <Link href="/signup" className="font-semibold text-gold-solid hover:brightness-110 touch-manipulation">
                         {t("auth.signup")}
                     </Link>
                 </p>

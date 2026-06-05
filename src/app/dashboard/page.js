@@ -125,23 +125,14 @@ export default function Dashboard() {
             {/* Welcome */}
             <section className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-md p-5 md:p-6 lg:p-8">
                 <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-gradient-to-tr from-gold-solid/20 to-gold-muted/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="relative z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                    <div>
-                        <p className="text-sm text-muted-foreground mb-1">{greeting}</p>
-                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
-                            {getUserDisplayName()}
-                        </h1>
-                        <p className="text-sm md:text-base text-muted-foreground mt-2 max-w-xl">
-                            {t("images.createStunningPhotography")}
-                        </p>
-                    </div>
-                    <Link
-                        href="/dashboard/images"
-                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gold-gradient text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity shrink-0"
-                    >
-                        {t("dashboard.individualGenerator")}
-                        <ArrowRight className="w-4 h-4" />
-                    </Link>
+                <div className="relative z-10">
+                    <p className="text-sm text-muted-foreground mb-1">{greeting}</p>
+                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
+                        {getUserDisplayName()}
+                    </h1>
+                    <p className="text-sm md:text-base text-muted-foreground mt-2 max-w-xl">
+                        {t("images.createStunningPhotography")}
+                    </p>
                 </div>
             </section>
 

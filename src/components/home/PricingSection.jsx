@@ -110,13 +110,13 @@ const PricingSection = () => {
                 </div>
                 <div>
                   <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Free Plan</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">For a limited time, you can get 5 credits for free.</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">For a limited time, you can get 10 credits for free.</p>
                 </div>
               </div>
 
               <div className="mb-3 sm:mb-4">
                 <span className="text-3xl sm:text-4xl font-bold text-foreground">Free</span>
-                <span className="text-sm sm:text-base text-muted-foreground ml-2">for 5 credits</span>
+                <span className="text-sm sm:text-base text-muted-foreground ml-2">for 10 credits</span>
               </div>
 
               <button
@@ -134,7 +134,7 @@ const PricingSection = () => {
                     </li>
                     <li className="flex items-start gap-2 sm:gap-3">
                       <Check className="w-4 h-4 sm:w-5 sm:h-5 text-gold-solid mt-0.5 flex-shrink-0" />
-                      <span className="text-sm sm:text-base text-muted-foreground"> Get 5 credits for free</span>
+                      <span className="text-sm sm:text-base text-muted-foreground"> Get 10 credits for free</span>
                     </li>
                     <li className="flex items-start gap-2 sm:gap-3">
                       <Check className="w-4 h-4 sm:w-5 sm:h-5 text-gold-solid mt-0.5 flex-shrink-0" />

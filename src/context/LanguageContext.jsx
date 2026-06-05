@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiService } from '@/lib/api';
+import enTranslations from '@/locales/en.json';
 
 const LanguageContext = createContext();
 
@@ -37,7 +38,7 @@ export const LanguageProvider = ({ children }) => {
     }
     return 'en';
   });
-  const [translations, setTranslations] = useState({});
+  const [translations, setTranslations] = useState(enTranslations);
 
   // Load translations immediately on mount
   useEffect(() => {
@@ -153,8 +154,10 @@ export const LanguageProvider = ({ children }) => {
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
       } else {
-        console.warn(`Translation key not found: ${key}`);
-        return key; // Return the key if translation not found
+        if (Object.keys(translations).length > 0) {
+          console.warn(`Translation key not found: ${key}`);
+        }
+        return key;
       }
     }
     

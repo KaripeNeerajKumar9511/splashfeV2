@@ -24,7 +24,7 @@ import {
 import { Label } from "@/components/ui/label";
 
 const inputClassName =
-    "w-full px-4 py-3 bg-input border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
+    "w-full min-h-11 px-4 py-3 text-base sm:text-sm bg-input border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 
 export default function SignupForm() {
     const { language, changeLanguage, t } = useLanguage();
@@ -145,19 +145,29 @@ export default function SignupForm() {
         }
 
         try {
-            await apiService.register(
+            const response = await apiService.register(
                 formData.full_name,
                 formData.username,
                 formData.email,
                 formData.password
             );
 
-            // ✅ Move to OTP step
             setStep("otp");
-            setMessage(t("auth.otpSent"));
+            setMessage(
+                response?.email_sent === false
+                    ? (response?.message || "Account created, but we couldn't send the verification email. Use Resend OTP to try again.")
+                    : (response?.message || t("auth.otpSent"))
+            );
 
         } catch (err) {
-            setMessage(err.message);
+            const msg = err.message || "";
+            if (msg.toLowerCase().includes("already exists") && msg.toLowerCase().includes("log in")) {
+                setMessage(msg);
+            } else if (msg.toLowerCase().includes("already exists") || msg.toLowerCase().includes("already taken")) {
+                setMessage(`${msg} Try logging in or use a different email/username.`);
+            } else {
+                setMessage(msg || "Signup failed. Please try again.");
+            }
         } finally {
             setLoading(false);
         }
@@ -226,9 +236,9 @@ export default function SignupForm() {
 
     return (
         <div className="w-full">
-            <div className="mb-6 sm:mb-8 text-left">
-                <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">{t("auth.signup")}</h1>
-                <p className="text-base sm:text-lg text-muted-foreground">{t("auth.createAccount")}</p>
+            <div className="mb-5 sm:mb-8 text-left">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">{t("auth.signup")}</h1>
+                <p className="text-sm sm:text-base md:text-lg text-muted-foreground">{t("auth.createAccount")}</p>
             </div>
 
             {/* Language Selector */}
@@ -247,7 +257,7 @@ export default function SignupForm() {
                 </Select>
             </div> */}
             {step === "signup" ? (
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                     <div className="space-y-2">
                         <label className="block text-sm font-semibold text-foreground">{t("auth.fullName")}</label>
                         <Input
@@ -256,6 +266,7 @@ export default function SignupForm() {
                             value={formData.full_name}
                             onChange={handleChange}
                             placeholder={t("auth.johnDoe")}
+                            autoComplete="name"
                             required
                             className={inputClassName}
                         />
@@ -269,6 +280,7 @@ export default function SignupForm() {
                             value={formData.username}
                             onChange={handleChange}
                             placeholder={t("auth.johndoe123")}
+                            autoComplete="username"
                             required
                             className={inputClassName}
                         />
@@ -282,6 +294,8 @@ export default function SignupForm() {
                             value={formData.email}
                             onChange={handleChange}
                             placeholder={t("auth.exampleEmail")}
+                            autoComplete="email"
+                            inputMode="email"
                             required
                             className={inputClassName}
                         />
@@ -295,6 +309,8 @@ export default function SignupForm() {
                             value={formData.password}
                             onChange={handleChange}
                             placeholder={t("auth.atLeast8Chars")}
+                            autoComplete="new-password"
+                            minLength={8}
                             required
                             className={inputClassName}
                         />
@@ -307,6 +323,8 @@ export default function SignupForm() {
                             value={formData.confirm_password}
                             onChange={handleChange}
                             placeholder={t("auth.confirmYourPassword")}
+                            autoComplete="new-password"
+                            minLength={8}
                             required
                             className={inputClassName}
                         />
@@ -351,27 +369,30 @@ export default function SignupForm() {
                         type="submit"
                         variant="brand"
                         disabled={loading}
-                        className="w-full py-3 h-auto font-semibold rounded-full"
+                        className="w-full min-h-11 py-3 h-auto font-semibold rounded-full text-base sm:text-sm"
                     >
                         {loading ? t("auth.signingUp") : t("auth.signup")}
                     </Button>
                 </form>
             ) : (
-                <form onSubmit={handleVerifyOtp} className="space-y-5">
-                    <h2 className="text-3xl font-bold text-foreground">
+                <form onSubmit={handleVerifyOtp} className="space-y-4 sm:space-y-5">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
                         {t("auth.verifyEmail")}
                     </h2>
 
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground break-words">
                         {t("auth.otpSentTo")} <strong>{formData.email}</strong>
                     </p>
 
                     <Input
                         type="text"
+                        name="otp"
                         value={otp}
                         onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                         maxLength={6}
                         placeholder={t("auth.enterOtp")}
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
                         className={`${inputClassName} text-center tracking-widest text-lg`}
                         required
                     />
@@ -380,7 +401,7 @@ export default function SignupForm() {
                         type="submit"
                         variant="brand"
                         disabled={otpLoading || otp.length !== 6}
-                        className="w-full py-3 h-auto font-semibold rounded-full"
+                        className="w-full min-h-11 py-3 h-auto font-semibold rounded-full text-base sm:text-sm"
                     >
                         {otpLoading ? t("auth.verifying") : t("auth.verifyOtp")}
                     </Button>
@@ -397,7 +418,7 @@ export default function SignupForm() {
             )}
 
             {message && (
-                <p className={`mt-4 text-center text-sm ${message.includes("successfully") || message.includes("sent") || message.includes("verified")
+                <p className={`mt-4 text-center text-sm break-words px-1 ${message.includes("successfully") || message.includes("sent") || message.includes("verified")
                         ? "text-green-400"
                         : "text-red-400"
                     }`}>

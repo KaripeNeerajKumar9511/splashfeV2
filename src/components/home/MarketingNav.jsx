@@ -118,7 +118,7 @@ export default function MarketingNav({ isHome = false }) {
               {label}
             </a>
           ))}
-          <Link href="/login" className="btn-gold" onClick={closeMenu}>
+          <Link href="/signup" className="btn-gold" onClick={closeMenu}>
             Start free
           </Link>
         </div>

@@ -282,19 +282,18 @@ const isHomePage = pathname === "/";
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 pt-[env(safe-area-inset-top,0px)] ${scrolled
         ? "bg-card/90 border-b border-border"
         : "bg-card/70 border-b border-border"
         }`}
     >
       <div className="max-w-screen-2xl mx-auto px-3 sm:px-4 lg:px-8">
-        <div className="flex items-center justify-between h-12 sm:h-14 lg:h-18">
-          {/* Logo - Mobile */}
-          <Link href="/" className="flex items-center justify-center gap-1 sm:gap-2 group">
+        <div className={`flex items-center justify-between ${isAuthPage ? "h-14" : "h-12 sm:h-14 lg:h-18"}`}>
+          <Link href="/" className="flex items-center justify-center gap-1 sm:gap-2 group min-w-0">
             <img
               src="/images/SplashLogoPNG.png"
               alt="Splash AI Studio"
-              className="h-16 w-auto object-contain hover:scale-105 "
+              className={`w-auto object-contain hover:scale-105 ${isAuthPage ? "h-10 sm:h-12" : "h-16"}`}
             />
           </Link>
 
@@ -316,14 +315,22 @@ const isHomePage = pathname === "/";
           {/* CTA Button - Desktop */}
           <div className="hidden md:block">
             <Link
-              href={isAuthPage ? "/" : "/login "}
+              href={isAuthPage ? "/" : "/signup"}
               className="inline-block px-4 py-2 text-sm lg:text-base font-medium text-primary-foreground bg-gold-gradient rounded-lg hover:brightness-110 "
             >
               {isAuthPage ? "Back to Home" : "Get Started for free"}
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Auth pages: back button on mobile instead of menu */}
+          {isAuthPage ? (
+            <Link
+              href="/"
+              className="md:hidden inline-flex items-center shrink-0 px-3 py-2 text-xs sm:text-sm font-medium text-primary-foreground bg-gold-gradient rounded-lg hover:brightness-110 touch-manipulation"
+            >
+              Back to Home
+            </Link>
+          ) : (
           <button
             className="md:hidden p-2 -mr-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -331,6 +338,7 @@ const isHomePage = pathname === "/";
           >
             {mobileMenuOpen ? <X size={20} className="sm:w-6 sm:h-6" /> : <Menu size={20} className="sm:w-6 sm:h-6" />}
           </button>
+          )}
         </div>
       </div>
 
@@ -349,7 +357,7 @@ const isHomePage = pathname === "/";
               </a>
             ))}
             <Link
-              href={isAuthPage ? "/" : "/login"}
+              href={isAuthPage ? "/" : "/signup"}
               className="block w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base font-medium text-primary-foreground bg-gold-gradient rounded-lg hover:brightness-110 transition-all text-center"
               onClick={() => setMobileMenuOpen(false)}
             >

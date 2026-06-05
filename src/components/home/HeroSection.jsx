@@ -19,7 +19,7 @@ const HeroSection = ({ hero: heroContent }) => {
   const heroImages = heroContent?.images?.length ? heroContent.images : defaultHeroImages;
   const title = heroContent?.title ?? "CAMPAIGN READY VISUALS, WITHOUT THE SHOOT";
   const ctaPrimaryText = heroContent?.cta_primary_text ?? "Try Free Splash AI";
-  const ctaPrimaryHref = heroContent?.cta_primary_href ?? "/login";
+  const ctaPrimaryHref = heroContent?.cta_primary_href ?? "/signup";
   const ctaSecondaryText = heroContent?.cta_secondary_text ?? "See Showcase";
   const ctaSecondaryHref = heroContent?.cta_secondary_href ?? "#showcase";
   const bottomText = heroContent?.bottom_text ?? "Moodboard to model shots to perfect retouches— Splash AI Studio turns your concepts into stunning, shoppable imagery.";

@@ -39,6 +39,8 @@
     "stayConnected": "Stay connected with us to see magic",
     "createAccount": "Create your account to get started",
     "loginFailed": "Login failed. Please check your credentials.",
+    "mobileLoginTitle": "Not available on mobile",
+    "mobileLoginBlocked": "The Splash AI Studio portal isn't available on mobile phones. Please log in on a tablet, PC, or laptop using the same email and password you entered here.",
     "passwordsNotMatch": "Passwords do not match",
     "acceptAllTerms": "Please accept all terms and conditions to continue",
     "signInWithGoogle": "Sign in with Google",
@@ -479,7 +481,11 @@
     "signin": "Sign in",
     "stayConnected": "Stay connected with us to see magic",
     "loginFailed": "Login failed. Please check your credentials.",
-    "createAccount": "Create your account to get started"
+    "passwordsNotMatch": "Passwords do not match",
+    "createAccount": "Create your account to get started",
+    "mobileLoginTitle": "Not available on mobile",
+    "mobileLoginBlocked": "The Splash AI Studio portal isn't available on mobile phones. Please log in on a tablet, PC, or laptop using the same email and password you entered here.",
+    "mobileLoginHint": "Use the same credentials on a supported device to continue."
 
   }
 }

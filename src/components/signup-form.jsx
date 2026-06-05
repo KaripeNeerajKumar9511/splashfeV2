@@ -86,20 +86,44 @@ export default function SignupForm() {
         }
     };
 
-    const handleViewContent = async (contentType) => {
+    const handleViewContent = async (contentType, e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        const titleKey =
+            contentType === "terms"
+                ? t("signup.termsAndConditions")
+                : t("signup.privacyPolicy");
+
+        setSelectedContent({
+            type: contentType,
+            title: titleKey,
+            content: null,
+        });
+        setIsDialogOpen(true);
+        setMessage("");
+
         try {
             const response = await apiService.getLegalContent(contentType);
             if (response && response.success && response.content) {
                 setSelectedContent({
                     type: contentType,
                     title: response.content.title,
-                    content: response.content.content
+                    content: response.content.content,
                 });
-                setIsDialogOpen(true);
+            } else {
+                throw new Error("No content returned");
             }
         } catch (err) {
             console.error("Failed to fetch legal content:", err);
-            setMessage(t("legal.failedToLoad"));
+            setSelectedContent({
+                type: contentType,
+                title: titleKey,
+                content: null,
+                error: t("legal.failedToLoad"),
+            });
         }
     };
 
@@ -157,18 +181,11 @@ export default function SignupForm() {
 
             // Check if verification was successful
             if (response && (response.token || response.message)) {
-                // ✅ Save token if returned
-                if (response.token) {
-                    localStorage.setItem("token", response.token);
-                }
-
-                // Show success message
                 setMessage(response.message || t("auth.emailVerified") || "Email verified successfully!");
 
-                // Redirect to dashboard after a short delay
                 setTimeout(() => {
                     router.push("/login");
-                }, 1000);
+                }, 1500);
             } else {
                 throw new Error(response?.error || t("auth.invalidOtp") || "Invalid OTP");
             }
@@ -208,10 +225,10 @@ export default function SignupForm() {
 
 
     return (
-        <div className="w-full max-w-md">
-            <div className="mb-8">
-                <h1 className="text-4xl font-bold text-foreground mb-2">{t("auth.signup")}</h1>
-                <p className="text-lg text-muted-foreground">{t("auth.createAccount")}</p>
+        <div className="w-full">
+            <div className="mb-6 sm:mb-8 text-left">
+                <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">{t("auth.signup")}</h1>
+                <p className="text-base sm:text-lg text-muted-foreground">{t("auth.createAccount")}</p>
             </div>
 
             {/* Language Selector */}
@@ -231,7 +248,7 @@ export default function SignupForm() {
             </div> */}
             {step === "signup" ? (
                 <form onSubmit={handleSubmit} className="space-y-5">
-                    <div>
+                    <div className="space-y-2">
                         <label className="block text-sm font-semibold text-foreground">{t("auth.fullName")}</label>
                         <Input
                             type="text"
@@ -244,7 +261,7 @@ export default function SignupForm() {
                         />
                     </div>
 
-                    <div>
+                    <div className="space-y-2">
                         <label className="block text-sm font-semibold text-foreground">{t("auth.username")}</label>
                         <Input
                             type="text"
@@ -257,7 +274,7 @@ export default function SignupForm() {
                         />
                     </div>
 
-                    <div>
+                    <div className="space-y-2">
                         <label className="block text-sm font-semibold text-foreground">{t("auth.email")}</label>
                         <Input
                             type="email"
@@ -270,7 +287,7 @@ export default function SignupForm() {
                         />
                     </div>
 
-                    <div>
+                    <div className="space-y-2">
                         <label className="block text-sm font-semibold text-foreground">{t("auth.password")}</label>
                         <Input
                             type="password"
@@ -282,7 +299,7 @@ export default function SignupForm() {
                             className={inputClassName}
                         />
                     </div>
-                    <div>
+                    <div className="space-y-2">
                         <label className="block text-sm font-semibold text-foreground">{t("auth.confirmPassword")}</label>
                         <Input
                             type="password"
@@ -295,9 +312,9 @@ export default function SignupForm() {
                         />
                     </div>
 
-                    {/* Legal Compliance Checkboxes */}
-                    <div className="space-y-3 pt-2">
-                        <div className="flex items-start gap-2">
+                    {/* Legal Compliance */}
+                    <div className="pt-2">
+                        <div className="flex items-start gap-3">
                             <input
                                 type="checkbox"
                                 id="acceptTerms"
@@ -305,31 +322,29 @@ export default function SignupForm() {
                                 checked={formData.acceptTerms}
                                 onChange={handleChange}
                                 required
-                                className="mt-1 h-4 w-4 accent-[#cd9639] border-border rounded focus:ring-ring"
+                                className="mt-0.5 h-5 w-5 shrink-0 accent-[#cd9639] border-border rounded focus:ring-ring"
                             />
-                            <label htmlFor="acceptTerms" className="text-sm text-muted-foreground">
-                                {t("signup.agreeTo")}{" "}
+                            <div className="min-w-0 text-sm text-muted-foreground leading-relaxed">
+                                <label htmlFor="acceptTerms" className="cursor-pointer">
+                                    {t("signup.agreeTo")}
+                                </label>{" "}
                                 <button
                                     type="button"
-                                    onClick={() => handleViewContent('terms')}
-                                    className="text-gold-solid hover:underline font-semibold"
+                                    onClick={(e) => handleViewContent("terms", e)}
+                                    className="text-gold-solid font-semibold underline underline-offset-2 touch-manipulation py-0.5"
                                 >
-                                    {t("signup.termsAndConditions")} {" "}
-                                </button>
-                                {" AND "}
+                                    {t("signup.termsAndConditions")}
+                                </button>{" "}
+                                <span className="text-muted-foreground">&</span>{" "}
                                 <button
                                     type="button"
-                                    onClick={() => handleViewContent('privacy')}
-                                    className="text-gold-solid hover:underline font-semibold"
+                                    onClick={(e) => handleViewContent("privacy", e)}
+                                    className="text-gold-solid font-semibold underline underline-offset-2 touch-manipulation py-0.5"
                                 >
                                     {t("signup.privacyPolicy")}
                                 </button>
-                            </label>
+                            </div>
                         </div>
-
-
-
-
                     </div>
 
                     <Button
@@ -390,6 +405,7 @@ export default function SignupForm() {
                 </p>
             )}
 
+            {step === "signup" && (
             <div className="mt-8 text-center">
                 <p className="text-sm text-muted-foreground">
                     {t("auth.alreadyHaveAccount")}{" "}
@@ -398,28 +414,33 @@ export default function SignupForm() {
                     </Link>
                 </p>
             </div>
+            )}
 
             {/* Legal Content Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-card border-border">
+                <DialogContent className="z-[200] w-[calc(100vw-2rem)] max-w-3xl max-h-[min(85dvh,720px)] overflow-y-auto bg-card border-border p-4 sm:p-6">
                     <DialogHeader>
-                        <DialogTitle>
+                        <DialogTitle className="text-left pr-8">
                             {selectedContent?.title || t("legal.legalDocument")}
                         </DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className="text-left">
                             {t("legal.readCarefully")}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="mt-4">
-                        {selectedContent?.content ? (
+                    <div className="mt-2 sm:mt-4">
+                        {selectedContent?.error ? (
+                            <p className="text-sm text-red-400">{selectedContent.error}</p>
+                        ) : selectedContent?.content ? (
                             <div
-                                className="prose prose-sm max-w-none text-muted-foreground prose-invert"
+                                className="prose prose-sm max-w-none text-muted-foreground prose-invert prose-p:leading-relaxed"
                                 dangerouslySetInnerHTML={{
-                                    __html: formatContent(selectedContent.content)
+                                    __html: formatContent(selectedContent.content),
                                 }}
                             />
                         ) : (
-                            <p className="text-muted-foreground">{t("legal.loadingContent")}</p>
+                            <div className="flex items-center justify-center py-10">
+                                <div className="animate-spin rounded-full h-8 w-8 border-2 border-gold-muted border-t-gold-solid" />
+                            </div>
                         )}
                     </div>
                 </DialogContent>

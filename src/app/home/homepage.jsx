@@ -84,17 +84,16 @@ h1 em{font-style:italic;color:var(--gold-l)}
 .showcase{background:var(--d2);padding:5rem 5%;max-width:100%;box-sizing:border-box;overflow:hidden}
 .showcase-hdr{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem}
 .showcase-cta{margin-top:.5rem;align-self:flex-start}
-.sc-grid{display:grid;grid-template-columns:1fr 2fr 1fr;grid-template-rows:280px 200px;gap:8px}
-.sc{border-radius:14px;overflow:hidden;border:.5px solid var(--gold-b);position:relative;display:flex;align-items:flex-end;background:var(--d4);min-height:140px}
-.sc.tall{grid-row:span 2;min-height:280px}
-.sc-lbl{position:absolute;bottom:12px;left:14px;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-l);background:rgba(14,13,9,.75);padding:4px 10px;border-radius:4px}
-.sc-inner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
-.c-gold{background:linear-gradient(140deg,#7A5A10 0%,#C9A84C 100%)}
-.c-slate{background:linear-gradient(140deg,#252525 0%,#545454 100%)}
-.c-violet{background:linear-gradient(140deg,#3B1078 0%,#8B40D0 100%)}
-.c-teal{background:linear-gradient(140deg,#0A5F62 0%,#17C9BC 100%)}
-.c-rose{background:linear-gradient(140deg,#8B1060 0%,#E8178A 100%)}
-.c-amber{background:linear-gradient(140deg,#876010 0%,#E8B828 100%)}
+.sc-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr);grid-template-rows:minmax(250px,1.05fr) minmax(250px,1fr);gap:12px;min-height:540px}
+.sc{border-radius:14px;overflow:hidden;border:.5px solid var(--gold-b);position:relative;background:var(--d3);min-height:0}
+.sc-product{grid-column:1;grid-row:1/3}
+.sc-campaign{grid-column:2;grid-row:1}
+.sc-lifestyle{grid-column:3;grid-row:1}
+.sc-model{grid-column:2;grid-row:2}
+.sc-multipiece{grid-column:3;grid-row:2}
+.sc-lbl{position:absolute;bottom:12px;left:14px;z-index:2;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-l);background:rgba(14,13,9,.75);padding:4px 10px;border-radius:4px;pointer-events:none}
+.sc-inner{position:absolute;inset:0;background:var(--d1)}
+.sc-inner img{width:100%;height:100%;max-width:none;object-fit:contain;object-position:center;display:block}
 
 /* SECTION COMMONS */
 section{padding:6rem 5%;max-width:100%;box-sizing:border-box}
@@ -226,8 +225,12 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   .wg{grid-template-columns:1fr}
   .tg{grid-template-columns:1fr}
   .pg{grid-template-columns:repeat(2,1fr)}
-  .sc-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto}
-  .sc.tall{grid-row:auto;min-height:200px}
+  .sc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr);grid-template-rows:minmax(200px,1fr) minmax(160px,1fr);min-height:400px;gap:10px}
+  .sc-product{grid-column:1;grid-row:1/3}
+  .sc-campaign{grid-column:2;grid-row:1}
+  .sc-lifestyle{grid-column:3;grid-row:1}
+  .sc-model{grid-column:2;grid-row:2}
+  .sc-multipiece{grid-column:3;grid-row:2}
   .showcase-hdr{flex-direction:column;align-items:flex-start}
   footer{flex-direction:column;align-items:flex-start;gap:1.25rem}
   .cta{padding:6rem clamp(1rem,4vw,5%) 5rem}
@@ -254,9 +257,10 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   section{padding:3rem 1rem}
   .showcase{padding:3rem 1rem}
   .og{grid-template-columns:1fr}
-  .sc-grid{grid-template-columns:1fr}
-  .sc{min-height:160px}
-  .sc.tall{min-height:200px}
+  .sc-grid{grid-template-columns:1fr;gap:10px;min-height:0}
+  .sc-product,.sc-campaign,.sc-lifestyle,.sc-model,.sc-multipiece{grid-column:1;grid-row:auto}
+  .sc-product{min-height:380px}
+  .sc-campaign,.sc-lifestyle,.sc-model,.sc-multipiece{min-height:200px}
   .pg{grid-template-columns:1fr}
   .cta{padding:4.5rem 1rem 4rem}
   .cta h2{font-size:clamp(28px,8vw,36px)}
@@ -298,8 +302,12 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
 
 /* Landscape with limited width */
 @media(max-width:900px) and (orientation:landscape){
-  .sc-grid{grid-template-columns:repeat(3,1fr);grid-template-rows:auto}
-  .sc.tall{grid-row:auto;grid-column:span 1}
+  .sc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr);grid-template-rows:minmax(180px,1fr) minmax(140px,1fr);min-height:360px}
+  .sc-product{grid-column:1;grid-row:1/3}
+  .sc-campaign{grid-column:2;grid-row:1}
+  .sc-lifestyle{grid-column:3;grid-row:1}
+  .sc-model{grid-column:2;grid-row:2}
+  .sc-multipiece{grid-column:3;grid-row:2}
   .og{grid-template-columns:repeat(3,1fr)}
   .wg{grid-template-columns:repeat(2,1fr)}
   .tg{grid-template-columns:repeat(2,1fr)}
@@ -489,7 +497,7 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   <h1>Your jewelry.<br /><em>Studio-quality visuals.</em><br />No photographer needed.</h1>
   <p className="hero-sub">Upload a reference photo — or nothing at all. Splash understands jewelry and generates product shots, model imagery, and campaign visuals in minutes.</p>
   <div className="actions">
-    <a href="/login" className="btn-p">
+    <a href="/signup" className="btn-p">
       Start creating for free
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
     </a>
@@ -511,62 +519,43 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
 </div>
 
 {/* SHOWCASE */}
-<div className="showcase">
+<div className="showcase" id="showcase">
   <div className="eye">Showcase</div>
   <div className="showcase-hdr">
     <div className="st">Created<br />with Splash</div>
     <a href="/login" className="btn-o showcase-cta">View all →</a>
   </div>
   <div className="sc-grid">
-    <div className="sc c-gold tall">
+    <div className="sc sc-product">
       <div className="sc-inner">
-        <svg width="80" height="120" viewBox="0 0 80 120" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" strokeLinecap="round">
-          <ellipse cx="40" cy="95" rx="22" ry="8"/><rect x="28" y="18" width="24" height="77" rx="4"/><ellipse cx="40" cy="18" rx="12" ry="8"/><circle cx="40" cy="18" r="5"/>
-        </svg>
-      </div>
-      <div className="sc-lbl">Product shot</div>
-    </div>
-    <div className="sc c-slate">
-      <div className="sc-inner">
-        <svg width="110" height="70" viewBox="0 0 110 70" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" strokeLinecap="round">
-          <ellipse cx="55" cy="48" rx="32" ry="11"/><ellipse cx="55" cy="36" rx="16" ry="6"/><circle cx="55" cy="29" r="9"/>
-        </svg>
-      </div>
-      <div className="sc-lbl">Campaign visual</div>
-    </div>
-    <div className="sc c-violet">
-      <div className="sc-inner">
-        <svg width="70" height="90" viewBox="0 0 70 90" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" strokeLinecap="round">
-          <ellipse cx="35" cy="68" rx="18" ry="7"/><path d="M17 28 Q35 10 53 28 L48 68 Q35 76 22 68Z"/><circle cx="35" cy="26" r="8"/>
-        </svg>
+        <img src="/images/lifestyle.webp" alt="Gold and emerald necklace product shot" loading="lazy" />
       </div>
       <div className="sc-lbl">Lifestyle setup</div>
     </div>
-    <div className="sc c-teal">
+    <div className="sc sc-campaign">
       <div className="sc-inner">
-        <svg width="96" height="60" viewBox="0 0 96 60" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" strokeLinecap="round">
-          <ellipse cx="48" cy="38" rx="30" ry="10"/><ellipse cx="48" cy="26" rx="18" ry="6"/><ellipse cx="48" cy="18" rx="9" ry="4"/>
-        </svg>
+        <img src="/images/campaign.webp" alt="Campaign visual with model wearing gold necklace" loading="lazy" />
+      </div>
+      <div className="sc-lbl">Campaign visual</div>
+    </div>
+    <div className="sc sc-lifestyle">
+      <div className="sc-inner">
+        <img src="/images/product.webp" alt="Lifestyle setup at a festive jewelry event" loading="lazy" />
+      </div>
+      <div className="sc-lbl">Product shot</div>
+    </div>
+    <div className="sc sc-model">
+      <div className="sc-inner">
+        <img src="/images/model.webp" alt="Model shot with gold chain necklace" loading="lazy" />
       </div>
       <div className="sc-lbl">Model shot</div>
     </div>
-    <div className="sc c-rose">
+    <div className="sc sc-multipiece">
       <div className="sc-inner">
-        <svg width="96" height="60" viewBox="0 0 96 60" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" strokeLinecap="round">
-          <circle cx="28" cy="30" r="14"/><circle cx="65" cy="30" r="10"/><circle cx="48" cy="20" r="6"/>
-        </svg>
+        <img src="/images/multipice.png" alt="Multi-piece gold earrings collection" loading="lazy" />
       </div>
       <div className="sc-lbl">Multi-piece</div>
     </div>
-    {/* <div className="sc c-amber">
-      <div className="sc-inner">
-        <svg width="90" height="60" viewBox="0 0 90 60" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" strokeLinecap="round">
-          <rect x="8" y="10" width="20" height="40" rx="3"/><rect x="34" y="16" width="20" height="34" rx="3"/><rect x="60" y="12" width="20" height="38" rx="3"/>
-        </svg>
-      </div>
-      <div className="sc-lbl">Bulk catalog</div>
-      
-    </div> */}
   </div>
 </div>
 
@@ -841,7 +830,7 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   <p className="cta-sub">Start creating jewelry visuals today — your first images are on us.</p>
 
   <div className="cta-actions" >
-    <a href="/login" className="btn-p">
+    <a href="/signup" className="btn-p">
       Start creating for free
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
     </a>

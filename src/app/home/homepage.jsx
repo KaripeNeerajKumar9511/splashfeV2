@@ -91,7 +91,7 @@ h1 em{font-style:italic;color:var(--gold-l)}
 .sc-lifestyle{grid-column:3;grid-row:1}
 .sc-model{grid-column:2;grid-row:2}
 .sc-multipiece{grid-column:3;grid-row:2}
-.sc-lbl{position:absolute;bottom:12px;left:14px;z-index:2;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-l);background:rgba(14,13,9,.75);padding:4px 10px;border-radius:4px;pointer-events:none}
+.sc-lbl{position:absolute;bottom:12px;left:14px;z-index:2;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-l);background:rgba(14,13,9,.82);padding:5px 10px;border-radius:6px;pointer-events:none;backdrop-filter:blur(4px)}
 .sc-inner{position:absolute;inset:0;background:var(--d1)}
 .sc-inner img{width:100%;height:100%;max-width:none;object-fit:contain;object-position:center;display:block}
 
@@ -225,12 +225,6 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   .wg{grid-template-columns:1fr}
   .tg{grid-template-columns:1fr}
   .pg{grid-template-columns:repeat(2,1fr)}
-  .sc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr);grid-template-rows:minmax(200px,1fr) minmax(160px,1fr);min-height:400px;gap:10px}
-  .sc-product{grid-column:1;grid-row:1/3}
-  .sc-campaign{grid-column:2;grid-row:1}
-  .sc-lifestyle{grid-column:3;grid-row:1}
-  .sc-model{grid-column:2;grid-row:2}
-  .sc-multipiece{grid-column:3;grid-row:2}
   .showcase-hdr{flex-direction:column;align-items:flex-start}
   footer{flex-direction:column;align-items:flex-start;gap:1.25rem}
   .cta{padding:6rem clamp(1rem,4vw,5%) 5rem}
@@ -250,17 +244,132 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   .cta-acts{flex-direction:column;width:100%;max-width:360px;margin:0 auto}
   .cta-acts .btn-p,.cta-acts .btn-wa{width:100%;justify-content:center}
   .flinks{flex-wrap:wrap;gap:1rem 1.25rem}
+  .showcase{padding:clamp(2.5rem,6vw,3.5rem) clamp(.85rem,4vw,1.25rem)}
+  .showcase-hdr{margin-bottom:1.5rem}
+  .showcase-hdr .st{font-size:clamp(28px,7vw,40px)}
+  .showcase-cta{width:100%;justify-content:center;text-align:center}
+}
+
+/* Mobile showcase stack (phones only — tablets use portrait layout below) */
+@media(max-width:767px){
+  .sc-grid{
+    grid-template-columns:1fr;
+    grid-template-rows:none;
+    gap:12px;
+    min-height:0;
+    width:100%;
+  }
+  .sc-product,.sc-campaign,.sc-lifestyle,.sc-model,.sc-multipiece{
+    grid-column:1;
+    grid-row:auto;
+    width:100%;
+    min-height:0;
+    aspect-ratio:4/3;
+  }
+  .sc-product{aspect-ratio:3/4}
+  .sc-campaign{aspect-ratio:3/4}
+  .sc-model,.sc-multipiece{aspect-ratio:3/4}
+  .sc-inner img{object-fit:cover;object-position:center}
+  .sc-product .sc-inner img,.sc-lifestyle .sc-inner img{object-position:center top}
+  .sc-campaign .sc-inner img{object-position:center 20%}
+  .sc-model .sc-inner img{object-position:center 15%}
+  .sc-multipiece .sc-inner img{object-position:center}
+  .sc-lbl{
+    bottom:10px;
+    left:10px;
+    font-size:11px;
+    letter-spacing:.1em;
+    padding:7px 12px;
+    border-radius:8px;
+    max-width:calc(100% - 20px);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+}
+
+/* Tablet portrait — wireframe grid, all images visible in one screen */
+@media(min-width:768px) and (max-width:1024px) and (orientation:portrait){
+  .showcase{
+    min-height:calc(100dvh - var(--nav-h));
+    max-height:calc(100dvh - var(--nav-h));
+    padding:1rem 1.25rem 1rem;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    box-sizing:border-box;
+  }
+  .showcase .eye{
+    margin-bottom:.35rem;
+    font-size:10px;
+  }
+  .showcase .eye::before{width:20px}
+  .showcase-hdr{
+    flex-shrink:0;
+    flex-direction:row;
+    align-items:center;
+    justify-content:space-between;
+    gap:.75rem;
+    margin-bottom:.65rem;
+  }
+  .showcase-hdr .st{
+    font-size:clamp(20px,3.2vw,26px);
+    margin-bottom:0;
+    line-height:1.15;
+  }
+  .showcase-hdr .st br{display:none}
+  .showcase-cta{
+    margin-top:0;
+    padding:8px 14px;
+    font-size:12px;
+    white-space:nowrap;
+  }
+  .sc-grid{
+    flex:1;
+    min-height:0;
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    grid-template-areas:
+      "lifestyle lifestyle"
+      "campaign multipiece"
+      "campaign product"
+      "model model";
+    grid-template-rows:minmax(0,0.95fr) minmax(0,1.05fr) minmax(0,1.05fr) minmax(0,0.85fr);
+    gap:6px;
+    width:100%;
+  }
+  .sc{
+    width:100%;
+    height:100%;
+    min-height:0;
+    border-radius:10px;
+  }
+  .sc-product{grid-area:lifestyle;aspect-ratio:unset}
+  .sc-campaign{grid-area:campaign;aspect-ratio:unset;align-self:stretch}
+  .sc-multipiece{grid-area:multipiece;aspect-ratio:unset}
+  .sc-lifestyle{grid-area:product;aspect-ratio:unset}
+  .sc-model{grid-area:model;aspect-ratio:unset}
+  .sc-inner img{
+    object-fit:contain;
+    object-position:center;
+  }
+  .sc-lbl{
+    bottom:6px;
+    left:8px;
+    font-size:9px;
+    letter-spacing:.08em;
+    padding:4px 8px;
+    border-radius:5px;
+    max-width:calc(100% - 16px);
+  }
 }
 
 /* Small phones portrait */
 @media(max-width:480px){
   section{padding:3rem 1rem}
-  .showcase{padding:3rem 1rem}
+  .showcase{padding:2.75rem .85rem}
   .og{grid-template-columns:1fr}
-  .sc-grid{grid-template-columns:1fr;gap:10px;min-height:0}
-  .sc-product,.sc-campaign,.sc-lifestyle,.sc-model,.sc-multipiece{grid-column:1;grid-row:auto}
-  .sc-product{min-height:380px}
-  .sc-campaign,.sc-lifestyle,.sc-model,.sc-multipiece{min-height:200px}
+  .sc-grid{gap:10px}
   .pg{grid-template-columns:1fr}
   .cta{padding:4.5rem 1rem 4rem}
   .cta h2{font-size:clamp(28px,8vw,36px)}
@@ -300,14 +409,8 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   .actions{gap:8px}
 }
 
-/* Landscape with limited width */
-@media(max-width:900px) and (orientation:landscape){
-  .sc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr);grid-template-rows:minmax(180px,1fr) minmax(140px,1fr);min-height:360px}
-  .sc-product{grid-column:1;grid-row:1/3}
-  .sc-campaign{grid-column:2;grid-row:1}
-  .sc-lifestyle{grid-column:3;grid-row:1}
-  .sc-model{grid-column:2;grid-row:2}
-  .sc-multipiece{grid-column:3;grid-row:2}
+/* Landscape with limited width (non-tablet phones) */
+@media(max-width:768px) and (orientation:landscape){
   .og{grid-template-columns:repeat(3,1fr)}
   .wg{grid-template-columns:repeat(2,1fr)}
   .tg{grid-template-columns:repeat(2,1fr)}
@@ -530,7 +633,7 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
       <div className="sc-inner">
         <img src="/images/lifestyle.webp" alt="Gold and emerald necklace product shot" loading="lazy" />
       </div>
-      <div className="sc-lbl">Lifestyle setup</div>
+      <div className="sc-lbl">Lifestyle</div>
     </div>
     <div className="sc sc-campaign">
       <div className="sc-inner">
@@ -554,7 +657,7 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
       <div className="sc-inner">
         <img src="/images/multipice.png" alt="Multi-piece gold earrings collection" loading="lazy" />
       </div>
-      <div className="sc-lbl">Multi-piece</div>
+      <div className="sc-lbl">Multi piece</div>
     </div>
   </div>
 </div>

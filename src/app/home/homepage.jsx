@@ -894,7 +894,7 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   <div className="st pricing-title">
     Need pricing details?
     <br />
-    <em>Let’s talk.</em>
+    <em>We'll help you find the best plan for you.</em>
   </div>
 
   <div className="price-simple-card">
@@ -913,11 +913,12 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
       </svg>
     </div>
 
-    <h3>To get more details, please contact us</h3>
+    <h2 className="price-simple-title text-xl font-bold"> Every jewellery brand is different — the number of 
+    products, the type of shoots, the frequency of content. </h2>
 
     <p>
-      We’ll help you choose the right plan based on your image volume,
-      team size, and business needs.
+    We'll understand your needs and help you get the most 
+    out of Splash.
     </p>
 
     <a href="/contact" className="price-simple-btn">

@@ -600,11 +600,13 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   <h1>Your jewelry.<br /><em>Studio-quality visuals.</em><br />No photographer needed.</h1>
   <p className="hero-sub">Upload a reference photo — or nothing at all. Splash understands jewelry and generates product shots, model imagery, and campaign visuals in minutes.</p>
   <div className="actions">
-    <a href="/signup" className="btn-p">
+    <a href="/signup" className="btn-o">
       Start creating for free
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
+      
     </a>
-    <a href="#how" className="btn-o">See how it works</a>
+    <a href="/contact" className="btn-p">Get a demo 
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
+    </a>
   </div>
   <p className="note">No credit card required &nbsp;·&nbsp; No prompts needed &nbsp;·&nbsp; First images on us</p>
 </section>

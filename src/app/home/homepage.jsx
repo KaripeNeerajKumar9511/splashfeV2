@@ -628,7 +628,7 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   <div className="eye">Showcase</div>
   <div className="showcase-hdr">
     <div className="st">Created<br />with Splash</div>
-    <a href="/login" className="btn-o showcase-cta">View all →</a>
+    <a href="/gallery" className="btn-o showcase-cta">View all →</a>
   </div>
   <div className="sc-grid">
     <div className="sc sc-product">

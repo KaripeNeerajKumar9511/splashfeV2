@@ -15,6 +15,10 @@ function handleTokenError() {
     window.location.href = SPLASH_LOGIN_PATH;
 }
 
+function isNetworkError(error) {
+    return error instanceof TypeError && String(error.message).toLowerCase().includes("failed to fetch");
+}
+
 function isTokenRelatedError(error) {
     if (!error?.message) return false;
     const msg = String(error.message).toLowerCase();
@@ -112,7 +116,9 @@ class ApiService {
             if (isTokenRelatedError(error)) {
                 handleTokenError();
             }
-            console.error("API request failed:", error);
+            if (!isNetworkError(error)) {
+                console.error("API request failed:", error);
+            }
             throw error;
         }
     }

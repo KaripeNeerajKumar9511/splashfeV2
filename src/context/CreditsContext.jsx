@@ -1,13 +1,20 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { apiService } from "@/lib/api";
 
 const CreditsContext = createContext(null);
 
+function isDashboardRoute(pathname) {
+    return pathname?.startsWith("/dashboard");
+}
+
 export function CreditsProvider({ children }) {
     const { token } = useAuth();
+    const pathname = usePathname();
+    const shouldFetchCredits = Boolean(token) && isDashboardRoute(pathname);
     const [organizationCredits, setOrganizationCredits] = useState(null);
     const [userCredits, setUserCredits] = useState(null);
     const [creditsLoading, setCreditsLoading] = useState(true);
@@ -15,8 +22,8 @@ export function CreditsProvider({ children }) {
     const socketRef = useRef(null);
 
     const fetchCredits = useCallback(async (showLoading = true) => {
-        if (!token) {
-            setCreditsLoading(false);
+        if (!shouldFetchCredits) {
+            if (showLoading) setCreditsLoading(false);
             return;
         }
         try {
@@ -47,21 +54,37 @@ export function CreditsProvider({ children }) {
                 setUserCredits(null);
             }
         } catch (err) {
-            console.error("Error fetching credits:", err);
+            const isNetworkError =
+                err instanceof TypeError && String(err.message).toLowerCase().includes("failed to fetch");
+            if (!isNetworkError) {
+                console.error("Error fetching credits:", err);
+            }
             setOrganizationCredits(null);
             setUserCredits(null);
         } finally {
             if (showLoading) setCreditsLoading(false);
         }
-    }, [token]);
+    }, [token, shouldFetchCredits]);
 
     useEffect(() => {
+        if (!shouldFetchCredits) {
+            setCreditsLoading(false);
+            setOrganizationCredits(null);
+            setUserCredits(null);
+            setSocketConnected(false);
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+                socketRef.current = null;
+            }
+            return;
+        }
+
         fetchCredits(true);
 
         const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
         let pollInterval = null;
 
-        if (token && socketUrl && typeof window !== "undefined") {
+        if (socketUrl && typeof window !== "undefined") {
             import("socket.io-client").then(({ io }) => {
                 const socket = io(socketUrl, {
                     auth: { token },
@@ -98,9 +121,9 @@ export function CreditsProvider({ children }) {
                 socketRef.current.disconnect();
                 socketRef.current = null;
             }
-            clearInterval(pollInterval);
+            if (pollInterval) clearInterval(pollInterval);
         };
-    }, [token, fetchCredits]);
+    }, [token, fetchCredits, shouldFetchCredits]);
 
     const value = {
         organizationCredits,

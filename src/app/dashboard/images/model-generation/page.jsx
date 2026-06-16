@@ -11,6 +11,7 @@ import { useLanguage } from "@/context/LanguageContext"
 import { OrnamentSelection } from "@/components/images/OrnamentSelection"
 import { DimensionsSelector } from "@/components/images/DimensionsSelector"
 import { NumberOfImagesSelector } from "@/components/images/NumberOfImagesSelector"
+import { ModelTierSelector, MODEL_TIER_DEFAULTS } from "@/components/images/ModelTierSelector"
 import { ReferenceImagesModal } from "@/components/images/ReferenceImagesModal"
 import toast from "react-hot-toast"
 import { openImageViewer } from "@/lib/openImageViewer"
@@ -40,6 +41,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
     const { t } = useLanguage()
     const [activeTab, setActiveTab] = useState("ai_model") // "ai_model" or "real_model"
     const [numImages, setNumImages] = useState(1)
+    const [modelTier, setModelTier] = useState(MODEL_TIER_DEFAULTS.model)
     const [creditSettings, setCreditSettings] = useState({ credits_per_image_generation: 2 })
     const [showCostNote, setShowCostNote] = useState(false)
     const generateSectionRef = useRef(null)
@@ -126,7 +128,8 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
         prompt: '',
         loading: false,
         error: null,
-        image: null
+        image: null,
+        modelTier: MODEL_TIER_DEFAULTS.model,
     })
 
     // Real Model State
@@ -152,7 +155,8 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
         prompt: '',
         loading: false,
         error: null,
-        image: null
+        image: null,
+        modelTier: MODEL_TIER_DEFAULTS.model,
     })
 
     const handleView = (selectedImage = null) => {
@@ -323,7 +327,8 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
             prompt: '',
             loading: false,
             error: null,
-            image: aiResult || null
+            image: aiResult || null,
+            modelTier,
         })
     }
 
@@ -347,7 +352,8 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
             const response = await apiService.regenerateImage(
                 target.mongo_id,
                 aiRegenerateModal.prompt,
-                token
+                token,
+                aiRegenerateModal.modelTier
             )
 
             if (response.success) {
@@ -366,7 +372,8 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                     prompt: '',
                     loading: false,
                     error: null,
-                    image: null
+                    image: null,
+                    modelTier: MODEL_TIER_DEFAULTS.model,
                 })
                 toast.success(t("images.imageRegeneratedSuccess"))
             } else {
@@ -389,7 +396,8 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                 prompt: '',
                 loading: false,
                 error: null,
-                image: null
+                image: null,
+                modelTier: MODEL_TIER_DEFAULTS.model,
             })
         }
     }
@@ -425,6 +433,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
             formDataToSend.append("ornament_measurements", JSON.stringify(aiOrnamentMeasurements))
             formDataToSend.append("dimension", aiFormData.dimension)
             formDataToSend.append("num_images", String(numImages))
+            formDataToSend.append("model_tier", modelTier)
 
             const response = await apiService.generateModelWithOrnament(formDataToSend, token)
             console.log("response for ai model generation:", response)
@@ -516,7 +525,8 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
             prompt: '',
             loading: false,
             error: null,
-            image: realResult || null
+            image: realResult || null,
+            modelTier,
         })
     }
 
@@ -540,7 +550,8 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
             const response = await apiService.regenerateImage(
                 target.mongo_id,
                 realRegenerateModal.prompt,
-                token
+                token,
+                realRegenerateModal.modelTier
             )
 
             if (response.success) {
@@ -559,7 +570,8 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                     prompt: '',
                     loading: false,
                     error: null,
-                    image: null
+                    image: null,
+                    modelTier: MODEL_TIER_DEFAULTS.model,
                 })
                 toast.success(t("images.imageRegeneratedSuccess"))
             } else {
@@ -582,7 +594,8 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                 prompt: '',
                 loading: false,
                 error: null,
-                image: null
+                image: null,
+                modelTier: MODEL_TIER_DEFAULTS.model,
             })
         }
     }
@@ -624,6 +637,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
             formDataToSend.append("ornament_measurements", JSON.stringify(realOrnamentMeasurements))
             formDataToSend.append("dimension", realFormData.dimension)
             formDataToSend.append("num_images", String(numImages))
+            formDataToSend.append("model_tier", modelTier)
 
             const response = await apiService.generateRealModelWithOrnament(formDataToSend, token)
             console.log("response for real model generation:", response)
@@ -643,7 +657,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
     }
 
     return (
-        <div className="min-h-screen">
+        <div>
             <div className="max-w-6xl mx-auto">
                 {/* Enhanced Header */}
                 <div className="mb-12">
@@ -820,18 +834,25 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                                 </div>
 
                                 {/* Number of images */}
-                                <div>
-                                    <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                                        <MdPhotoSizeSelectLarge size={20} className="text-gold-solid" />
-                                        {t("images.numberOfImages") || "Number of images"}
-                                    </label>
-                                    <div className="flex flex-wrap items-center gap-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                                            <MdPhotoSizeSelectLarge size={20} className="text-gold-solid" />
+                                            {t("images.numberOfImages") || "Number of images"}
+                                        </label>
                                         <NumberOfImagesSelector
                                             value={numImages}
                                             onChange={setNumImages}
                                             min={MIN_IMAGES}
                                             max={MAX_IMAGES}
-                                            
+                                        />
+                                    </div>
+                                    <div>
+                                        <ModelTierSelector
+                                            value={modelTier}
+                                            onChange={setModelTier}
+                                            context="model"
+                                            compact
                                         />
                                     </div>
                                 </div>
@@ -1093,18 +1114,25 @@ text-foreground text-sm leading-snug">
                                 </div>
 
                                 {/* Number of images */}
-                                <div>
-                                    <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                                        <MdPhotoSizeSelectLarge size={20} className="text-gold-solid" />
-                                        {t("images.numberOfImages") || "Number of images"}
-                                    </label>
-                                    <div className="flex flex-wrap items-center gap-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                                            <MdPhotoSizeSelectLarge size={20} className="text-gold-solid" />
+                                            {t("images.numberOfImages") || "Number of images"}
+                                        </label>
                                         <NumberOfImagesSelector
                                             value={numImages}
                                             onChange={setNumImages}
                                             min={MIN_IMAGES}
                                             max={MAX_IMAGES}
-                                            
+                                        />
+                                    </div>
+                                    <div>
+                                        <ModelTierSelector
+                                            value={modelTier}
+                                            onChange={setModelTier}
+                                            context="model"
+                                            compact
                                         />
                                     </div>
                                 </div>
@@ -1208,7 +1236,7 @@ text-foreground text-sm leading-snug">
                                                         <span className="text-sm font-medium text-gold-solid bg-card px-2 py-1 rounded border border-gold-muted/20">Image {idx + 1}</span>
                                                         <button type="button" onClick={() => handleView(img)} className="px-4 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/30 flex items-center gap-2"><Eye size={16} />{t("images.view")}</button>
                                                         <button type="button" onClick={() => downloadImage(img.generated_image_url, `model-${idx + 1}.png`)} className="px-4 py-3 bg-gold-solid text-white rounded-xl font-semibold flex items-center gap-2"><Download size={16} />{t("images.download")}</button>
-                                                        <button type="button" onClick={() => (activeTab === "ai_model" ? setAiRegenerateModal({ isOpen: true, prompt: '', loading: false, error: null, image: { ...img, index: idx } }) : setRealRegenerateModal({ isOpen: true, prompt: '', loading: false, error: null, image: { ...img, index: idx } }))} className="px-4 py-3 border-2 border-gold-muted text-gold-solid rounded-xl font-semibold hover:bg-gold-solid/10 flex items-center gap-2"><RefreshCw size={16} />{t("images.regenerate")}</button>
+                                                        <button type="button" onClick={() => (activeTab === "ai_model" ? setAiRegenerateModal({ isOpen: true, prompt: '', loading: false, error: null, image: { ...img, index: idx }, modelTier }) : setRealRegenerateModal({ isOpen: true, prompt: '', loading: false, error: null, image: { ...img, index: idx }, modelTier }))} className="px-4 py-3 border-2 border-gold-muted text-gold-solid rounded-xl font-semibold hover:bg-gold-solid/10 flex items-center gap-2"><RefreshCw size={16} />{t("images.regenerate")}</button>
                                                     </div>
                                                 </div>
                                             ))}
@@ -1335,6 +1363,15 @@ text-foreground text-sm leading-snug">
                                 </p>
                             </div>
 
+                            <div>
+                                <ModelTierSelector
+                                    value={aiRegenerateModal.modelTier}
+                                    onChange={(tier) => setAiRegenerateModal((prev) => ({ ...prev, modelTier: tier }))}
+                                    context="model"
+                                    compact
+                                />
+                            </div>
+
                             {aiRegenerateModal.error && (
                                 <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
                                     <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
@@ -1444,6 +1481,15 @@ text-foreground text-sm leading-snug">
                                 <p className="text-xs text-muted-foreground mt-2">
                                     💡 {t("images.modificationWillBeAppliedToRealModel")}
                                 </p>
+                            </div>
+
+                            <div>
+                                <ModelTierSelector
+                                    value={realRegenerateModal.modelTier}
+                                    onChange={(tier) => setRealRegenerateModal((prev) => ({ ...prev, modelTier: tier }))}
+                                    context="model"
+                                    compact
+                                />
                             </div>
 
                             {realRegenerateModal.error && (

@@ -1,35 +1,49 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useLayoutEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Image from "next/image"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
+function readViewerPayload(key) {
+  if (!key || typeof window === "undefined") {
+    return { images: [], activeIndex: 0 }
+  }
+
+  const payload = window.sessionStorage.getItem(`image-viewer:${key}`)
+  if (!payload) return { images: [], activeIndex: 0 }
+
+  try {
+    const parsed = JSON.parse(payload)
+    const parsedImages = Array.isArray(parsed?.images) ? parsed.images : []
+    const nextIndex = Number(parsed?.initialIndex) || 0
+
+    return {
+      images: parsedImages,
+      activeIndex: Math.min(
+        Math.max(nextIndex, 0),
+        Math.max(parsedImages.length - 1, 0)
+      ),
+    }
+  } catch (error) {
+    console.error("Failed to load viewer payload:", error)
+    return { images: [], activeIndex: 0 }
+  }
+}
+
 export default function ImageViewerPage() {
   const searchParams = useSearchParams()
+  const key = searchParams.get("key")
   const [images, setImages] = useState([])
   const [activeIndex, setActiveIndex] = useState(0)
+  const [ready, setReady] = useState(false)
 
-  useEffect(() => {
-    const key = searchParams.get("key")
-    if (!key) return
-
-    const payload = window.sessionStorage.getItem(`image-viewer:${key}`)
-    if (!payload) return
-
-    try {
-      const parsed = JSON.parse(payload)
-      const parsedImages = Array.isArray(parsed?.images) ? parsed.images : []
-      const nextIndex = Number(parsed?.initialIndex) || 0
-
-      setImages(parsedImages)
-      setActiveIndex(
-        Math.min(Math.max(nextIndex, 0), Math.max(parsedImages.length - 1, 0))
-      )
-    } catch (error) {
-      console.error("Failed to load viewer payload:", error)
-    }
-  }, [searchParams])
+  useLayoutEffect(() => {
+    const { images: nextImages, activeIndex: nextIndex } = readViewerPayload(key)
+    setImages(nextImages)
+    setActiveIndex(nextIndex)
+    setReady(true)
+  }, [key])
 
   const activeImage = useMemo(() => images[activeIndex], [images, activeIndex])
 
@@ -39,6 +53,16 @@ export default function ImageViewerPage() {
 
   const goNext = () => {
     setActiveIndex((prev) => (prev < images.length - 1 ? prev + 1 : prev))
+  }
+
+  if (!ready) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="bg-card rounded-xl border border-border p-8 text-center">
+          <p className="text-muted-foreground">Loading image…</p>
+        </div>
+      </div>
+    )
   }
 
   if (!activeImage) {
@@ -73,11 +97,15 @@ export default function ImageViewerPage() {
         <div className="relative bg-card rounded-xl border border-border overflow-hidden">
           <div className="relative w-full h-[65vh] min-h-[420px]">
             <Image
+              key={activeImage.url}
               src={activeImage.url}
               alt={activeImage.label || "Selected image"}
               fill
+              sizes="(max-width: 1280px) 100vw, 1280px"
               className="object-contain bg-secondary/30"
               priority
+              loading="eager"
+              fetchPriority="high"
             />
           </div>
 
@@ -120,6 +148,8 @@ export default function ImageViewerPage() {
                   src={image.url}
                   alt={image.label || `Image ${index + 1}`}
                   fill
+                  sizes="96px"
+                  loading="lazy"
                   className="object-cover"
                 />
               </button>

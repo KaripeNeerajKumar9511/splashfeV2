@@ -10,6 +10,28 @@ import PortalDeviceGuard from "@/components/portal/PortalDeviceGuard";
 import { usePathname } from "next/navigation";
 import { PORTAL_TABLET_MIN_PX } from "@/hooks/usePortalDevice";
 
+function useLockDocumentScroll(active) {
+    useEffect(() => {
+        if (!active) return;
+
+        const html = document.documentElement;
+        const body = document.body;
+        const previousHtmlOverflow = html.style.overflow;
+        const previousBodyOverflow = body.style.overflow;
+        const previousBodyHeight = body.style.height;
+
+        html.style.overflow = "hidden";
+        body.style.overflow = "hidden";
+        body.style.height = "100%";
+
+        return () => {
+            html.style.overflow = previousHtmlOverflow;
+            body.style.overflow = previousBodyOverflow;
+            body.style.height = previousBodyHeight;
+        };
+    }, [active]);
+}
+
 export default function DashboardLayout({ children }) {
     const pathname = usePathname();
     const [collapsed, setCollapsed] = useState(true);
@@ -38,9 +60,11 @@ export default function DashboardLayout({ children }) {
     const sidebarWidth = collapsed && !hovered ? 80 : 256;
     const isViewerRoute = pathname === "/dashboard/images/view";
 
+    useLockDocumentScroll(true);
+
     return (
         <PortalDeviceGuard>
-            <div className="dark flex h-screen min-h-screen bg-surface-gradient">
+            <div className="dark flex h-screen min-h-screen bg-surface-gradient overflow-hidden">
                 {!isViewerRoute && (
                     <Sidebar
                         collapsed={collapsed}
@@ -60,7 +84,7 @@ export default function DashboardLayout({ children }) {
                     )}
 
                     <main
-                        className={`flex-1 overflow-y-auto overflow-x-hidden transition-all duration-300 ${
+                        className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-surface-gradient transition-all duration-300 ${
                             isViewerRoute ? "p-0 mt-0" : "mt-16 px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8"
                         }`}
                         style={{

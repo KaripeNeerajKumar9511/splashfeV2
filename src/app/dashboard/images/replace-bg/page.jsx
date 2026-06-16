@@ -11,6 +11,7 @@ import { useLanguage } from "@/context/LanguageContext"
 import toast from "react-hot-toast"
 import { DimensionsSelector } from "@/components/images/DimensionsSelector"
 import { NumberOfImagesSelector } from "@/components/images/NumberOfImagesSelector"
+import { ModelTierSelector, MODEL_TIER_DEFAULTS } from "@/components/images/ModelTierSelector"
 import { openImageViewer } from "@/lib/openImageViewer"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -55,6 +56,7 @@ const BackgroundReplaceForm = () => {
     const [error, setError] = useState(null)
     const { token } = useAuth()
     const [numImages, setNumImages] = useState(1)
+    const [modelTier, setModelTier] = useState(MODEL_TIER_DEFAULTS.themed)
     const [creditSettings, setCreditSettings] = useState({ credits_per_image_generation: 2 })
     const [showCostNote, setShowCostNote] = useState(false)
     const generateSectionRef = useRef(null)
@@ -63,7 +65,8 @@ const BackgroundReplaceForm = () => {
         prompt: '',
         loading: false,
         error: null,
-        image: null
+        image: null,
+        modelTier: MODEL_TIER_DEFAULTS.themed,
     })
 
     useEffect(() => {
@@ -100,7 +103,8 @@ const BackgroundReplaceForm = () => {
             prompt: '',
             loading: false,
             error: null,
-            image: normalizedImage ?? (result?.generated_image_url ? result : null)
+            image: normalizedImage ?? (result?.generated_image_url ? result : null),
+            modelTier,
         })
     }
 
@@ -224,7 +228,8 @@ const BackgroundReplaceForm = () => {
             const response = await apiService.regenerateImage(
                 imageId,
                 regenerateModal.prompt,
-                token
+                token,
+                regenerateModal.modelTier
             )
 
             console.log('[replace-bg] regenerate response:', response);
@@ -249,7 +254,7 @@ const BackgroundReplaceForm = () => {
                     setResult(prev => ({ ...(prev || {}), ...updated }))
                 }
 
-                setRegenerateModal({ isOpen: false, prompt: '', loading: false, error: null, image: null })
+                setRegenerateModal({ isOpen: false, prompt: '', loading: false, error: null, image: null, modelTier: MODEL_TIER_DEFAULTS.themed })
                 toast.success(t("images.imageRegeneratedSuccess"))
             } else {
                 throw new Error(response.error || 'Regeneration failed')
@@ -271,7 +276,8 @@ const BackgroundReplaceForm = () => {
                 prompt: '',
                 loading: false,
                 error: null,
-                image: null
+                image: null,
+                modelTier: MODEL_TIER_DEFAULTS.themed,
             })
         }
     }
@@ -407,6 +413,7 @@ const BackgroundReplaceForm = () => {
             formDataToSend.append("prompt", formData.prompt || t("images.changeTheBackground"))
             formDataToSend.append("dimension", formData.dimension)
             formDataToSend.append("num_images", String(productImages.length === 1 ? numImages : 1))
+            formDataToSend.append("model_tier", modelTier)
 
             const response = await apiService.changeBackground(formDataToSend, token)
 
@@ -424,7 +431,7 @@ const BackgroundReplaceForm = () => {
     }
 
     return (
-        <div className="min-h-screen">
+        <div>
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="mb-12">
@@ -621,12 +628,12 @@ const BackgroundReplaceForm = () => {
 
                             {/* Number of variations (only when single product image) */}
                             {(formData.productImages?.length || 0) <= 1 && (
-                                <div>
-                                    <label className="block text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                                        <MdPhotoSizeSelectLarge size={20} className="text-gold-solid" />
-                                        {t("images.numberOfImages") || "Number of images"}
-                                    </label>
-                                    <div className="flex flex-wrap items-center gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                                            <MdPhotoSizeSelectLarge size={20} className="text-gold-solid" />
+                                            {t("images.numberOfImages") || "Number of images"}
+                                        </label>
                                         <NumberOfImagesSelector
                                             value={numImages}
                                             onChange={setNumImages}
@@ -635,6 +642,22 @@ const BackgroundReplaceForm = () => {
                                             primaryColor={GOLD}
                                         />
                                     </div>
+                                    <div>
+                                        <ModelTierSelector
+                                            value={modelTier}
+                                            onChange={setModelTier}
+                                            context="themed"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                            {(formData.productImages?.length || 0) > 1 && (
+                                <div>
+                                    <ModelTierSelector
+                                        value={modelTier}
+                                        onChange={setModelTier}
+                                        context="themed"
+                                    />
                                 </div>
                             )}
                             <DimensionsSelector
@@ -809,6 +832,15 @@ const BackgroundReplaceForm = () => {
                                     className="w-full px-4 py-3 border border-input rounded-xl bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-none"
                                     rows="4"
                                     disabled={regenerateModal.loading}
+                                />
+                            </div>
+
+                            <div>
+                                <ModelTierSelector
+                                    value={regenerateModal.modelTier}
+                                    onChange={(tier) => setRegenerateModal((prev) => ({ ...prev, modelTier: tier }))}
+                                    context="themed"
+                                    compact
                                 />
                             </div>
 

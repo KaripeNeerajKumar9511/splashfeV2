@@ -1221,7 +1221,7 @@ class ApiService {
     }
 
     // Regeneration endpoints
-    async regenerateImage(imageId, prompt, token) {
+    async regenerateImage(imageId, prompt, token, modelTier = "regular") {
         // Validate MongoDB ObjectId format (24 hex characters)
         if (!imageId || typeof imageId !== 'string') {
             throw new Error('Invalid image ID: image_id is required and must be a string');
@@ -1236,6 +1236,7 @@ class ApiService {
         const formData = new FormData();
         formData.append('image_id', imageId);
         formData.append('prompt', prompt);
+        formData.append('model_tier', modelTier || 'regular');
 
         const response = await axios.post(
             `${this.baseURL}/image/regenerate/`,

@@ -349,7 +349,7 @@ export default function GalleryPage() {
                 ) : (
                     <>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {filteredImages.map((image) => (
+                            {filteredImages.map((image, index) => (
                                 <div
                                     key={image.id}
                                     className="group cursor-pointer"
@@ -360,6 +360,8 @@ export default function GalleryPage() {
   src={`${image.generated_image_url}?v=${image.id}`}
   alt={image.prompt || "Generated image"}
   fill
+  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+  priority={index === 0}
   className="object-cover"
             />
 
@@ -515,6 +517,7 @@ export default function GalleryPage() {
                                         src={regenerateModal.image.generated_image_url}
                                         alt="Current image"
                                         fill
+                                        sizes="(max-width: 768px) 100vw, 600px"
                                         className="object-contain bg-secondary/30"
                                     />
                                 </div>

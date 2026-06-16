@@ -11,6 +11,7 @@ import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
 import { DimensionsSelector } from "@/components/images/DimensionsSelector"
 import { NumberOfImagesSelector } from "@/components/images/NumberOfImagesSelector"
+import { ModelTierSelector, MODEL_TIER_DEFAULTS } from "@/components/images/ModelTierSelector"
 import { ORNAMENT_TYPES } from "@/components/images/OrnamentSelection"
 import { OrnamentTypeSelect } from "@/components/images/OrnamentTypeSelect"
 import { ReferenceImagesModal } from "@/components/images/ReferenceImagesModal"
@@ -60,9 +61,11 @@ export default function CampaignForm() {
         prompt: '',
         loading: false,
         error: null,
-        image: null
+        image: null,
+        modelTier: MODEL_TIER_DEFAULTS.campaign,
     })
     const [numImages, setNumImages] = useState(1)
+    const [modelTier, setModelTier] = useState(MODEL_TIER_DEFAULTS.campaign)
     const [creditSettings, setCreditSettings] = useState({ credits_per_image_generation: 2 })
     const [showCostNote, setShowCostNote] = useState(false)
     const generateSectionRef = useRef(null)
@@ -358,7 +361,8 @@ export default function CampaignForm() {
             prompt: '',
             loading: false,
             error: null,
-            image: imageItem
+            image: imageItem,
+            modelTier,
         })
     }
 
@@ -389,7 +393,8 @@ const submitRegenerate = async () => {
         const response = await apiService.regenerateImage(
             target.mongo_id,
             regenerateModal.prompt,
-            token
+            token,
+            regenerateModal.modelTier
         )
 
             if (response.success) {
@@ -403,7 +408,7 @@ const submitRegenerate = async () => {
                 } else {
                     setResult({ ...result, ...updated })
                 }
-                setRegenerateModal({ isOpen: false, prompt: '', loading: false, error: null, image: null })
+                setRegenerateModal({ isOpen: false, prompt: '', loading: false, error: null, image: null, modelTier: MODEL_TIER_DEFAULTS.campaign })
                 toast.success(t("images.imageRegeneratedSuccess"))
             } else {
                 throw new Error(response.error || 'Regeneration failed')
@@ -425,7 +430,8 @@ const submitRegenerate = async () => {
                 prompt: '',
                 loading: false,
                 error: null,
-                image: null
+                image: null,
+                modelTier: MODEL_TIER_DEFAULTS.campaign,
             })
         }
     }
@@ -492,6 +498,7 @@ const submitRegenerate = async () => {
             formDataToSend.append("prompt", formData.prompt || t("images.createProfessionalCampaignShot"))
             formDataToSend.append("dimension", formData.dimension)
             formDataToSend.append("num_images", String(numImages))
+            formDataToSend.append("model_tier", modelTier)
 
             const response = await apiService.generateCampaignShot(formDataToSend, token)
 
@@ -515,7 +522,7 @@ const submitRegenerate = async () => {
     }
 
     return (
-        <div className="min-h-screen">
+        <div>
             <div className="max-w-7xl mx-auto">
                 {/* Enhanced Header */}
                 <div className="mb-12">
@@ -831,18 +838,25 @@ const submitRegenerate = async () => {
                             </div>
 
                             {/* Number of images */}
-                            <div>
-                                <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                                    <MdPhotoSizeSelectLarge size={18} className="text-gold-solid" />
-                                    {t("images.numberOfImages") || "Number of images"}
-                                </label>
-                                <div className="flex flex-wrap items-center gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                                        <MdPhotoSizeSelectLarge size={18} className="text-gold-solid" />
+                                        {t("images.numberOfImages") || "Number of images"}
+                                    </label>
                                     <NumberOfImagesSelector
                                         value={numImages}
                                         onChange={setNumImages}
                                         min={MIN_IMAGES}
                                         max={MAX_IMAGES}
-                                        
+                                    />
+                                </div>
+                                <div>
+                                    <ModelTierSelector
+                                        value={modelTier}
+                                        onChange={setModelTier}
+                                        context="campaign"
+                                        compact
                                     />
                                 </div>
                             </div>
@@ -1057,6 +1071,15 @@ text-foreground text-sm">
                                 <p className="text-xs text-muted-foreground mt-2">
                                     💡 {t("images.modificationWillBeApplied")}
                                 </p>
+                            </div>
+
+                            <div>
+                                <ModelTierSelector
+                                    value={regenerateModal.modelTier}
+                                    onChange={(tier) => setRegenerateModal((prev) => ({ ...prev, modelTier: tier }))}
+                                    context="campaign"
+                                    compact
+                                />
                             </div>
 
                             {/* Error Message */}

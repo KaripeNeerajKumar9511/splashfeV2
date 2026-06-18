@@ -34,6 +34,7 @@ export default function RealModelForm() {
     const [ornamentPreview, setOrnamentPreview] = useState(null)
     const [posePreview, setPosePreview] = useState(null)
     const [isLoading, setIsLoading] = useState(false)
+    const [isDimensionValid, setIsDimensionValid] = useState(true)
     const [result, setResult] = useState(null)
     const [error, setError] = useState(null)
     const { token } = useAuth()
@@ -389,6 +390,7 @@ export default function RealModelForm() {
                             <DimensionsSelector
                                 selectedDimension={formData.dimension}
                                 onDimensionChange={(dimension) => setFormData((prev) => ({ ...prev, dimension }))}
+                                onValidityChange={setIsDimensionValid}
                                 primaryColor="#f97316"
                             />
 
@@ -412,7 +414,7 @@ export default function RealModelForm() {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={isLoading}
+                                    disabled={isLoading || !isDimensionValid}
                                     className="bg-gold-gradient text-primary-foreground hover:brightness-110 px-8 py-3 rounded-xl flex items-center gap-3 font-semibold shadow-lg hover:shadow-xl transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isLoading ? (

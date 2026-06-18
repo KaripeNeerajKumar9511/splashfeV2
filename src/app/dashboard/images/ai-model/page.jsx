@@ -37,6 +37,7 @@ export default function AIModelForm() {
     const [ornamentPreview, setOrnamentPreview] = useState(null)
     const [posePreview, setPosePreview] = useState(null)
     const [isLoading, setIsLoading] = useState(false)
+    const [isDimensionValid, setIsDimensionValid] = useState(true)
     const [result, setResult] = useState(null)
     const [error, setError] = useState(null)
     const [regenerateModal, setRegenerateModal] = useState({
@@ -381,6 +382,7 @@ export default function AIModelForm() {
                             <DimensionsSelector
                                 selectedDimension={formData.dimension}
                                 onDimensionChange={(dimension) => setFormData((prev) => ({ ...prev, dimension }))}
+                                onValidityChange={setIsDimensionValid}
                             />
 
                             {/* Error Message */}
@@ -403,7 +405,7 @@ export default function AIModelForm() {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={isLoading}
+                                    disabled={isLoading || !isDimensionValid}
                                     className="bg-gold-gradient hover:brightness-110 text-white px-8 py-3 rounded-xl flex items-center gap-3 font-semibold shadow-lg hover:shadow-xl transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isLoading ? (

@@ -124,6 +124,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
     const [aiResult, setAiResult] = useState(null)
     const [aiError, setAiError] = useState(null)
     const [aiIsLoading, setAiIsLoading] = useState(false)
+    const [aiDimensionValid, setAiDimensionValid] = useState(true)
     const [aiRegenerateModal, setAiRegenerateModal] = useState({
         isOpen: false,
         prompt: '',
@@ -151,6 +152,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
     const [realResult, setRealResult] = useState(null)
     const [realError, setRealError] = useState(null)
     const [realIsLoading, setRealIsLoading] = useState(false)
+    const [realDimensionValid, setRealDimensionValid] = useState(true)
     const [realRegenerateModal, setRealRegenerateModal] = useState({
         isOpen: false,
         prompt: '',
@@ -861,7 +863,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                                 <DimensionsSelector
                                     selectedDimension={aiFormData.dimension}
                                     onDimensionChange={(dimension) => setAiFormData((prev) => ({ ...prev, dimension }))}
-                                    
+                                    onValidityChange={setAiDimensionValid}
                                 />
 
                                 {/* Error Message */}
@@ -898,7 +900,7 @@ text-foreground text-sm leading-snug">
                                     )}
                                     <button
                                         type="submit"
-                                        disabled={aiIsLoading}
+                                        disabled={aiIsLoading || !aiDimensionValid}
                                         className="flex items-center justify-center gap-3 px-8 py-3.5 bg-gold-gradient text-primary-foreground rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                                     >
                                         {aiIsLoading ? (
@@ -1141,7 +1143,7 @@ text-foreground text-sm leading-snug">
                                 <DimensionsSelector
                                     selectedDimension={realFormData.dimension}
                                     onDimensionChange={(dimension) => setRealFormData((prev) => ({ ...prev, dimension }))}
-                                    
+                                    onValidityChange={setRealDimensionValid}
                                 />
 
                                 {/* Error Message */}
@@ -1178,7 +1180,7 @@ text-foreground text-sm leading-snug">
                                     )}
                                     <button
                                         type="submit"
-                                        disabled={realIsLoading}
+                                        disabled={realIsLoading || !realDimensionValid}
                                         className="bg-gold-gradient text-primary-foreground px-8 py-3.5 rounded-xl flex items-center justify-center gap-3 font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                                     >
                                         {realIsLoading ? (

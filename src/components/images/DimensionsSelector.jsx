@@ -47,7 +47,17 @@ export function isCustomDimension(value) {
     return Boolean(value) && !PRESET_VALUES.includes(value)
 }
 
-export function DimensionsSelector({ selectedDimension, onDimensionChange, primaryColor = GOLD }) {
+export function isDimensionSelectionValid(showCustomInputs, customA, customB) {
+    if (!showCustomInputs) return true
+    return Boolean(parseDimension(`${String(customA || "").trim()}:${String(customB || "").trim()}`))
+}
+
+export function DimensionsSelector({
+    selectedDimension,
+    onDimensionChange,
+    onValidityChange,
+    primaryColor = GOLD,
+}) {
     const [editingCustom, setEditingCustom] = useState(() => isCustomDimension(selectedDimension))
     const [customA, setCustomA] = useState("")
     const [customB, setCustomB] = useState("")
@@ -63,7 +73,6 @@ export function DimensionsSelector({ selectedDimension, onDimensionChange, prima
             return
         }
 
-        setEditingCustom(false)
         const parsed = parseDimension(selectedDimension)
         if (parsed) {
             setCustomA(String(parsed.a))
@@ -72,6 +81,18 @@ export function DimensionsSelector({ selectedDimension, onDimensionChange, prima
     }, [selectedDimension])
 
     const showCustomInputs = editingCustom || isCustomDimension(selectedDimension)
+    const parsedCustom = parseDimension(`${customA.trim()}:${customB.trim()}`)
+    const isValid = isDimensionSelectionValid(showCustomInputs, customA, customB)
+
+    const customInvalid =
+        showCustomInputs &&
+        customA.trim() &&
+        customB.trim() &&
+        !parsedCustom
+
+    useEffect(() => {
+        onValidityChange?.(isValid)
+    }, [isValid, onValidityChange])
 
     const handleCustomValueChange = (nextA, nextB) => {
         const sanitizedA = sanitizeDecimalInput(nextA)
@@ -89,17 +110,9 @@ export function DimensionsSelector({ selectedDimension, onDimensionChange, prima
 
     const activateCustom = () => {
         setEditingCustom(true)
-        if (!isCustomDimension(selectedDimension)) {
-            setCustomA("")
-            setCustomB("")
-        }
+        setCustomA("")
+        setCustomB("")
     }
-
-    const customInvalid =
-        showCustomInputs &&
-        customA.trim() &&
-        customB.trim() &&
-        !parseDimension(`${customA.trim()}:${customB.trim()}`)
 
     const getTileStyle = (isSelected) =>
         isSelected
@@ -131,26 +144,12 @@ export function DimensionsSelector({ selectedDimension, onDimensionChange, prima
                         return (
                             <div
                                 key={option.value}
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => {
-                                    if (!showCustomInputs) activateCustom()
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                        e.preventDefault()
-                                        if (!showCustomInputs) activateCustom()
-                                    }
-                                }}
+                                role="presentation"
                                 className={getTileClass(isSelected)}
                                 style={getTileStyle(isSelected)}
                             >
                                 {showCustomInputs ? (
-                                    <div
-                                        className="flex flex-col items-center justify-center w-full gap-1"
-                                        onClick={(e) => e.stopPropagation()}
-                                        onKeyDown={(e) => e.stopPropagation()}
-                                    >
+                                    <div className="flex flex-col items-center justify-center w-full gap-1">
                                         <div className="text-[11px] font-semibold leading-none text-muted-foreground">
                                             Custom
                                         </div>
@@ -180,11 +179,15 @@ export function DimensionsSelector({ selectedDimension, onDimensionChange, prima
                                         </div>
                                     </div>
                                 ) : (
-                                    <>
+                                    <button
+                                        type="button"
+                                        onClick={activateCustom}
+                                        className="flex flex-col items-center justify-center w-full h-full"
+                                    >
                                         <div className="text-lg font-bold leading-none">{option.label}</div>
                                         <div className="text-xs text-muted-foreground mt-1 leading-tight">{option.ratio}</div>
                                         <div className="text-[11px] text-muted-foreground mt-1 leading-tight">{option.name}</div>
-                                    </>
+                                    </button>
                                 )}
                             </div>
                         )
@@ -211,13 +214,19 @@ export function DimensionsSelector({ selectedDimension, onDimensionChange, prima
                 })}
             </div>
 
-            {(!showCustomInputs || isCustomDimension(selectedDimension)) && selectedDimension && !customInvalid && (
+            {isValid && (
                 <p className="text-sm text-muted-foreground mt-3">
                     Selected:{" "}
                     <span className="font-semibold text-gold-solid" style={{ color: primaryColor }}>
-                        {selectedDimension}
+                        {showCustomInputs ? parsedCustom?.value : selectedDimension}
                     </span>{" "}
                     aspect ratio
+                </p>
+            )}
+
+            {showCustomInputs && !isValid && (
+                <p className="text-sm text-muted-foreground mt-3">
+                    Enter both width and height values, or select another dimension.
                 </p>
             )}
         </div>

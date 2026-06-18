@@ -53,6 +53,7 @@ export default function CampaignForm() {
     const [themeReferenceAnalyses, setThemeReferenceAnalyses] = useState([]) // kept for backward-compat; backend now analyzes theme images
     const [modelReferenceAnalysis, setModelReferenceAnalysis] = useState("")
     const [isLoading, setIsLoading] = useState(false)
+    const [isDimensionValid, setIsDimensionValid] = useState(true)
     const [showReferenceModal, setShowReferenceModal] = useState(false)
     const [result, setResult] = useState(null)
     const [error, setError] = useState(null)
@@ -864,7 +865,7 @@ const submitRegenerate = async () => {
                             <DimensionsSelector
                                 selectedDimension={formData.dimension}
                                 onDimensionChange={(dimension) => setFormData((prev) => ({ ...prev, dimension }))}
-                                
+                                onValidityChange={setIsDimensionValid}
                             />
 
                             {/* Error Message */}
@@ -899,7 +900,7 @@ text-foreground text-sm">
                                     )}
                                     <Button
                                         type="submit"
-                                        disabled={isLoading}
+                                        disabled={isLoading || !isDimensionValid}
                                         className="bg-gold-gradient text-primary-foreground px-8 py-3 rounded-xl flex items-center gap-3 font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {isLoading ? (

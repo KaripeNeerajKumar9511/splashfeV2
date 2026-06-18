@@ -53,6 +53,7 @@ const BackgroundReplaceForm = () => {
     const [referenceAnalysisLoading, setReferenceAnalysisLoading] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
+    const [isDimensionValid, setIsDimensionValid] = useState(true)
     const [result, setResult] = useState(null)
     const [error, setError] = useState(null)
     const { token } = useAuth()
@@ -664,6 +665,7 @@ const BackgroundReplaceForm = () => {
                             <DimensionsSelector
                                 selectedDimension={formData.dimension}
                                 onDimensionChange={(dimension) => setFormData((prev) => ({ ...prev, dimension }))}
+                                onValidityChange={setIsDimensionValid}
                                 primaryColor={GOLD}
                             />
 
@@ -695,7 +697,7 @@ const BackgroundReplaceForm = () => {
                                     <Button
                                         type="submit"
                                         variant="brand"
-                                        disabled={isLoading}
+                                        disabled={isLoading || !isDimensionValid}
                                         className="px-8 py-3 h-auto rounded-xl gap-3 text-base"
                                     >
                                         {isLoading ? (

@@ -32,6 +32,7 @@ const PlainBackgroundForm = () => {
     const [imagePreview, setImagePreview] = useState(null)
     const [isDragging, setIsDragging] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
+    const [isDimensionValid, setIsDimensionValid] = useState(true)
     const [result, setResult] = useState(null)
     const [error, setError] = useState(null)
     const { token } = useAuth()
@@ -377,7 +378,7 @@ const PlainBackgroundForm = () => {
                             <DimensionsSelector
                                 selectedDimension={formData.dimension}
                                 onDimensionChange={(dimension) => setFormData((prev) => ({ ...prev, dimension }))}
-                                
+                                onValidityChange={setIsDimensionValid}
                             />
 
                             {/* Background Color */}
@@ -436,7 +437,7 @@ const PlainBackgroundForm = () => {
                                 </button>
                                 <Button
                                     type="submit"
-                                    disabled={isLoading}
+                                    disabled={isLoading || !isDimensionValid}
                                     variant="brand"
                                     className="flex items-center gap-3 px-8 py-4 h-auto rounded-xl text-base disabled:opacity-50 disabled:cursor-not-allowed"
                                 >

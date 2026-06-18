@@ -7,9 +7,12 @@ import { X, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 
 const FILTERS = [
   { id: "all", label: "All" },
+  { id: "lifestyle", label: "Lifestyle" },
   { id: "campaign", label: "Campaign" },
-  { id: "background", label: "Background change" },
   { id: "product", label: "Product shot" },
+  { id: "model", label: "Model shot" },
+  { id: "multi_piece", label: "Multi piece" },
+  { id: "background", label: "Background change" },
 ];
 
 export default function PublicGallery({ images = [] }) {

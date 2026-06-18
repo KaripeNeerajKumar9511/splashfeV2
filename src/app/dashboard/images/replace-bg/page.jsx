@@ -12,6 +12,7 @@ import toast from "react-hot-toast"
 import { DimensionsSelector } from "@/components/images/DimensionsSelector"
 import { NumberOfImagesSelector } from "@/components/images/NumberOfImagesSelector"
 import { ModelTierSelector, MODEL_TIER_DEFAULTS } from "@/components/images/ModelTierSelector"
+import { getGenerationCreditCost } from "@/lib/creditPricing"
 import { openImageViewer } from "@/lib/openImageViewer"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -688,7 +689,7 @@ const BackgroundReplaceForm = () => {
                                     {showCostNote && (formData.productImages?.length || 0) <= 1 && numImages > 1 && (
                                         <div className="flex items-center gap-2 px-4 py-3 bg-secondary/80 border border-border rounded-xl text-foreground text-sm">
                                             <Coins className="w-5 h-5 text-gold-solid shrink-0" />
-                                            <span>{t("images.creditsCost") || "Cost:"} {numImages * (creditSettings.credits_per_image_generation || 2)} {t("images.credits") || "credits"}. {t("images.clickGenerateAgainToConfirm") || "Click Generate again to confirm."}</span>
+                                            <span>{t("images.creditsCost") || "Cost:"} {numImages * getGenerationCreditCost(creditSettings, modelTier)} {t("images.credits") || "credits"}. {t("images.clickGenerateAgainToConfirm") || "Click Generate again to confirm."}</span>
                                         </div>
                                     )}
                                     <Button

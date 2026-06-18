@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button"
 import { apiService } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { formatRelativeCommentTime } from "@/lib/comment-time"
+import { ModelTierSelector } from "@/components/images/ModelTierSelector"
+import { resolveRegenerationTier } from "@/lib/creditPricing"
+
+function getProjectRegenContext(imageType) {
+    if (imageType === "campaign_image") return "campaign"
+    if (imageType === "model_image") return "model"
+    return "themed"
+}
 
 export function ProductImagesDisplay({
     project,
@@ -23,6 +31,8 @@ export function ProductImagesDisplay({
     const [zoomedImage, setZoomedImage] = useState(null)
     const [useDifferentModel, setUseDifferentModel] = useState(false)
     const [selectedModel, setSelectedModel] = useState(null)
+    const [regenModelTier, setRegenModelTier] = useState("regular")
+    const [regenContext, setRegenContext] = useState("themed")
     const [availableModels, setAvailableModels] = useState({ ai_models: [], real_models: [] })
     const [activeCommentField, setActiveCommentField] = useState(null)
     const [commentsByField, setCommentsByField] = useState({
@@ -283,7 +293,8 @@ export function ProductImagesDisplay({
                 customPrompt,
                 useDifferentModel,
                 selectedModel,
-                token
+                token,
+                regenModelTier
             )
 
             if (response.success) {
@@ -306,11 +317,17 @@ export function ProductImagesDisplay({
     }
 
     const openPromptModal = async (product, generatedImage, isRegenerated = false) => {
+        const imageType = generatedImage.type || "model_image"
+        const context = getProjectRegenContext(imageType)
         setShowPromptModal({ product, generatedImage, isRegenerated })
-        // Show empty textarea - the backend will combine with original prompt
         setCustomPrompt("")
         setUseDifferentModel(false)
         setSelectedModel(null)
+        setRegenContext(context)
+        setRegenModelTier(resolveRegenerationTier({
+            storedTier: generatedImage.model_tier,
+            imageType,
+        }))
         setError(null)
 
         // Load available models
@@ -1042,6 +1059,14 @@ export function ProductImagesDisplay({
                                 </div>
                             )}
                         </div>
+
+                        <ModelTierSelector
+                            value={regenModelTier}
+                            onChange={setRegenModelTier}
+                            context={regenContext}
+                            compact
+                            className="mb-6"
+                        />
 
                         {/* Prompt Input */}
                         <div className="mb-6">

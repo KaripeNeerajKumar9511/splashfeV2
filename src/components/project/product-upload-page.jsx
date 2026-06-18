@@ -7,6 +7,12 @@ import { apiService } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { HierarchicalOrnamentSelect } from "./hierarchical-ornament-select"
 import { formatRelativeCommentTime } from "@/lib/comment-time"
+import {
+    ProductModelTierSelect,
+    defaultProductRowSelection,
+    mergeProductRowSelection,
+} from "./ProductModelTierSelect"
+import { estimateProductUploadCredits } from "@/lib/creditPricing"
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -37,8 +43,21 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
     const fileInputRef = useRef(null)
     const { token } = useAuth()
     
-    // Selection state: { productIndex: { plainBg: boolean, bgReplace: boolean, model: boolean, campaign: boolean } }
+    // Selection state: { productIndex: { plainBg, bgReplace, model, campaign, modelTiers } }
     const [selections, setSelections] = useState({})
+
+    const updateModelTier = (index, typeKey, tier) => {
+        setSelections((prev) => {
+            const row = mergeProductRowSelection(prev[index] || {})
+            return {
+                ...prev,
+                [index]: {
+                    ...row,
+                    modelTiers: { ...row.modelTiers, [typeKey]: tier },
+                },
+            }
+        })
+    }
     
     // Column header selection state
     const [columnSelections, setColumnSelections] = useState({
@@ -85,23 +104,9 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
             // Initialize selections from backend or default to false
             const initialSelections = {}
             existing.forEach((product, index) => {
-                if (product.generation_selections) {
-                    // Use saved selections from backend
-                    initialSelections[index] = {
-                        plainBg: product.generation_selections.plainBg || false,
-                        bgReplace: product.generation_selections.bgReplace || false,
-                        model: product.generation_selections.model || false,
-                        campaign: product.generation_selections.campaign || false
-                    }
-                } else {
-                    // Default to false if no selections saved
-                    initialSelections[index] = {
-                        plainBg: false,
-                        bgReplace: false,
-                        model: false,
-                        campaign: false
-                    }
-                }
+                initialSelections[index] = product.generation_selections
+                    ? mergeProductRowSelection(product.generation_selections)
+                    : defaultProductRowSelection()
             })
             setSelections(initialSelections)
         }
@@ -775,7 +780,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                         const newSelections = { ...selections }
                                                         uploadedProducts.forEach((_, index) => {
                                                             if (!newSelections[index]) {
-                                                                newSelections[index] = { plainBg: false, bgReplace: false, model: false, campaign: false }
+                                                                newSelections[index] = defaultProductRowSelection()
                                                             }
                                                             newSelections[index].plainBg = newValue
                                                         })
@@ -802,7 +807,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                         const newSelections = { ...selections }
                                                         uploadedProducts.forEach((_, index) => {
                                                             if (!newSelections[index]) {
-                                                                newSelections[index] = { plainBg: false, bgReplace: false, model: false, campaign: false }
+                                                                newSelections[index] = defaultProductRowSelection()
                                                             }
                                                             newSelections[index].bgReplace = newValue
                                                         })
@@ -829,7 +834,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                         const newSelections = { ...selections }
                                                         uploadedProducts.forEach((_, index) => {
                                                             if (!newSelections[index]) {
-                                                                newSelections[index] = { plainBg: false, bgReplace: false, model: false, campaign: false }
+                                                                newSelections[index] = defaultProductRowSelection()
                                                             }
                                                             newSelections[index].model = newValue
                                                         })
@@ -856,7 +861,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                         const newSelections = { ...selections }
                                                         uploadedProducts.forEach((_, index) => {
                                                             if (!newSelections[index]) {
-                                                                newSelections[index] = { plainBg: false, bgReplace: false, model: false, campaign: false }
+                                                                newSelections[index] = defaultProductRowSelection()
                                                             }
                                                             newSelections[index].campaign = newValue
                                                         })
@@ -912,88 +917,128 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                 </div>
                                             </td>
                                             <td className="px-4 py-4 text-center">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelections(prev => ({
-                                                            ...prev,
-                                                            [index]: {
-                                                                ...(prev[index] || { plainBg: false, bgReplace: false, model: false, campaign: false }),
-                                                                plainBg: !(prev[index]?.plainBg || false)
-                                                            }
-                                                        }))
-                                                    }}
-                                                    className="flex items-center justify-center mx-auto hover:opacity-70 transition-opacity"
-                                                    disabled={!canEdit}
-                                                >
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelections(prev => ({
+                                                                ...prev,
+                                                                [index]: {
+                                                                    ...(prev[index] || defaultProductRowSelection()),
+                                                                    plainBg: !(prev[index]?.plainBg || false)
+                                                                }
+                                                            }))
+                                                        }}
+                                                        className="flex items-center justify-center hover:opacity-70 transition-opacity"
+                                                        disabled={!canEdit}
+                                                    >
+                                                        {selections[index]?.plainBg ? (
+                                                            <CheckSquare className="w-6 h-6 text-gold-solid" />
+                                                        ) : (
+                                                            <Square className="w-6 h-6 text-muted-foreground/70" />
+                                                        )}
+                                                    </button>
                                                     {selections[index]?.plainBg ? (
-                                                        <CheckSquare className="w-6 h-6 text-gold-solid" />
-                                                    ) : (
-                                                        <Square className="w-6 h-6 text-muted-foreground/70" />
-                                                    )}
-                                                </button>
+                                                        <ProductModelTierSelect
+                                                            value={selections[index]?.modelTiers?.plainBg || "regular"}
+                                                            onChange={(tier) => updateModelTier(index, "plainBg", tier)}
+                                                            context="themed"
+                                                            disabled={!canEdit}
+                                                        />
+                                                    ) : null}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-4 text-center">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelections(prev => ({
-                                                            ...prev,
-                                                            [index]: {
-                                                                ...(prev[index] || { plainBg: false, bgReplace: false, model: false, campaign: false }),
-                                                                bgReplace: !(prev[index]?.bgReplace || false)
-                                                            }
-                                                        }))
-                                                    }}
-                                                    className="flex items-center justify-center mx-auto hover:opacity-70 transition-opacity"
-                                                    disabled={!canEdit}
-                                                >
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelections(prev => ({
+                                                                ...prev,
+                                                                [index]: {
+                                                                    ...(prev[index] || defaultProductRowSelection()),
+                                                                    bgReplace: !(prev[index]?.bgReplace || false)
+                                                                }
+                                                            }))
+                                                        }}
+                                                        className="flex items-center justify-center hover:opacity-70 transition-opacity"
+                                                        disabled={!canEdit}
+                                                    >
+                                                        {selections[index]?.bgReplace ? (
+                                                            <CheckSquare className="w-6 h-6 text-gold-solid" />
+                                                        ) : (
+                                                            <Square className="w-6 h-6 text-muted-foreground/70" />
+                                                        )}
+                                                    </button>
                                                     {selections[index]?.bgReplace ? (
-                                                        <CheckSquare className="w-6 h-6 text-gold-solid" />
-                                                    ) : (
-                                                        <Square className="w-6 h-6 text-muted-foreground/70" />
-                                                    )}
-                                                </button>
+                                                        <ProductModelTierSelect
+                                                            value={selections[index]?.modelTiers?.bgReplace || "regular"}
+                                                            onChange={(tier) => updateModelTier(index, "bgReplace", tier)}
+                                                            context="themed"
+                                                            disabled={!canEdit}
+                                                        />
+                                                    ) : null}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-4 text-center">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelections(prev => ({
-                                                            ...prev,
-                                                            [index]: {
-                                                                ...(prev[index] || { plainBg: false, bgReplace: false, model: false, campaign: false }),
-                                                                model: !(prev[index]?.model || false)
-                                                            }
-                                                        }))
-                                                    }}
-                                                    className="flex items-center justify-center mx-auto hover:opacity-70 transition-opacity"
-                                                    disabled={!canEdit}
-                                                >
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelections(prev => ({
+                                                                ...prev,
+                                                                [index]: {
+                                                                    ...(prev[index] || defaultProductRowSelection()),
+                                                                    model: !(prev[index]?.model || false)
+                                                                }
+                                                            }))
+                                                        }}
+                                                        className="flex items-center justify-center hover:opacity-70 transition-opacity"
+                                                        disabled={!canEdit}
+                                                    >
+                                                        {selections[index]?.model ? (
+                                                            <CheckSquare className="w-6 h-6 text-gold-solid" />
+                                                        ) : (
+                                                            <Square className="w-6 h-6 text-muted-foreground/70" />
+                                                        )}
+                                                    </button>
                                                     {selections[index]?.model ? (
-                                                        <CheckSquare className="w-6 h-6 text-gold-solid" />
-                                                    ) : (
-                                                        <Square className="w-6 h-6 text-muted-foreground/70" />
-                                                    )}
-                                                </button>
+                                                        <ProductModelTierSelect
+                                                            value={selections[index]?.modelTiers?.model || "premium"}
+                                                            onChange={(tier) => updateModelTier(index, "model", tier)}
+                                                            context="model"
+                                                            disabled={!canEdit}
+                                                        />
+                                                    ) : null}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-4 text-center">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelections(prev => ({
-                                                            ...prev,
-                                                            [index]: {
-                                                                ...(prev[index] || { plainBg: false, bgReplace: false, model: false, campaign: false }),
-                                                                campaign: !(prev[index]?.campaign || false)
-                                                            }
-                                                        }))
-                                                    }}
-                                                    className="flex items-center justify-center mx-auto hover:opacity-70 transition-opacity"
-                                                    disabled={!canEdit}
-                                                >
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelections(prev => ({
+                                                                ...prev,
+                                                                [index]: {
+                                                                    ...(prev[index] || defaultProductRowSelection()),
+                                                                    campaign: !(prev[index]?.campaign || false)
+                                                                }
+                                                            }))
+                                                        }}
+                                                        className="flex items-center justify-center hover:opacity-70 transition-opacity"
+                                                        disabled={!canEdit}
+                                                    >
+                                                        {selections[index]?.campaign ? (
+                                                            <CheckSquare className="w-6 h-6 text-gold-solid" />
+                                                        ) : (
+                                                            <Square className="w-6 h-6 text-muted-foreground/70" />
+                                                        )}
+                                                    </button>
                                                     {selections[index]?.campaign ? (
-                                                        <CheckSquare className="w-6 h-6 text-gold-solid" />
-                                                    ) : (
-                                                        <Square className="w-6 h-6 text-muted-foreground/70" />
-                                                    )}
-                                                </button>
+                                                        <ProductModelTierSelect
+                                                            value={selections[index]?.modelTiers?.campaign || "premium"}
+                                                            onChange={(tier) => updateModelTier(index, "campaign", tier)}
+                                                            context="campaign"
+                                                            disabled={!canEdit}
+                                                        />
+                                                    ) : null}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-4 text-center">
                                                 {canEdit && (
@@ -1023,7 +1068,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                     const totalSelected = Object.values(selections).reduce((acc, sel) => {
                                         return acc + (sel.plainBg ? 1 : 0) + (sel.bgReplace ? 1 : 0) + (sel.model ? 1 : 0) + (sel.campaign ? 1 : 0)
                                     }, 0)
-                                    const totalCredits = totalSelected * creditSettings.credits_per_image_generation
+                                    const totalCredits = estimateProductUploadCredits(selections, creditSettings)
                                     return totalSelected > 0 ? (
                                         <span>
                                             <span className="font-semibold text-foreground">{totalSelected}</span> image{totalSelected !== 1 ? 's' : ''} selected • 

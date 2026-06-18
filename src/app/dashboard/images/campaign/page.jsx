@@ -12,6 +12,7 @@ import { useLanguage } from "@/context/LanguageContext"
 import { DimensionsSelector } from "@/components/images/DimensionsSelector"
 import { NumberOfImagesSelector } from "@/components/images/NumberOfImagesSelector"
 import { ModelTierSelector, MODEL_TIER_DEFAULTS } from "@/components/images/ModelTierSelector"
+import { getGenerationCreditCost } from "@/lib/creditPricing"
 import { ORNAMENT_TYPES } from "@/components/images/OrnamentSelection"
 import { OrnamentTypeSelect } from "@/components/images/OrnamentTypeSelect"
 import { ReferenceImagesModal } from "@/components/images/ReferenceImagesModal"
@@ -893,7 +894,7 @@ rounded-xl
 text-foreground text-sm">
 
                                             <Coins className="w-5 h-5 text-amber-600 shrink-0" />
-                                            <span>{t("images.creditsCost") || "Cost:"} {numImages * (creditSettings.credits_per_image_generation || 2)} {t("images.credits") || "credits"}. {t("images.clickGenerateAgainToConfirm") || "Click Generate again to confirm."}</span>
+                                            <span>{t("images.creditsCost") || "Cost:"} {numImages * getGenerationCreditCost(creditSettings, modelTier)} {t("images.credits") || "credits"}. {t("images.clickGenerateAgainToConfirm") || "Click Generate again to confirm."}</span>
                                         </div>
                                     )}
                                     <Button

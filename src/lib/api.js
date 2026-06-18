@@ -748,7 +748,7 @@ class ApiService {
         });
     }
 
-    async regenerateProductModelImage(collectionId, productImagePath, generatedImagePath, prompt, useDifferentModel = false, newModel = null, token) {
+    async regenerateProductModelImage(collectionId, productImagePath, generatedImagePath, prompt, useDifferentModel = false, newModel = null, token, modelTier = "regular") {
         return this.request(`/probackendapp/api/collections/${collectionId}/regenerate/`, {
             method: 'POST',
             body: JSON.stringify({
@@ -757,6 +757,7 @@ class ApiService {
                 prompt: prompt,
                 use_different_model: useDifferentModel,
                 new_model: newModel,
+                model_tier: modelTier,
             }),
             headers: {
                 'Authorization': `Bearer ${token || ''}`,

@@ -344,6 +344,7 @@ const PlainBackgroundForm = () => {
                                                 src={imagePreview}
                                                 alt="Preview"
                                                 fill
+                                                sizes="(max-width: 768px) 100vw, 50vw"
                                                 className="object-contain rounded-lg"
                                             />
                                         </div>
@@ -474,6 +475,7 @@ const PlainBackgroundForm = () => {
                                         src={result.generated_image_url}
                                         alt="Generated"
                                         fill
+                                        sizes="(max-width: 1024px) 100vw, 768px"
                                         className="object-contain bg-secondary/30"
                                     />
                                 </div>
@@ -575,6 +577,7 @@ const PlainBackgroundForm = () => {
                                         src={result?.generated_image_url}
                                         alt="Current image"
                                         fill
+                                        sizes="(max-width: 768px) 100vw, 672px"
                                         className="object-contain bg-secondary/30"
                                     />
                                 </div>

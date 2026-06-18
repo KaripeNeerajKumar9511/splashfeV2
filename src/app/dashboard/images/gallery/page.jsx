@@ -9,6 +9,14 @@ import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
 import toast from "react-hot-toast"
 import { openImageViewer } from "@/lib/openImageViewer"
+import { ModelTierSelector } from "@/components/images/ModelTierSelector"
+import { resolveRegenerationTier } from "@/lib/creditPricing"
+
+function getRegenContextForImageType(type) {
+    if (type === "campaign_shot_advanced") return "campaign"
+    if (type === "model_with_ornament" || type === "real_model_with_ornament") return "model"
+    return "themed"
+}
 
 export default function GalleryPage() {
     const router = useRouter()
@@ -24,7 +32,9 @@ export default function GalleryPage() {
         image: null,
         prompt: '',
         loading: false,
-        error: null
+        error: null,
+        modelTier: "regular",
+        regenContext: "themed",
     })
 
     // Map filter categories to image types for API
@@ -175,12 +185,18 @@ export default function GalleryPage() {
       
 
     const handleRegenerate = (image) => {
+        const regenContext = getRegenContextForImageType(image.type)
         setRegenerateModal({
             isOpen: true,
             image,
             prompt: '',
             loading: false,
-            error: null
+            error: null,
+            modelTier: resolveRegenerationTier({
+                storedTier: image.model_tier,
+                imageType: image.type,
+            }),
+            regenContext,
         })
     }
 
@@ -199,7 +215,9 @@ export default function GalleryPage() {
         try {
             const response = await apiService.regenerateImage(
                 regenerateModal.image.id,
-                regenerateModal.prompt, token
+                regenerateModal.prompt,
+                token,
+                regenerateModal.modelTier
             )
 
             if (response.success) {
@@ -212,7 +230,9 @@ export default function GalleryPage() {
                     image: null,
                     prompt: '',
                     loading: false,
-                    error: null
+                    error: null,
+                    modelTier: "regular",
+                    regenContext: "themed",
                 })
 
                 toast.success(t("images.imageRegeneratedSuccess"))
@@ -236,7 +256,9 @@ export default function GalleryPage() {
                 image: null,
                 prompt: '',
                 loading: false,
-                error: null
+                error: null,
+                modelTier: "regular",
+                regenContext: "themed",
             })
         }
     }
@@ -551,6 +573,13 @@ export default function GalleryPage() {
                                     💡 Your modification will be combined with the original prompt to maintain context
                                 </p>
                             </div>
+
+                            <ModelTierSelector
+                                value={regenerateModal.modelTier}
+                                onChange={(tier) => setRegenerateModal((prev) => ({ ...prev, modelTier: tier }))}
+                                context={regenerateModal.regenContext}
+                                compact
+                            />
 
                             {/* Error Message */}
                             {regenerateModal.error && (

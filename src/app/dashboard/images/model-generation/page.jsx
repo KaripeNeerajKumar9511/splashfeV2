@@ -12,6 +12,7 @@ import { OrnamentSelection } from "@/components/images/OrnamentSelection"
 import { DimensionsSelector } from "@/components/images/DimensionsSelector"
 import { NumberOfImagesSelector } from "@/components/images/NumberOfImagesSelector"
 import { ModelTierSelector, MODEL_TIER_DEFAULTS } from "@/components/images/ModelTierSelector"
+import { getGenerationCreditCost } from "@/lib/creditPricing"
 import { ReferenceImagesModal } from "@/components/images/ReferenceImagesModal"
 import toast from "react-hot-toast"
 import { openImageViewer } from "@/lib/openImageViewer"
@@ -892,7 +893,7 @@ rounded-xl
 text-foreground text-sm leading-snug">
 
                                             <Coins className="w-5 h-5 text-amber-600 shrink-0" />
-                                            <span>{t("images.creditsCost") || "Cost:"} {numImages * (creditSettings.credits_per_image_generation || 2)} {t("images.credits") || "credits"}. {t("images.clickGenerateAgainToConfirm") || "Click Generate again to confirm."}</span>
+                                            <span>{t("images.creditsCost") || "Cost:"} {numImages * getGenerationCreditCost(creditSettings, modelTier)} {t("images.credits") || "credits"}. {t("images.clickGenerateAgainToConfirm") || "Click Generate again to confirm."}</span>
                                         </div>
                                     )}
                                     <button
@@ -1172,7 +1173,7 @@ rounded-xl
 text-foreground text-sm leading-snug">
 
                                             <Coins className="w-5 h-5 text-amber-600 shrink-0" />
-                                            <span>{t("images.creditsCost") || "Cost:"} {numImages * (creditSettings.credits_per_image_generation || 2)} {t("images.credits") || "credits"}. {t("images.clickGenerateAgainToConfirm") || "Click Generate again to confirm."}</span>
+                                            <span>{t("images.creditsCost") || "Cost:"} {numImages * getGenerationCreditCost(creditSettings, modelTier)} {t("images.credits") || "credits"}. {t("images.clickGenerateAgainToConfirm") || "Click Generate again to confirm."}</span>
                                         </div>
                                     )}
                                     <button

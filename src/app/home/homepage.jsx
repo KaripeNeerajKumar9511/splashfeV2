@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   GemIcon,
   StoreIcon,
@@ -34,7 +34,29 @@ function TickerContent() {
   );
 }
 
+const FALLBACK_SHOWCASE = [
+  { id: "fallback-1", src: "/images/lifestyle.webp", label: "Lifestyle", homepage_layout: "lifestyle", alt: "Gold and emerald necklace product shot" },
+  { id: "fallback-2", src: "/images/campaign.webp", label: "Campaign visual", homepage_layout: "campaign", alt: "Campaign visual with model wearing gold necklace" },
+  { id: "fallback-3", src: "/images/product.webp", label: "Product shot", homepage_layout: "product", alt: "Lifestyle setup at a festive jewelry event" },
+  { id: "fallback-4", src: "/images/model.webp", label: "Model shot", homepage_layout: "model", alt: "Model shot with gold chain necklace" },
+  { id: "fallback-5", src: "/images/multipice.png", label: "Multi piece", homepage_layout: "multipiece", alt: "Multi-piece gold earrings collection" },
+];
+
 export default function SplashLanding() {
+  const [showcaseImages, setShowcaseImages] = useState(FALLBACK_SHOWCASE);
+
+  useEffect(() => {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+    fetch(`${apiBase}/api/homepage/public-gallery/showcase/`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.images) && data.images.length > 0) {
+          setShowcaseImages(data.images);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="splash-page">
       <MarketingNav isHome />
@@ -631,36 +653,14 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
     <a href="/gallery" className="btn-o showcase-cta">View all →</a>
   </div>
   <div className="sc-grid">
-    <div className="sc sc-product">
-      <div className="sc-inner">
-        <img src="/images/lifestyle.webp" alt="Gold and emerald necklace product shot" loading="lazy" />
+    {showcaseImages.map((img) => (
+      <div key={img.id || img.src} className={`sc sc-${img.homepage_layout || "product"}`}>
+        <div className="sc-inner">
+          <img src={img.src || img.image_url} alt={img.alt || img.label || "Showcase image"} loading="lazy" />
+        </div>
+        <div className="sc-lbl">{img.label}</div>
       </div>
-      <div className="sc-lbl">Lifestyle</div>
-    </div>
-    <div className="sc sc-campaign">
-      <div className="sc-inner">
-        <img src="/images/campaign.webp" alt="Campaign visual with model wearing gold necklace" loading="lazy" />
-      </div>
-      <div className="sc-lbl">Campaign visual</div>
-    </div>
-    <div className="sc sc-lifestyle">
-      <div className="sc-inner">
-        <img src="/images/product.webp" alt="Lifestyle setup at a festive jewelry event" loading="lazy" />
-      </div>
-      <div className="sc-lbl">Product shot</div>
-    </div>
-    <div className="sc sc-model">
-      <div className="sc-inner">
-        <img src="/images/model.webp" alt="Model shot with gold chain necklace" loading="lazy" />
-      </div>
-      <div className="sc-lbl">Model shot</div>
-    </div>
-    <div className="sc sc-multipiece">
-      <div className="sc-inner">
-        <img src="/images/multipice.png" alt="Multi-piece gold earrings collection" loading="lazy" />
-      </div>
-      <div className="sc-lbl">Multi piece</div>
-    </div>
+    ))}
   </div>
 </div>
 

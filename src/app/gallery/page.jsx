@@ -1,4 +1,4 @@
-import { getPublicGalleryImages } from "@/lib/publicGallery";
+import { fetchPublicGalleryImages } from "@/lib/publicGallery";
 import PublicGallery from "@/components/gallery/PublicGallery";
 
 export const metadata = {
@@ -7,7 +7,7 @@ export const metadata = {
     "Browse AI-generated jewelry visuals created with Splash — campaign shots, product photography, and background changes.",
 };
 
-export default function GalleryPage() {
-  const images = getPublicGalleryImages();
+export default async function GalleryPage() {
+  const images = await fetchPublicGalleryImages();
   return <PublicGallery images={images} />;
 }

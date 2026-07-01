@@ -761,6 +761,15 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                                     </div>
                                 </div>
 
+                                 {/* Ornament Selection */}
+                                 <OrnamentSelection
+                                    selectedType={aiOrnamentType}
+                                    onTypeChange={setAiOrnamentType}
+                                    measurements={aiOrnamentMeasurements}
+                                    onMeasurementsChange={setAiOrnamentMeasurements}
+                                />
+
+
                                 {/* Pose Style */}
                                 <div>
                                     <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -812,14 +821,6 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                                         )}
                                     </div>
                                 </div>
-
-                                {/* Ornament Selection */}
-                                <OrnamentSelection
-                                    selectedType={aiOrnamentType}
-                                    onTypeChange={setAiOrnamentType}
-                                    measurements={aiOrnamentMeasurements}
-                                    onMeasurementsChange={setAiOrnamentMeasurements}
-                                />
 
                                 {/* Custom Prompt */}
                                 <div>

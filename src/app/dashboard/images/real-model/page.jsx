@@ -12,6 +12,7 @@ import { DimensionsSelector } from "@/components/images/DimensionsSelector"
 import toast from "react-hot-toast"
 import { Badge } from "@/components/ui/badge"
 import GeneratedSmartImage from "@/components/images/GeneratedSmartImage"
+import { mergeRegenerationResult } from "@/lib/regeneration"
 
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
@@ -139,12 +140,7 @@ export default function RealModelForm() {
             )
 
             if (response.success) {
-                setResult({
-                    ...result,
-                    generated_image_url: response.generated_image_url,
-                    mongo_id: response.mongo_id,
-                    prompt: response.combined_prompt
-                })
+                setResult(mergeRegenerationResult(result, response))
 
                 setRegenerateModal({
                     isOpen: false,

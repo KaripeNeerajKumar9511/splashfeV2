@@ -17,6 +17,7 @@ import { ReferenceImagesModal } from "@/components/images/ReferenceImagesModal"
 import toast from "react-hot-toast"
 import { openImageViewer } from "@/lib/openImageViewer"
 import GeneratedSmartImage, { toViewerItem } from "@/components/images/GeneratedSmartImage"
+import { mergeRegenerationResult } from "@/lib/regeneration"
 import { HiOutlineUserCircle } from "react-icons/hi";
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
@@ -360,15 +361,16 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
             )
 
             if (response.success) {
-                const updated = { generated_image_url: response.generated_image_url, mongo_id: response.mongo_id, prompt: response.combined_prompt }
                 if (aiResult?.images && Array.isArray(aiResult.images)) {
                     const idx = aiRegenerateModal.image?.index ?? 0
                     setAiResult({
                         ...aiResult,
-                        images: aiResult.images.map((img, i) => (i === idx ? { ...img, ...updated } : img))
+                        images: aiResult.images.map((img, i) =>
+                            i === idx ? mergeRegenerationResult(img, response) : img
+                        ),
                     })
                 } else {
-                    setAiResult({ ...aiResult, ...updated })
+                    setAiResult(mergeRegenerationResult(aiResult, response))
                 }
                 setAiRegenerateModal({
                     isOpen: false,
@@ -558,15 +560,16 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
             )
 
             if (response.success) {
-                const updated = { generated_image_url: response.generated_image_url, mongo_id: response.mongo_id, prompt: response.combined_prompt }
                 if (realResult?.images && Array.isArray(realResult.images)) {
                     const idx = realRegenerateModal.image?.index ?? 0
                     setRealResult({
                         ...realResult,
-                        images: realResult.images.map((img, i) => (i === idx ? { ...img, ...updated } : img))
+                        images: realResult.images.map((img, i) =>
+                            i === idx ? mergeRegenerationResult(img, response) : img
+                        ),
                     })
                 } else {
-                    setRealResult({ ...realResult, ...updated })
+                    setRealResult(mergeRegenerationResult(realResult, response))
                 }
                 setRealRegenerateModal({
                     isOpen: false,

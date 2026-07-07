@@ -2,6 +2,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 import axios from 'axios';
 import { generateEnhancedPrompt, generateEnhancedCampaignPrompt } from './ornamentRules';
+import { normalizeRegenerationResponse } from './regeneration';
 
 const SPLASH_LOGIN_PATH = '/login';
 
@@ -1221,7 +1222,6 @@ class ApiService {
         return data;
     }
 
-    // Regeneration endpoints
     async regenerateImage(imageId, prompt, token, modelTier = "regular") {
         // Validate MongoDB ObjectId format (24 hex characters)
         if (!imageId || typeof imageId !== 'string') {
@@ -1251,10 +1251,11 @@ class ApiService {
         const data = response.data;
 
         if (data && data.task_id) {
-            return await this.waitForImageTask(data.task_id, token);
+            const result = await this.waitForImageTask(data.task_id, token);
+            return normalizeRegenerationResponse(result);
         }
 
-        return data;
+        return normalizeRegenerationResponse(data);
     }
 
     async getUserImages(type = null, page = 1, limit = 20) {

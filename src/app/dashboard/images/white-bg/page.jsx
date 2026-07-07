@@ -18,6 +18,7 @@ const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 import GeneratedSmartImage, { toViewerItem } from "@/components/images/GeneratedSmartImage"
+import { mergeRegenerationResult } from "@/lib/regeneration"
 const PlainBackgroundForm = () => {
     const router = useRouter()
     const { t } = useLanguage()
@@ -201,12 +202,7 @@ const PlainBackgroundForm = () => {
             )
 
             if (response.success) {
-                setResult({
-                    ...result,
-                    generated_image_url: response.generated_image_url,
-                    mongo_id: response.mongo_id,
-                    prompt: response.combined_prompt
-                })
+                setResult(mergeRegenerationResult(result, response))
                 setRegenerateModal({
                     isOpen: false,
                     prompt: '',

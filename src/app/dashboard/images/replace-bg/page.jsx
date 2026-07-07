@@ -15,6 +15,7 @@ import { ModelTierSelector, MODEL_TIER_DEFAULTS } from "@/components/images/Mode
 import { getGenerationCreditCost } from "@/lib/creditPricing"
 import { openImageViewer } from "@/lib/openImageViewer"
 import GeneratedSmartImage, { toViewerItem } from "@/components/images/GeneratedSmartImage"
+import { mergeRegenerationResult } from "@/lib/regeneration"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -240,20 +241,16 @@ const BackgroundReplaceForm = () => {
             const isSuccess = response.success !== false && Boolean(response.generated_image_url || response.images);
 
             if (isSuccess) {
-                const updated = {
-                    generated_image_url: response.generated_image_url || response?.images?.[0]?.generated_image_url,
-                    mongo_id: response.mongo_id || response?.images?.[0]?.mongo_id,
-                    prompt: response.combined_prompt || regenerateModal.prompt
-                }
-
                 if (result?.images && Array.isArray(result.images)) {
                     const idx = regenerateModal.image?.index ?? 0
                     setResult({
                         ...result,
-                        images: result.images.map((img, i) => (i === idx ? { ...img, ...updated } : img))
+                        images: result.images.map((img, i) =>
+                            i === idx ? mergeRegenerationResult(img, response) : img
+                        ),
                     })
                 } else {
-                    setResult(prev => ({ ...(prev || {}), ...updated }))
+                    setResult(prev => mergeRegenerationResult(prev || {}, response))
                 }
 
                 setRegenerateModal({ isOpen: false, prompt: '', loading: false, error: null, image: null, modelTier: MODEL_TIER_DEFAULTS.themed })
@@ -741,7 +738,7 @@ const BackgroundReplaceForm = () => {
                                             {result.images.map((img, idx) => (
                                                 <div key={img.mongo_id || idx} className="rounded-xl border border-border overflow-hidden bg-secondary/30 relative">
                                                     <div className="relative w-full h-[400px]">
-                                                        <GeneratedSmartImage image={img} alt={`Generated ${idx + 1}`} fill className="object-contain" />
+                                                        <GeneratedSmartImage key={img.mongo_id || idx} image={img} alt={`Generated ${idx + 1}`} fill className="object-contain" />
                                                     </div>
                                                     <div className="p-4 flex flex-wrap gap-3 justify-center border-t border-border">
                                                         <span className="text-sm font-medium text-gold-solid bg-card px-2 py-1 rounded border border-gold-muted">Image {idx + 1}</span>
@@ -757,7 +754,7 @@ const BackgroundReplaceForm = () => {
                                 ) : (
                                     <>
                                         <div className="relative w-full h-[450px] rounded-2xl overflow-hidden border border-border bg-secondary/30">
-                                            <GeneratedSmartImage image={result} alt="Generated" fill className="object-contain" />
+                                            <GeneratedSmartImage key={result.mongo_id || "result"} image={result} alt="Generated" fill className="object-contain" />
                                         </div>
                                         <div className="space-y-3">
                                             <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl">

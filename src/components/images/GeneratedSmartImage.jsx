@@ -27,8 +27,12 @@ export function getGeneratedImageSources(image) {
     }
   }
 
+  const cacheKey = image.mongo_id || image.id
+  const primaryWithCache =
+    primary && cacheKey && !isHttpUrl(primary) ? `${primary}?v=${cacheKey}` : primary
+
   return {
-    src: primary || urlField || "",
+    src: primaryWithCache || urlField || "",
     fallbackSrc: "",
   }
 }

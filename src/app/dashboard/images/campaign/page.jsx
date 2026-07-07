@@ -19,6 +19,7 @@ import { ReferenceImagesModal } from "@/components/images/ReferenceImagesModal"
 import toast from "react-hot-toast"
 import { openImageViewer } from "@/lib/openImageViewer"
 import GeneratedSmartImage, { toViewerItem } from "@/components/images/GeneratedSmartImage"
+import { mergeRegenerationResult } from "@/lib/regeneration"
 import { SiGooglecampaignmanager360  } from "react-icons/si";
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
@@ -400,15 +401,16 @@ const submitRegenerate = async () => {
         )
 
             if (response.success) {
-                const updated = { generated_image_url: response.generated_image_url, mongo_id: response.mongo_id, prompt: response.combined_prompt }
                 if (result?.images && Array.isArray(result.images)) {
                     const idx = regenerateModal.image?.index ?? 0
                     setResult({
                         ...result,
-                        images: result.images.map((img, i) => (i === idx ? { ...img, ...updated } : img))
+                        images: result.images.map((img, i) =>
+                            i === idx ? mergeRegenerationResult(img, response) : img
+                        ),
                     })
                 } else {
-                    setResult({ ...result, ...updated })
+                    setResult(mergeRegenerationResult(result, response))
                 }
                 setRegenerateModal({ isOpen: false, prompt: '', loading: false, error: null, image: null, modelTier: MODEL_TIER_DEFAULTS.campaign })
                 toast.success(t("images.imageRegeneratedSuccess"))

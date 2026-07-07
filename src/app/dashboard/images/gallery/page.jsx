@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, Grid, Download, Trash2, Filter, Calendar, Tag, RefreshCw, Loader2, X, Sparkles, AlertCircle, Eye } from "lucide-react"
-import Image from "next/image"
 import { apiService } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
 import toast from "react-hot-toast"
 import { openImageViewer } from "@/lib/openImageViewer"
 import { ModelTierSelector } from "@/components/images/ModelTierSelector"
-import { resolveRegenerationTier } from "@/lib/creditPricing"
+import { resolveRegenerationTier } from "@/lib/creditPricing"   
+import GeneratedSmartImage, { toViewerItem } from "@/components/images/GeneratedSmartImage"
 
 function getRegenContextForImageType(type) {
     if (type === "campaign_shot_advanced") return "campaign"
@@ -175,10 +175,9 @@ export default function GalleryPage() {
     }
 
     const handleView = (image) => {
-        const viewerItems = filteredImages.map((img, idx) => ({
-            url: img.generated_image_url,
-            label: `${getImageCategory(img.type)} ${idx + 1}`
-        }))
+        const viewerItems = filteredImages.map((img, idx) =>
+            toViewerItem(img, `${getImageCategory(img.type)} ${idx + 1}`)
+        )
         const activeIndex = filteredImages.findIndex((img) => img.id === image.id)
         openImageViewer(viewerItems, activeIndex >= 0 ? activeIndex : 0)
     }
@@ -378,8 +377,8 @@ export default function GalleryPage() {
                                 >
                                     {/* Image */}
                                     <div className="relative w-75 h-75 bg-card rounded-lg overflow-hidden mb-2">
-                                    <Image 
-  src={`${image.generated_image_url}?v=${image.id}`}
+                                    <GeneratedSmartImage
+  image={image}
   alt={image.prompt || "Generated image"}
   fill
   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -535,8 +534,8 @@ export default function GalleryPage() {
                             <div>
                                 <p className="text-sm font-semibold text-foreground mb-3">Current Image:</p>
                                 <div className="relative w-full h-64 rounded-xl overflow-hidden border-2 border-border">
-                                    <Image
-                                        src={regenerateModal.image.generated_image_url}
+                                    <GeneratedSmartImage
+                                        image={regenerateModal.image}
                                         alt="Current image"
                                         fill
                                         sizes="(max-width: 768px) 100vw, 600px"

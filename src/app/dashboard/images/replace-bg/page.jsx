@@ -14,6 +14,7 @@ import { NumberOfImagesSelector } from "@/components/images/NumberOfImagesSelect
 import { ModelTierSelector, MODEL_TIER_DEFAULTS } from "@/components/images/ModelTierSelector"
 import { getGenerationCreditCost } from "@/lib/creditPricing"
 import { openImageViewer } from "@/lib/openImageViewer"
+import GeneratedSmartImage, { toViewerItem } from "@/components/images/GeneratedSmartImage"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -118,10 +119,9 @@ const BackgroundReplaceForm = () => {
                   ? [result]
                   : []
 
-        const viewerItems = generatedImages.map((img, idx) => ({
-            url: img.generated_image_url,
-            label: `Image ${idx + 1}`
-        }))
+        const viewerItems = generatedImages.map((img, idx) =>
+            toViewerItem(img, `Image ${idx + 1}`)
+        )
 
         const activeIndex = selectedImage
             ? generatedImages.findIndex((img) => {
@@ -418,6 +418,7 @@ const BackgroundReplaceForm = () => {
             formDataToSend.append("model_tier", modelTier)
 
             const response = await apiService.changeBackground(formDataToSend, token)
+            console.log("response for change background", response)
 
             if (response && (response.success !== false)) {
                 setResult(response)
@@ -740,7 +741,7 @@ const BackgroundReplaceForm = () => {
                                             {result.images.map((img, idx) => (
                                                 <div key={img.mongo_id || idx} className="rounded-xl border border-border overflow-hidden bg-secondary/30 relative">
                                                     <div className="relative w-full h-[400px]">
-                                                        <Image src={img.generated_image_url} alt={`Generated ${idx + 1}`} fill className="object-contain" />
+                                                        <GeneratedSmartImage image={img} alt={`Generated ${idx + 1}`} fill className="object-contain" />
                                                     </div>
                                                     <div className="p-4 flex flex-wrap gap-3 justify-center border-t border-border">
                                                         <span className="text-sm font-medium text-gold-solid bg-card px-2 py-1 rounded border border-gold-muted">Image {idx + 1}</span>
@@ -756,7 +757,7 @@ const BackgroundReplaceForm = () => {
                                 ) : (
                                     <>
                                         <div className="relative w-full h-[450px] rounded-2xl overflow-hidden border border-border bg-secondary/30">
-                                            <Image src={result.generated_image_url} alt="Generated" fill className="object-contain" />
+                                            <GeneratedSmartImage image={result} alt="Generated" fill className="object-contain" />
                                         </div>
                                         <div className="space-y-3">
                                             <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
@@ -814,8 +815,8 @@ const BackgroundReplaceForm = () => {
                             <div>
                                 <p className="text-sm font-semibold text-foreground mb-3">{t("images.currentImage")}:</p>
                                 <div className="relative w-full h-64 rounded-xl overflow-hidden border border-border bg-secondary/30">
-                                    <Image
-                                        src={result?.generated_image_url}
+                                    <GeneratedSmartImage
+                                        image={regenerateModal.image || result}
                                         alt="Current"
                                         fill
                                         className="object-contain"

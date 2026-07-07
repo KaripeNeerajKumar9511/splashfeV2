@@ -11,6 +11,7 @@ import { OrnamentSelection } from "@/components/images/OrnamentSelection"
 import { DimensionsSelector } from "@/components/images/DimensionsSelector"
 import toast from "react-hot-toast"
 import { Badge } from "@/components/ui/badge"
+import GeneratedSmartImage from "@/components/images/GeneratedSmartImage"
 
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
@@ -448,8 +449,8 @@ export default function RealModelForm() {
                         ) : result ? (
                             <div className="space-y-6">
                                 <div className="relative w-full h-[550px] rounded-2xl overflow-hidden border-2 border-gold-muted">
-                                    <Image
-                                        src={result.generated_image_url}
+                                    <GeneratedSmartImage
+                                        image={result}
                                         alt="Generated Real Model"
                                         fill
                                         className="object-contain bg-secondary/30"
@@ -557,8 +558,8 @@ export default function RealModelForm() {
                             <div>
                                 <p className="text-sm font-semibold text-foreground mb-3">{t("images.currentImage")}:</p>
                                 <div className="relative w-full h-64 rounded-xl overflow-hidden border-2 border-border">
-                                    <Image
-                                        src={result.generated_image_url}
+                                    <GeneratedSmartImage
+                                        image={result}
                                         alt="Current image"
                                         fill
                                         className="object-contain bg-secondary/30"

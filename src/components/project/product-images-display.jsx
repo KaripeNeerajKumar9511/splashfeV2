@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext"
 import { formatRelativeCommentTime } from "@/lib/comment-time"
 import { ModelTierSelector } from "@/components/images/ModelTierSelector"
 import { resolveRegenerationTier } from "@/lib/creditPricing"
+import SmartImage from "@/utils/SmartImage"
 
 function getProjectRegenContext(imageType) {
     if (imageType === "campaign_image") return "campaign"
@@ -439,6 +440,8 @@ export function ProductImagesDisplay({
         await downloadImageAsBlob(imageUrl, filename);
     }
 
+    console.log("products", products)
+
     return (
         <div className="mb-12">
             {/* Header */}
@@ -511,8 +514,12 @@ export function ProductImagesDisplay({
                                     <div className="space-y-3">
                                         <div className="relative group">
                                             <div className="aspect-square rounded-xl overflow-hidden bg-muted border-2 border-gold-solid shadow-sm">
-                                                <img
-                                                    src={product.uploaded_image_url}
+                                                <SmartImage
+                                                    src={product.uploaded_image_path}
+                                                    fallbackSrc={product.uploaded_image_url}
+                                                    fill
+                                                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                                    priority={productIndex === 0}
                                                     alt={`Product ${productIndex + 1}`}
                                                     className="w-full h-full object-cover cursor-zoom-in transition-transform hover:scale-105"
                                                     onClick={() => setZoomedImage(product.uploaded_image_url)}
@@ -561,8 +568,12 @@ export function ProductImagesDisplay({
                                                     <div key={imgIndex} className="group">
                                                         <div className="space-y-3">
                                                             <div className="relative aspect-square rounded-xl overflow-hidden bg-muted border border-border shadow-sm hover:shadow-md transition-all">
-                                                                <img
-                                                                    src={imageToShow.cloud_url}
+                                                                <SmartImage
+                                                                    src={imageToShow.local_path}
+                                                                    fallbackSrc={imageToShow.cloud_url}
+                                                                    fill
+                                                                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                                                    priority={imgIndex === 0}
                                                                     alt={`${imageToShow.type} ${imgIndex + 1}`}
                                                                     className="w-full h-full object-cover cursor-zoom-in transition-transform hover:scale-105"
                                                                     onClick={() => setZoomedImage(imageToShow.cloud_url)}

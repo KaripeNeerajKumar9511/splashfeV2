@@ -17,7 +17,7 @@ import { MdPhotoSizeSelectLarge } from "react-icons/md"
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-
+import GeneratedSmartImage, { toViewerItem } from "@/components/images/GeneratedSmartImage"
 const PlainBackgroundForm = () => {
     const router = useRouter()
     const { t } = useLanguage()
@@ -52,7 +52,7 @@ const PlainBackgroundForm = () => {
     //         reader.readAsDataURL(file)
     //     }
     // }
-
+    
     const handleFileChange = (file, inputEl) => {
         if (!file) return;
       
@@ -105,10 +105,9 @@ const PlainBackgroundForm = () => {
                 ? [result]
                 : []
 
-        const viewerItems = generatedImages.map((img, idx) => ({
-            url: img.generated_image_url,
-            label: `Image ${idx + 1}`
-        }))
+        const viewerItems = generatedImages.map((img, idx) =>
+            toViewerItem(img, `Image ${idx + 1}`)
+        )
 
         const activeIndex = selectedImage ? 0 : 0
         openImageViewer(viewerItems, activeIndex)
@@ -264,7 +263,8 @@ const PlainBackgroundForm = () => {
             }
 
             const response = await apiService.uploadOrnamentWithBackground(formDataToSend, token)
-            console.log(response.data)
+            console.log("Full response:", response);
+            console.log("response.data:", response.data);
 
             if (response.success) {
                 setResult(response)
@@ -345,7 +345,6 @@ const PlainBackgroundForm = () => {
                                                 src={imagePreview}
                                                 alt="Preview"
                                                 fill
-                                                sizes="(max-width: 768px) 100vw, 50vw"
                                                 className="object-contain rounded-lg"
                                             />
                                         </div>
@@ -472,8 +471,8 @@ const PlainBackgroundForm = () => {
                         ) : result ? (
                             <div className="space-y-6">
                                 <div className="relative w-full h-[400px] rounded-2xl overflow-hidden border-2 border-gold-muted/20">
-                                    <Image
-                                        src={result.generated_image_url}
+                                    <GeneratedSmartImage
+                                        image={result}
                                         alt="Generated"
                                         fill
                                         sizes="(max-width: 1024px) 100vw, 768px"
@@ -574,8 +573,8 @@ const PlainBackgroundForm = () => {
                             <div>
                                 <p className="text-sm font-semibold text-foreground mb-3">Current Image:</p>
                                 <div className="relative w-full h-64 rounded-xl overflow-hidden border-2 border-border">
-                                    <Image
-                                        src={result?.generated_image_url}
+                                    <GeneratedSmartImage
+                                        image={result}
                                         alt="Current image"
                                         fill
                                         sizes="(max-width: 768px) 100vw, 672px"

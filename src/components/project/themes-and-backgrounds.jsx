@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import { apiService } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { formatRelativeCommentTime } from "@/lib/comment-time"
+import SmartImage from "@/utils/SmartImage"
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -647,9 +648,14 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
                             <div className="grid grid-cols-2 gap-2">
                                 {uploadedImages.themes.map((image) => (
                                     <div key={image.id} className="relative group">
-                                        <img
-                                            src={image.url}
+                                        <SmartImage
+                                            src={image.local_path}
+                                            fallbackSrc={image.cloud_url}
                                             alt={image.name}
+                                            width={100}
+                                            height={100}
+                                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                            priority={image.id === uploadedImages.themes[0].id}
                                             className="w-full h-16 object-cover rounded border"
                                         />
                                         <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -760,8 +766,13 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
                             <div className="grid grid-cols-2 gap-2">
                                 {uploadedImages.backgrounds.map((image) => (
                                     <div key={image.id} className="relative group">
-                                        <img
-                                            src={image.url}
+                                        <SmartImage
+                                            src={image.local_path}
+                                            fallbackSrc={image.cloud_url}
+                                            width={100}
+                                            height={100}
+                                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                            priority={image.id === uploadedImages.backgrounds[0].id}
                                             alt={image.name}
                                             className="w-full h-16 object-cover rounded border"
                                         />
@@ -868,8 +879,13 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
                             <div className="grid grid-cols-2 gap-2">
                                 {uploadedImages.poses.map((image) => (
                                     <div key={image.id} className="relative group">
-                                        <img
-                                            src={image.url}
+                                        <SmartImage
+                                            src={image.local_path}
+                                            fallbackSrc={image.cloud_url}
+                                            width={100}
+                                            height={100}
+                                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                            priority={image.id === uploadedImages.poses[0].id}
                                             alt={image.name}
                                             className="w-full h-16 object-cover rounded border"
                                         />
@@ -972,8 +988,13 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
                             <div className="grid grid-cols-2 gap-2">
                                 {uploadedImages.locations.map((image) => (
                                     <div key={image.id} className="relative group">
-                                        <img
-                                            src={image.url}
+                                        <SmartImage
+                                            src={image.local_path}
+                                            fallbackSrc={image.cloud_url}
+                                            width={100}
+                                            height={100}
+                                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                            priority={image.id === uploadedImages.locations[0].id}
                                             alt={image.name}
                                             className="w-full h-16 object-cover rounded border"
                                         />

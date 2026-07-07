@@ -16,6 +16,7 @@ import { getGenerationCreditCost } from "@/lib/creditPricing"
 import { ReferenceImagesModal } from "@/components/images/ReferenceImagesModal"
 import toast from "react-hot-toast"
 import { openImageViewer } from "@/lib/openImageViewer"
+import GeneratedSmartImage, { toViewerItem } from "@/components/images/GeneratedSmartImage"
 import { HiOutlineUserCircle } from "react-icons/hi";
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
@@ -170,10 +171,9 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                   ? [currentState.result]
                   : []
 
-        const viewerItems = generatedImages.map((img, idx) => ({
-            url: img.generated_image_url,
-            label: `Image ${idx + 1}`
-        }))
+        const viewerItems = generatedImages.map((img, idx) =>
+            toViewerItem(img, `Image ${idx + 1}`)
+        )
 
         const activeIndex = selectedImage
             ? generatedImages.findIndex((img) => {
@@ -1227,8 +1227,8 @@ text-foreground text-sm leading-snug">
                                             {currentState.result.images.map((img, idx) => (
                                                 <div key={img.mongo_id || idx} className="rounded-xl border-2 border-gold-muted/20 overflow-hidden bg-secondary/30">
                                                     <div className="relative w-full h-[400px]">
-                                                        <Image
-                                                            src={img.generated_image_url}
+                                                        <GeneratedSmartImage
+                                                            image={img}
                                                             alt={`Generated ${idx + 1}`}
                                                             fill
                                                             sizes="100vw"
@@ -1250,8 +1250,8 @@ text-foreground text-sm leading-snug">
                                 ) : (
                                     <>
                                         <div className="relative w-full h-[450px] rounded-2xl overflow-hidden border-2 border-gold-muted/20">
-                                            <Image
-                                                src={currentState.result.generated_image_url}
+                                            <GeneratedSmartImage
+                                                image={currentState.result}
                                                 alt={activeTab === "ai_model" ? "Generated AI Model" : "Generated Real Model"}
                                                 fill
                                                 sizes="100vw"
@@ -1331,8 +1331,8 @@ text-foreground text-sm leading-snug">
                             <div>
                                 <p className="text-sm font-semibold text-foreground mb-3">{t("images.currentImage")}:</p>
                                 <div className="relative w-full h-64 rounded-xl overflow-hidden border-2 border-border">
-                                    <Image
-                                        src={aiResult?.generated_image_url}
+                                    <GeneratedSmartImage
+                                        image={aiRegenerateModal.image || aiResult}
                                         alt="Current image"
                                         fill
                                         sizes="100vw"
@@ -1451,8 +1451,8 @@ text-foreground text-sm leading-snug">
                             <div>
                                 <p className="text-sm font-semibold text-foreground mb-3">{t("images.currentImage")}:</p>
                                 <div className="relative w-full h-64 rounded-xl overflow-hidden border-2 border-border">
-                                    <Image
-                                        src={realResult?.generated_image_url}
+                                    <GeneratedSmartImage
+                                        image={realRegenerateModal.image || realResult}
                                         alt="Current image"
                                         fill
                                         sizes="100vw"

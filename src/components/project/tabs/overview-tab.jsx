@@ -241,6 +241,7 @@ import { ProductImagesDisplay } from "../product-images-display"
 import { apiService } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { dataCache, cacheKeys } from "@/lib/data-cache"
+import SmartImage from "@/utils/SmartImage"
 
 export default function OverviewTab({ project }) {
     const [collectionData, setCollectionData] = useState(null)
@@ -294,6 +295,7 @@ export default function OverviewTab({ project }) {
                     2 * 60 * 1000
                 ).catch(() => null)
             ])
+            console.log("data", data)
 
             if (data.status === 'fulfilled') {
                 const collectionData = data.value
@@ -547,12 +549,14 @@ export default function OverviewTab({ project }) {
                         <div className="space-y-3">
                             <div className="flex items-center gap-3">
                                 <div className="relative w-20 h-20 rounded-lg border-2 border-gold-solid overflow-hidden">
-                                    <Image
-                                        src={item.selected_model.cloud || item.selected_model.local}
+                                    <SmartImage
+                                        src={item.selected_model.local}
+                                        fallbackSrc={item.selected_model.cloud}
                                         alt="Selected Model"
                                         fill
+                                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                        priority={true}
                                         className="object-cover"
-                                        sizes="80px"
                                     />
                                 </div>
                                 <div>
@@ -706,13 +710,15 @@ const SelectionSection = ({ title, icon, selected, uploadedImages }) => (
                 <div className="grid grid-cols-4 gap-4">
                     {uploadedImages.map((img, idx) => (
                         <div key={idx} className="relative w-full h-24 rounded-lg border border-border overflow-hidden">
-                            <Image
-                                src={img.cloud_url || img.local_url}
+                            <SmartImage
+                                src={img.local_path}
+                                fallbackSrc={img.cloud_url}
                                 alt={`${title} ${idx + 1}`}
                                 fill
-                                className="object-cover"
                                 sizes="(max-width: 768px) 25vw, 25vw"
-                            />
+                                priority={idx === 0}
+                                className="object-cover"
+                            />  
                         </div>
                     ))}
                 </div>

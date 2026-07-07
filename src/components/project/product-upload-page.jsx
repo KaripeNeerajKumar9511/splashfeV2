@@ -13,6 +13,7 @@ import {
     mergeProductRowSelection,
 } from "./ProductModelTierSelect"
 import { estimateProductUploadCredits } from "@/lib/creditPricing"
+import SmartImage from "@/utils/SmartImage"
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -566,6 +567,8 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
     }))
 
     const hasProducts = uploadedProducts.length > 0
+
+    console.log("uploadedProducts", uploadedProducts)
     const hasSelectedFiles = selectedFiles.length > 0
 
     return (
@@ -890,10 +893,14 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                             <td className="px-4 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="relative group w-20 h-20 flex-shrink-0">
-                                                        <img
-                                                            src={product.uploaded_image_url}
+                                                        <SmartImage
+                                                            src={product.uploaded_image_path}
+                                                            fallbackSrc={product.uploaded_image_url}
                                                             alt={`Product ${index + 1}`}
                                                             className="w-full h-full object-contain bg-card border border-border rounded-lg"
+                                                            fill
+                                                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                                            priority={index === 0}
                                                         />
                                                         <button
                                                             onClick={(e) => {

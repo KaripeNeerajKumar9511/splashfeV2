@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { apiService } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { formatRelativeCommentTime } from "@/lib/comment-time"
+import SmartImage from "@/utils/SmartImage"
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
 const ALLOWED_REAL_MODEL_TYPES = [
@@ -48,7 +49,7 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
     const [commentMessage, setCommentMessage] = useState("")
     const [savingComments, setSavingComments] = useState(false)
     const [nowMs, setNowMs] = useState(Date.now())
-
+    console.log("realModels : ", realModels)
     const commentFieldConfig = {
         human_model_preview: {
             payloadKey: "human_model_preview_comments",
@@ -765,7 +766,7 @@ function AIModelsTab({
                 : [...prev, imageUrl]
         )
     }
-
+    console.log("AIModelsTab : ", aiModels)
     const handleSaveClick = async () => {
         if (tempSelectedModels.length === 0) {
             return
@@ -836,8 +837,13 @@ function AIModelsTab({
                                                 }`}
                                         >
                                             {/* Image */}
-                                            <img
-                                                src={imageUrl}
+                                            <SmartImage
+                                                src={model.local_path}
+                                                fallbackSrc={model.cloud_url}
+                                                width={100}
+                                                height={100}
+                                                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                                priority={index === 0}
                                                 alt={`Existing Model ${index + 1}`}
                                                 className="w-full h-40 object-cover group-hover:scale-[1.03] transition-transform duration-300"
                                             />
@@ -1001,8 +1007,13 @@ function AIModelsTab({
                                         : 'border-border hover:border-amber-400/50'
                                         }`}
                                 >
-                                    <img
-                                        src={imageUrl}
+                                    <SmartImage
+                                        src={model.local}
+                                        fallbackSrc={model.cloud}
+                                        width={100}
+                                        height={100}
+                                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                        priority={index === 0}
                                         alt={`AI Model ${index + 1}`}
                                         className="w-full h-40 object-cover"
                                     />
@@ -1174,8 +1185,13 @@ function RealModelsTab({
                                     onClick={() => canEdit && onSelect(model)}
                                 >
                                     {/* Model image */}
-                                    <img
-                                        src={imageUrl}
+                                    <SmartImage
+                                        src={model.local}
+                                        fallbackSrc={model.cloud}
+                                        width={100}
+                                        height={100}
+                                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                        priority={index === 0}
                                         alt={`Real Model ${index + 1}`}
                                         className="w-full h-40 object-cover group-hover:scale-[1.03] transition-transform duration-300"
                                     />

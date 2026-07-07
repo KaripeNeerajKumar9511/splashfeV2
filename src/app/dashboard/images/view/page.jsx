@@ -2,9 +2,8 @@
 
 import { useLayoutEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import Image from "next/image"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-
+import SmartImage from "@/utils/SmartImage"
 function readViewerPayload(key) {
   if (!key || typeof window === "undefined") {
     return { images: [], activeIndex: 0 }
@@ -96,16 +95,14 @@ export default function ImageViewerPage() {
 
         <div className="relative bg-card rounded-xl border border-border overflow-hidden">
           <div className="relative w-full h-[65vh] min-h-[420px]">
-            <Image
-              key={activeImage.url}
-              src={activeImage.url}
+            <SmartImage
+              key={`${activeImage.localPath || ""}-${activeImage.url || ""}-${activeIndex}`}
+              src={activeImage.localPath}
+              fallbackSrc={activeImage.url}
               alt={activeImage.label || "Selected image"}
               fill
-              sizes="(max-width: 1280px) 100vw, 1280px"
+              sizes="100vw"
               className="object-contain bg-secondary/30"
-              priority
-              loading="eager"
-              fetchPriority="high"
             />
           </div>
 
@@ -135,7 +132,7 @@ export default function ImageViewerPage() {
             {images.map((image, index) => (
               <button
                 type="button"
-                key={`${image.url}-${index}`}
+                key={`${image.localPath || image.url}-${index}`}
                 onClick={() => setActiveIndex(index)}
                 className={`relative w-24 h-24 rounded-xl overflow-hidden border-2 shrink-0 ${
                   index === activeIndex
@@ -144,12 +141,12 @@ export default function ImageViewerPage() {
                 }`}
                 title={image.label || `Image ${index + 1}`}
               >
-                <Image
-                  src={image.url}
+                <SmartImage
+                  src={image.localPath}
+                  fallbackSrc={image.url}
                   alt={image.label || `Image ${index + 1}`}
                   fill
                   sizes="96px"
-                  loading="lazy"
                   className="object-cover"
                 />
               </button>

@@ -5,10 +5,11 @@ export function openImageViewer(items = [], initialIndex = 0) {
 
   const normalized = items
     .map((item, idx) => ({
-      url: item?.url || "",
+      localPath: item?.localPath || item?.generated_image_path || item?.local_path || "",
+      url: item?.url || item?.fallbackSrc || item?.generated_image_url || "",
       label: item?.label || `Image ${idx + 1}`,
     }))
-    .filter((item) => Boolean(item.url))
+    .filter((item) => Boolean(item.localPath || item.url))
 
   if (!normalized.length) return
 

@@ -45,30 +45,16 @@ export default function SmartImage({
 
       if (cancelled) return;
 
-      if (primary) {
-        setImageSrc(primary);
-        setResolvedFallback("");
-        return;
-      }
-
-      const fallback = await resolveSource(fallbackSrc);
+      const fallback = fallbackSrc
+        ? isHttpUrl(fallbackSrc)
+          ? fallbackSrc
+          : await resolveSource(fallbackSrc)
+        : "";
 
       if (cancelled) return;
 
-      if (resolved) {
-        console.log("✅ Using PRIMARY image:", resolved);
-        setImageSrc(resolved);
-        setSourceType("primary");
-      } else {
-        console.log("⚠️ Primary image unavailable.");
-        console.log("✅ Using FALLBACK image:", fallbackSrc);
-      }
-
-
-
-
       setResolvedFallback(fallback);
-      setImageSrc(fallback);
+      setImageSrc(primary || fallback);
     };
 
     setImageSrc("");

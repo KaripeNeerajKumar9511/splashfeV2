@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   GemIcon,
   StoreIcon,
@@ -8,19 +8,29 @@ import {
   Share2Icon,
 } from "lucide-react";
 import MarketingNav from "@/components/home/MarketingNav";
+import { apiService } from "@/lib/api";
+import { HOME_PAGE_DEFAULTS, resolveHomeContent } from "@/lib/pageContentDefaults";
 
-const TICKER_ITEMS = [
-  { strong: "Save up to 80%", span: "on photography costs" },
-  { strong: "No prompts needed", span: "upload & generate" },
-  { strong: "Understands jewelry", span: "metals, gems & styling" },
-  { strong: "India-first", span: "built for the Indian jewelry market" },
+const WHO_ICON_MAP = {
+  Gem: GemIcon,
+  Store: StoreIcon,
+  Palette: PaletteIcon,
+  Share2: Share2Icon,
+};
+
+const OUTPUT_ICONS = [
+  <svg key="0" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"><circle cx="9" cy="9" r="5" /><circle cx="9" cy="9" r="2" /></svg>,
+  <svg key="1" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"><path d="M3 15 Q9 3 15 15" /><circle cx="9" cy="8" r="2" /></svg>,
+  <svg key="2" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="6" width="12" height="9" rx="2" /><path d="M6 6V5a3 3 0 016 0v1" /></svg>,
+  <svg key="3" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"><circle cx="9" cy="6" r="3" /><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6" /></svg>,
+  <svg key="4" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="5" width="4" height="9" rx="1" /><rect x="7" y="7" width="4" height="7" rx="1" /><rect x="12" y="6" width="4" height="8" rx="1" /></svg>,
 ];
 
-function TickerContent() {
+function TickerContent({ items }) {
   return (
     <>
-      {TICKER_ITEMS.map((item) => (
-        <React.Fragment key={item.strong}>
+      {items.map((item) => (
+        <React.Fragment key={`${item.strong}-${item.span}`}>
           <div className="ti">
             <strong>{item.strong}</strong>
             <span>{item.span}</span>
@@ -44,6 +54,14 @@ const FALLBACK_SHOWCASE = [
 
 export default function SplashLanding() {
   const [showcaseImages, setShowcaseImages] = useState(FALLBACK_SHOWCASE);
+  const [pageContent, setPageContent] = useState(HOME_PAGE_DEFAULTS);
+
+  useEffect(() => {
+    apiService
+      .getPageContent("home")
+      .then((data) => setPageContent(data || {}))
+      .catch(() => setPageContent({}));
+  }, []);
 
   useEffect(() => {
     const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -56,6 +74,9 @@ export default function SplashLanding() {
       })
       .catch(() => {});
   }, []);
+
+  const content = useMemo(() => resolveHomeContent(pageContent), [pageContent]);
+  const { hero, ticker, showcase, how, output, capabilities, who_uses, testimonials, pricing, cta, footer } = content;
 
   return (
     <div className="splash-page">
@@ -618,39 +639,38 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
 {/* HERO */}
 <section className="hero">
   <div className="hero-glow"></div>
-  <div className="pill"><span className="dot"></span>Built exclusively for jewelry brands</div>
-  <h1>Your jewelry.<br /><em>Studio-quality visuals.</em><br />No photographer needed.</h1>
-  <p className="hero-sub">Upload a reference photo — or nothing at all. Splash understands jewelry and generates product shots, model imagery, and campaign visuals in minutes.</p>
+  <div className="pill"><span className="dot"></span>{hero.pill_text}</div>
+  <h1 dangerouslySetInnerHTML={{ __html: hero.title_html }} />
+  <p className="hero-sub">{hero.subtitle}</p>
   <div className="actions">
-    <a href="/signup" className="btn-o">
-      Start creating for free
-      
+    <a href={hero.cta_secondary_href} className="btn-o">
+      {hero.cta_secondary_text}
     </a>
-    <a href="/contact" className="btn-p">Get a demo 
+    <a href={hero.cta_primary_href} className="btn-p">{hero.cta_primary_text}
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
     </a>
   </div>
-  <p className="note">No credit card required &nbsp;·&nbsp; No prompts needed &nbsp;·&nbsp; First images on us</p>
+  <p className="note">{hero.note}</p>
 </section>
 
 {/* TICKER */}
 <div className="ticker" aria-label="Highlights">
   <div className="ticker-track">
     <div className="ticker-group">
-      <TickerContent />
+      <TickerContent items={ticker} />
     </div>
     <div className="ticker-group" aria-hidden="true">
-      <TickerContent />
+      <TickerContent items={ticker} />
     </div>
   </div>
 </div>
 
 {/* SHOWCASE */}
 <div className="showcase" id="showcase">
-  <div className="eye">Showcase</div>
+  <div className="eye">{showcase.eye_label}</div>
   <div className="showcase-hdr">
-    <div className="st">Created<br />with Splash</div>
-    <a href="/gallery" className="btn-o showcase-cta">View all →</a>
+    <div className="st" dangerouslySetInnerHTML={{ __html: showcase.title_html }} />
+    <a href={showcase.cta_href} className="btn-o showcase-cta">{showcase.cta_text}</a>
   </div>
   <div className="sc-grid">
     {showcaseImages.map((img) => (
@@ -666,32 +686,20 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
 
 {/* HOW IT WORKS */}
 <section className="how" id="how">
-  <div className="eye">How it works</div>
+  <div className="eye">{how.eye_label}</div>
   <div className="how-lay">
     <div>
-      <div className="st">Three steps to<br /><em>studio-perfect visuals</em></div>
+      <div className="st" dangerouslySetInnerHTML={{ __html: how.title_html }} />
       <div className="how-steps">
-        <div className="step">
-          <div className="sn">01</div>
-          <div>
-            <div className="s-title">Upload your jewelry piece</div>
-            <div className="s-desc">Take a simple photo with your phone or use an existing product image. Or skip it entirely — Splash can generate beautiful visuals from scratch. It works brilliantly either way.</div>
+        {how.steps.map((step) => (
+          <div className="step" key={step.number}>
+            <div className="sn">{step.number}</div>
+            <div>
+              <div className="s-title">{step.title}</div>
+              <div className="s-desc">{step.description}</div>
+            </div>
           </div>
-        </div>
-        <div className="step">
-          <div className="sn">02</div>
-          <div>
-            <div className="s-title">AI composes the scene</div>
-            <div className="s-desc">Splash reads your jewelry's metal finish, gemstone type, and style — then generates a campaign-ready visual with the perfect lighting, backdrop, and composition. Share a reference image to match any mood.</div>
-          </div>
-        </div>
-        <div className="step">
-          <div className="sn">03</div>
-          <div>
-            <div className="s-title">Download &amp; publish</div>
-            <div className="s-desc">Export in full resolution. Use it on your website, social media, ads, catalogues, or share directly with your team for review — all from one place.</div>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
     <div className="how-vis">
@@ -699,8 +707,8 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
         <div className="hv-icon">
           <svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"><path d="M13 4v10M13 14l-4-4M13 14l4-4"/><rect x="4" y="18" width="18" height="5" rx="2"/></svg>
         </div>
-        <div className="hv-lbl">One upload</div>
-        <div className="hv-title">Multiple campaign-ready<br />outputs in seconds</div>
+        <div className="hv-lbl">{how.visual.label}</div>
+        <div className="hv-title" dangerouslySetInnerHTML={{ __html: how.visual.title_html }} />
         <div className="thumb-row">
           <div className="thumb"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9A84C" strokeWidth="1" opacity=".65"><circle cx="10" cy="10" r="6"/><circle cx="10" cy="10" r="2.5"/></svg></div>
           <div className="thumb"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9A84C" strokeWidth="1" opacity=".65"><path d="M5 4h10l2 4H3L5 4z"/><ellipse cx="10" cy="15" rx="6" ry="3"/></svg></div>
@@ -713,192 +721,89 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
 
 {/* WHAT YOU CAN CREATE */}
 <section className="output">
-  <div className="eye">What you can create</div>
-  <div className="st">Every visual<br /><em>your brand needs</em></div>
+  <div className="eye">{output.eye_label}</div>
+  <div className="st" dangerouslySetInnerHTML={{ __html: output.title_html }} />
   <div className="og">
-    <div className="oc">
-      <div className="oi"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"><circle cx="9" cy="9" r="5"/><circle cx="9" cy="9" r="2"/></svg></div>
-      <div className="ot">Clean product shot</div>
-      <div className="od">White or plain background. Perfect for websites, marketplaces, and catalogs.</div>
-    </div>
-    <div className="oc">
-      <div className="oi"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"><path d="M3 15 Q9 3 15 15"/><circle cx="9" cy="8" r="2"/></svg></div>
-      <div className="ot">Campaign visual</div>
-      <div className="od">Editorial, mood-driven imagery for ads, lookbooks, and seasonal campaigns.</div>
-    </div>
-    <div className="oc">
-      <div className="oi"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="6" width="12" height="9" rx="2"/><path d="M6 6V5a3 3 0 016 0v1"/></svg></div>
-      <div className="ot">Lifestyle setup</div>
-      <div className="od">Themed scenes with props, textures, and environments that match your brand.</div>
-    </div>
-    <div className="oc">
-      <div className="oi"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"><circle cx="9" cy="6" r="3"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg></div>
-      <div className="ot">Model shot</div>
-      <div className="od">Jewelry worn on a model — up to 5 pieces styled together in a single image.</div>
-    </div>
-    <div className="oc">
-      <div className="oi"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="5" width="4" height="9" rx="1"/><rect x="7" y="7" width="4" height="7" rx="1"/><rect x="12" y="6" width="4" height="8" rx="1"/></svg></div>
-      <div className="ot">Bulk catalog</div>
-      <div className="od">Generate dozens of consistent images across your full collection in one session.</div>
-    </div>
+    {output.items.map((item, index) => (
+      <div className="oc" key={item.title}>
+        <div className="oi">{OUTPUT_ICONS[index] || OUTPUT_ICONS[0]}</div>
+        <div className="ot">{item.title}</div>
+        <div className="od">{item.description}</div>
+      </div>
+    ))}
   </div>
 </section>
 
 {/* CAPABILITIES */}
 <section className="cap">
-  <div className="eye">Capabilities</div>
-  <div className="st">Built different.<br /><em>For jewelry.</em></div>
+  <div className="eye">{capabilities.eye_label}</div>
+  <div className="st" dangerouslySetInnerHTML={{ __html: capabilities.title_html }} />
   <div className="cg">
-    <div className="cc hi">
-      <div className="ctag">No prompt required</div>
-      <div className="ctitle">Generate without typing a single word</div>
-      <div className="cdesc">Most AI tools require technical descriptions. Splash understands jewelry — metals, gemstones, silhouettes — and composes the perfect scene automatically. Just upload and go.</div>
-      <div className="pills"><span className="pl g">White background</span><span className="pl g">Themed setups</span><span className="pl g">Auto-composed</span></div>
-    </div>
-    <div className="cc hi">
-      <div className="ctag">Mood matching</div>
-      <div className="ctitle">Share a reference. Get that exact feel.</div>
-      <div className="cdesc">Upload any inspiration image — a campaign you love, a competitor's shoot, a mood board. Splash reads the lighting, backdrop, colour palette, and styling, then applies it to your piece.</div>
-      <div className="pills"><span className="pl g">Reads lighting</span><span className="pl g">Matches colour tone</span><span className="pl g">Captures mood</span></div>
-    </div>
-    <div className="cc">
-      <div className="ctag">Team collaboration</div>
-      <div className="ctitle">Your whole team, one shared studio</div>
-      <div className="cdesc">Invite designers, marketers, and your agency. Work inside shared projects, review outputs, and publish — no email chains, no file transfers.</div>
-      <div className="pills"><span className="pl g">Shared projects</span><span className="pl g">Review &amp; comment</span><span className="pl g">Agency ready</span></div>
-    </div>
-    <div className="cc">
-      <div className="ctag">Multi-piece generation</div>
-      <div className="ctitle">Style up to 5 pieces in one image</div>
-      <div className="cdesc">Create cohesive campaign shots featuring a full set — necklace, earrings, ring, bracelet — worn together on a model or arranged in a single scene.</div>
-      <div className="pills"><span className="pl g">Up to 5 pieces</span><span className="pl g">Model shots</span><span className="pl g">Set styling</span></div>
-    </div>
+    {capabilities.items.map((item) => (
+      <div className={`cc${item.highlighted ? " hi" : ""}`} key={item.title}>
+        <div className="ctag">{item.tag}</div>
+        <div className="ctitle">{item.title}</div>
+        <div className="cdesc">{item.description}</div>
+        <div className="pills">
+          {(item.pills || []).map((pill) => (
+            <span className="pl g" key={pill}>{pill}</span>
+          ))}
+        </div>
+      </div>
+    ))}
   </div>
 </section>
 
 {/* WHO USES SPLASH */}
 <section className="who" id="who">
-  <div className="eye">Who uses Splash</div>
-
-  <div className="st">
-    Built for everyone
-    <br />
-    <em>in the jewelry space</em>
-  </div>
-
+  <div className="eye">{who_uses.eye_label}</div>
+  <div className="st" dangerouslySetInnerHTML={{ __html: who_uses.title_html }} />
   <div className="wg">
-    <div className="wc">
-      <div className="wi">
-        <GemIcon className="wi-icon" />
-      </div>
-
-      <div className="wt">D2C Jewelry Brands</div>
-
-      <div className="wd">
-        Stop spending ₹25,000–₹1,50,000 per photoshoot. Splash gives you
-        studio-quality product images for your website, Instagram, and
-        marketplace listings — at a fraction of the cost and in a fraction
-        of the time.
-      </div>
-
-      <div className="pills">
-        <span className="pl g">Product catalog</span>
-        <span className="pl g">Instagram content</span>
-        <span className="pl g">Marketplace listings</span>
-        <span className="pl g">Campaign visuals</span>
-      </div>
-    </div>
-
-    <div className="wc">
-      <div className="wi">
-        <StoreIcon className="wi-icon" />
-      </div>
-
-      <div className="wt">Traditional Jewelers Going Digital</div>
-
-      <div className="wd">
-        Upload one photo of your piece. Get stunning catalog images, ready
-        to share on WhatsApp or your new website. No technical knowledge
-        needed.
-      </div>
-
-      <div className="pills">
-        <span className="pl g">WhatsApp catalog</span>
-        <span className="pl g">Website gallery</span>
-      </div>
-    </div>
-
-    <div className="wc">
-      <div className="wi">
-        <PaletteIcon className="wi-icon" />
-      </div>
-
-      <div className="wt">Creative Agencies</div>
-
-      <div className="wd">
-        Deliver more for your jewelry clients without adding headcount.
-        Team collaboration, bulk generation, and white-label ready.
-      </div>
-
-      <div className="pills">
-        <span className="pl g">Bulk delivery</span>
-        <span className="pl g">Team projects</span>
-      </div>
-    </div>
-
-    <div className="wc">
-      <div className="wi">
-        <Share2Icon className="wi-icon" />
-      </div>
-
-      <div className="wt">Social Media Managers</div>
-
-      <div className="wd">
-        Never run out of jewelry content again. Generate 30 days of social
-        posts in one session with consistent styling.
-      </div>
-
-      <div className="pills">
-        <span className="pl g">Content calendar</span>
-        <span className="pl g">Reels & Stories</span>
-      </div>
-    </div>
+    {who_uses.items.map((item) => {
+      const Icon = WHO_ICON_MAP[item.icon] || GemIcon;
+      return (
+        <div className="wc" key={item.title}>
+          <div className="wi">
+            <Icon className="wi-icon" />
+          </div>
+          <div className="wt">{item.title}</div>
+          <div className="wd">{item.description}</div>
+          <div className="pills">
+            {(item.pills || []).map((pill) => (
+              <span className="pl g" key={pill}>{pill}</span>
+            ))}
+          </div>
+        </div>
+      );
+    })}
   </div>
 </section>
 
 {/* TESTIMONIALS */}
 <section className="test">
-  <div className="eye">Stories</div>
-  <div className="st">What jewelry brands<br /><em>are saying</em></div>
+  <div className="eye">{testimonials.eye_label}</div>
+  <div className="st" dangerouslySetInnerHTML={{ __html: testimonials.title_html }} />
   <div className="tg">
-    <div className="tc">
-      <div className="stars"><div className="star"></div><div className="star"></div><div className="star"></div><div className="star"></div><div className="star"></div></div>
-      <div className="tq">"A single jewellery shoot used to cost us <strong>₹2 lakhs minimum</strong> — studio, photographer, stylist, editing. With Splash we generate the same campaign-quality imagery in minutes, at a fraction of that cost."</div>
-      <div className="ta"><div className="av">TR</div><div><div className="an">Tarinika</div><div className="ar">Fine Jewellery Brand</div></div></div>
-    </div>
-    <div className="tc">
-      <div className="stars"><div className="star"></div><div className="star"></div><div className="star"></div><div className="star"></div><div className="star"></div></div>
-      <div className="tq">"We were spending <strong>₹3.5 lakhs+ per shoot</strong> every season. Splash replaced our entire production workflow — we now launch collections faster, with more visual variations, and at a cost that actually makes sense."</div>
-      <div className="ta"><div className="av">PK</div><div><div className="an">Paksha</div><div className="ar">Contemporary Jewellery Brand</div></div></div>
-    </div>
-    <div className="tc">
-      <div className="stars"><div className="star"></div><div className="star"></div><div className="star"></div><div className="star"></div><div className="star"></div></div>
-      <div className="tq">"Our Diwali campaign had <strong>5 collections, 200+ images, generated in 2 days</strong>. Previously that would take 3 weeks and a full production crew costing ₹2 lakhs+. Splash is now our primary creative tool."</div>
-      <div className="ta"><div className="av">SN</div><div><div className="an">Sneha Nair</div><div className="ar">Marketing Director</div></div></div>
-    </div>
+    {testimonials.items.map((item) => (
+      <div className="tc" key={item.name}>
+        <div className="stars"><div className="star"></div><div className="star"></div><div className="star"></div><div className="star"></div><div className="star"></div></div>
+        <div className="tq" dangerouslySetInnerHTML={{ __html: item.quote_html }} />
+        <div className="ta">
+          <div className="av">{item.initials}</div>
+          <div>
+            <div className="an">{item.name}</div>
+            <div className="ar">{item.role}</div>
+          </div>
+        </div>
+      </div>
+    ))}
   </div>
 </section>
 
 {/* PRICING */}
 <section className="price" id="pricing">
-  <div className="eye">Pricing</div>
-
-  <div className="st pricing-title">
-    Need pricing details?
-    <br />
-    <em>We'll help you find the best plan for you.</em>
-  </div>
-
+  <div className="eye">{pricing.eye_label}</div>
+  <div className="st pricing-title" dangerouslySetInnerHTML={{ __html: pricing.title_html }} />
   <div className="price-simple-card">
     <div className="price-simple-icon">
       <svg
@@ -914,17 +819,10 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
         <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
       </svg>
     </div>
-
-    <h2 className="price-simple-title text-xl font-bold"> Every jewellery brand is different — the number of 
-    products, the type of shoots, the frequency of content. </h2>
-
-    <p>
-    We'll understand your needs and help you get the most 
-    out of Splash.
-    </p>
-
-    <a href="/contact" className="price-simple-btn">
-      Contact Us
+    <h2 className="price-simple-title text-xl font-bold">{pricing.card_title}</h2>
+    <p>{pricing.card_description}</p>
+    <a href={pricing.cta_href} className="price-simple-btn">
+      {pricing.cta_text}
     </a>
   </div>
 </section>
@@ -932,55 +830,35 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
 {/* CTA */}
 <section className="cta">
   <div className="cta-glow"></div>
-  <h2>Your next collection.<br /><em>Ready before the shoot<br />would've been booked.</em></h2>
-  <p className="cta-sub">Start creating jewelry visuals today — your first images are on us.</p>
-
-  <div className="cta-actions" >
-    <a href="/signup" className="btn-p">
-      Start creating for free
+  <h2 dangerouslySetInnerHTML={{ __html: cta.title_html }} />
+  <p className="cta-sub">{cta.subtitle}</p>
+  <div className="cta-actions">
+    <a href={cta.primary_href} className="btn-p">
+      {cta.primary_text}
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
     </a>
-    <a href="https://wa.me/+918861308898" className="btn-wa" target="_blank">
+    <a href={cta.whatsapp_href} className="btn-wa" target="_blank" rel="noopener noreferrer">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(37,211,102,0.85)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      Chat on WhatsApp
+      {cta.whatsapp_text}
     </a>
   </div>
-
-  {/* <div className="cta-acts">
-    <a href="/login" className="btn-p" style={{ fontSize: "15px", padding: "15px 34px" }}>
-      Start creating for free
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
-    </a>
-    <a href="https://wa.me/91XXXXXXXXXX" className="btn-wa">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(37,211,102,0.85)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      Chat on WhatsApp
-    </a>
-  </div> */}
-  <p className="cta-note">No credit card · No prompts · Just your jewelry and Splash</p>
+  <p className="cta-note">{cta.note}</p>
 </section>
 
 <footer className="footer">
   <div className="footer-logo">
-    <img src="/images/SplashLogoPNG.png" alt="Splash" />
+    <img src={footer.logo_url} alt="Splash" />
   </div>
-
-
-
   <ul className="flinks">
-    <li>
-      <a href="https://www.instagram.com/splash_ai_studios/">
-        Instagram
-      </a>
-    </li>
-    <li><a href="#">Privacy</a></li>
-    <li><a href="#">Terms</a></li>
-    <li><a href="/contact">Contact</a></li>
+    {footer.links.map((link) => (
+      <li key={`${link.label}-${link.href}`}>
+        <a href={link.href}>{link.label}</a>
+      </li>
+    ))}
   </ul>
-
   <div className="footer-center">
-    © 2025 Splash AI Studio
+    {footer.copyright}
   </div>
-
 </footer>
     </div>
   );

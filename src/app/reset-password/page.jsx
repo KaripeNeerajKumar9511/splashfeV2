@@ -7,11 +7,13 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { apiService } from "@/lib/api";
 import toast from "react-hot-toast";
-import { Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Lock, Eye, EyeOff, CheckCircle, ArrowLeft } from "lucide-react";
 
-import Navigation from "@/components/home/Navigation";
-import LoginImage from "@/components/login-image";
+import AuthPageShell from "@/components/auth/AuthPageShell";
 import PortalDeviceGuard from "@/components/portal/PortalDeviceGuard";
+
+const inputClassName =
+    "w-full min-h-11 pl-10 pr-10 py-3 text-base sm:text-sm bg-input border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 
 export default function ResetPasswordPage() {
     const searchParams = useSearchParams();
@@ -74,150 +76,137 @@ export default function ResetPasswordPage() {
     if (success) {
         return (
             <PortalDeviceGuard>
-            <div className="dark min-h-screen bg-surface-gradient">
-                <Navigation />
-
-                <main className="pt-20 pb-8 flex items-center justify-center p-4">
-                    <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-
-                        <div className="max-w-md mx-auto text-center">
-                            <div className="mb-6">
-                                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                                    <CheckCircle className="w-8 h-8 text-green-600" />
-                                </div>
-
-                                <h2 className="text-2xl font-bold text-[#0c1421] mb-2">
-                                    Password Reset Successful!
-                                </h2>
-
-                                <p className="text-[#313957]">
-                                    Your password has been reset successfully.
-                                </p>
-                            </div>
-
-                            <Link href="/login">
-                                <Button className="w-full bg-[#5533ff] hover:bg-[#4422dd] text-white">
-                                    Go to Login
-                                </Button>
-                            </Link>
+                <AuthPageShell>
+                    <div className="w-full text-center">
+                        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/30">
+                            <CheckCircle className="h-8 w-8 text-emerald-400" />
                         </div>
 
-                        <div className="hidden lg:block">
-                            <LoginImage />
-                        </div>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+                            Password Reset Successful!
+                        </h2>
 
+                        <p className="text-sm sm:text-base text-muted-foreground mb-8">
+                            Your password has been reset successfully. Redirecting you to login…
+                        </p>
+
+                        <Link href="/login">
+                            <Button
+                                variant="brand"
+                                className="w-full min-h-11 py-3 h-auto rounded-full font-semibold text-base sm:text-sm"
+                            >
+                                Go to Login
+                            </Button>
+                        </Link>
                     </div>
-                </main>
-            </div>
+                </AuthPageShell>
             </PortalDeviceGuard>
         );
     }
 
     return (
         <PortalDeviceGuard>
-        <div className="dark min-h-screen bg-surface-gradient">
-            <Navigation />
-
-            <main className="pt-34 pb-8 flex items-center justify-center p-4">
-                <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-
-                    {/* LEFT SIDE FORM */}
-                    <div className="w-full max-w-md mx-auto pt-17">
-
-                        <div className="mb-8">
-                            <h1 className="text-4xl font-bold text-[#0c1421] mb-2">
-                                Reset Password
-                            </h1>
-                            <p className="text-lg text-[#313957]">
-                                Enter your new password below.
-                            </p>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="space-y-6">
-
-                            {/* Password */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-[#0c1421]">
-                                    New Password
-                                </label>
-
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#737373]" />
-
-                                    <Input
-                                        type={showPassword ? "text" : "password"}
-                                        placeholder="At least 8 characters"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="pl-10 pr-10 py-3 bg-[#f3f9fa] border border-[#e6e6e6]"
-                                    />
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2"
-                                    >
-                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Confirm Password */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-[#0c1421]">
-                                    Confirm Password
-                                </label>
-
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#737373]" />
-
-                                    <Input
-                                        type={showConfirmPassword ? "text" : "password"}
-                                        placeholder="Confirm password"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="pl-10 pr-10 py-3 bg-[#f3f9fa] border border-[#e6e6e6]"
-                                    />
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2"
-                                    >
-                                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <Button
-                                type="submit"
-                                disabled={loading || !token}
-                                className="w-full py-3 bg-[#5533ff] hover:bg-[#4422dd] text-white rounded-full"
-                            >
-                                {loading ? "Resetting..." : "Reset Password"}
-                            </Button>
-
-                        </form>
-
-                        <div className="mt-6 text-center">
-                            <Link
-                                href="/login"
-                                className="text-sm font-medium text-[#5533ff]"
-                            >
-                                Back to Login
-                            </Link>
-                        </div>
-
+            <AuthPageShell>
+                <div className="w-full">
+                    <div className="mb-6 sm:mb-8 text-left">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">
+                            Reset Password
+                        </h1>
+                        <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
+                            Enter your new password below.
+                        </p>
                     </div>
 
-                    {/* RIGHT IMAGE */}
-                    <div className="hidden lg:block">
-                        <LoginImage />
-                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">
+                        <div className="space-y-2">
+                            <label
+                                htmlFor="new-password"
+                                className="block text-sm font-semibold text-foreground"
+                            >
+                                New Password
+                            </label>
 
+                            <div className="relative">
+                                <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+
+                                <Input
+                                    id="new-password"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="At least 8 characters"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className={inputClassName}
+                                    autoComplete="new-password"
+                                    required
+                                />
+
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label
+                                htmlFor="confirm-password"
+                                className="block text-sm font-semibold text-foreground"
+                            >
+                                Confirm Password
+                            </label>
+
+                            <div className="relative">
+                                <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+
+                                <Input
+                                    id="confirm-password"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    placeholder="Confirm password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className={inputClassName}
+                                    autoComplete="new-password"
+                                    required
+                                />
+
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                    aria-label={
+                                        showConfirmPassword ? "Hide password" : "Show password"
+                                    }
+                                >
+                                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <Button
+                            type="submit"
+                            variant="brand"
+                            disabled={loading || !token}
+                            className="w-full min-h-11 py-3 h-auto rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-sm"
+                        >
+                            {loading ? "Resetting..." : "Reset Password"}
+                        </Button>
+                    </form>
+
+                    <div className="mt-6 sm:mt-8 text-center">
+                        <Link
+                            href="/login"
+                            className="inline-flex items-center gap-2 text-sm font-medium text-gold-solid hover:brightness-110 transition-opacity touch-manipulation"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Back to Login
+                        </Link>
+                    </div>
                 </div>
-            </main>
-        </div>
+            </AuthPageShell>
         </PortalDeviceGuard>
     );
 }

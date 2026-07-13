@@ -179,10 +179,16 @@ class ApiService {
         });
     }
 
-    async register(full_name, username, email, password) {
+    async register(full_name, username, email, password, signupSource = null) {
         return this.request('/api/register/', {
             method: 'POST',
-            body: JSON.stringify({ full_name, username, email, password }),
+            body: JSON.stringify({
+                full_name,
+                username,
+                email,
+                password,
+                ...(signupSource ? { signup_source: signupSource } : {}),
+            }),
         })
     }
 
@@ -258,6 +264,19 @@ class ApiService {
         return this.request('/api/reset-password/', {
             method: 'POST',
             body: JSON.stringify({ token, new_password: newPassword }),
+        });
+    }
+
+    async changePassword(currentPassword, newPassword, token) {
+        return this.request('/api/profile/change-password/', {
+            method: 'POST',
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword,
+            }),
+            headers: {
+                'Authorization': `Bearer ${token || ''}`,
+            },
         });
     }
 
@@ -1545,6 +1564,41 @@ class ApiService {
         return this.request('/api/payments/contact-sales/', {
             method: 'POST',
             body: JSON.stringify(data),
+        });
+    }
+
+    // Razorpay payment endpoints
+    async createRazorpayOrder(token, { amount, credits, planId = null, planSlug = null, organizationId = null, billingDetails = {} }) {
+        const body = {
+            amount,
+            credits,
+            plan_id: planId,
+            plan_slug: planSlug,
+            ...billingDetails,
+        };
+        if (organizationId) {
+            body.organization_id = organizationId;
+        }
+        return this.request('/api/payments/razorpay/create-order/', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token || ''}`,
+            },
+            body: JSON.stringify(body),
+        });
+    }
+
+    async verifyRazorpayPayment(token, orderId, paymentId, signature) {
+        return this.request('/api/payments/razorpay/verify/', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token || ''}`,
+            },
+            body: JSON.stringify({
+                order_id: orderId,
+                payment_id: paymentId,
+                signature,
+            }),
         });
     }
 

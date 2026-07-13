@@ -1,57 +1,219 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Loader2, MessageCircle, Coins } from "lucide-react";
-import Link from "next/link";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2, ShieldAlert, Mail } from "lucide-react";
 import { apiService } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import PricingPlansSection from "@/components/pricing/PricingPlansSection";
+import BillingDetailsModal from "@/components/pricing/BillingDetailsModal";
+import {
+  userBelongsToOrganization,
+  isOrganizationOwner,
+  buildSignupRedirect,
+} from "@/lib/billingAccess";
+import { redirectToOrgPayments } from "@/lib/portalSwitch";
+import { getPlanById } from "@/lib/pricingPlans";
+import { fetchPricingData, getPlanFromList } from "@/lib/pricingApi";
+import toast from "react-hot-toast";
 
-export const SubscriptionBilling = () => {
+function OrgMemberBlocked({ orgName, ownerEmail }) {
+  return (
+    <div className="max-w-lg mx-auto p-8 text-center">
+      <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-amber-500/10 border border-amber-500/25 flex items-center justify-center">
+        <ShieldAlert className="w-7 h-7 text-amber-400" />
+      </div>
+      <h1 className="text-2xl font-bold text-foreground mb-3">Payment access restricted</h1>
+      <p className="text-muted-foreground text-sm leading-relaxed mb-2">
+        You don&apos;t have access to make payments
+        {orgName ? ` for ${orgName}` : ""}.
+      </p>
+      <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+        Please contact your organization owner to upgrade or purchase credits.
+      </p>
+      {ownerEmail && (
+        <div className="inline-flex items-center gap-2 text-sm text-gold-solid bg-accent border border-gold-muted/30 rounded-lg px-4 py-2">
+          <Mail className="w-4 h-4" />
+          {ownerEmail}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BillingPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, token } = useAuth();
+
+  const initialPlan = searchParams.get("plan") || "starter";
+  const [selectedPlanId, setSelectedPlanId] = useState(initialPlan);
   const [loading, setLoading] = useState(true);
+  const [accessType, setAccessType] = useState("individual");
+  const [orgName, setOrgName] = useState("");
+  const [ownerEmail, setOwnerEmail] = useState("");
   const [creditBalance, setCreditBalance] = useState(0);
-  const [isOrganizationUser, setIsOrganizationUser] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [pricingPlans, setPricingPlans] = useState([]);
+  const [taxConfig, setTaxConfig] = useState(null);
 
   useEffect(() => {
-    fetchCreditBalance();
-  }, [token, user]);
+    fetchPricingData().then((data) => {
+      setPricingPlans(data.plans);
+      setTaxConfig(data.taxConfig);
+    });
+  }, []);
 
-  const fetchCreditBalance = async () => {
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => setRazorpayLoaded(true);
+    document.body.appendChild(script);
+    return () => {
+      const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      if (existing) existing.remove();
+    };
+  }, []);
+
+  useEffect(() => {
     if (!token || !user) {
-      setLoading(false);
+      router.replace(buildSignupRedirect(initialPlan));
       return;
     }
 
-    setLoading(true);
+    const load = async () => {
+      setLoading(true);
+      try {
+        const userProfile = await apiService.getUserProfile(token);
+        const currentUser = userProfile?.user;
+        if (!currentUser) return;
+
+        setProfile(currentUser);
+
+        if (userBelongsToOrganization(currentUser)) {
+          if (isOrganizationOwner(currentUser)) {
+            redirectToOrgPayments(initialPlan);
+            return;
+          }
+
+          setAccessType("org_member");
+          const orgId =
+            typeof currentUser.organization === "object"
+              ? currentUser.organization?.id
+              : currentUser.organization;
+
+          if (orgId) {
+            const orgData = await apiService.getOrganization(orgId, token);
+            setOrgName(orgData?.name || "");
+            setOwnerEmail(orgData?.owner_email || "");
+            setCreditBalance(orgData?.credit_balance || 0);
+          }
+        } else {
+          setAccessType("individual");
+          setCreditBalance(currentUser.credit_balance || 0);
+        }
+      } catch (error) {
+        console.error("Failed to load billing page:", error);
+        toast.error("Failed to load billing information.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [token, user, router, initialPlan]);
+
+  useEffect(() => {
+    setSelectedPlanId(initialPlan);
+  }, [initialPlan]);
+
+  const resolvePlan = useCallback(
+    (planId) => getPlanFromList(pricingPlans, planId) || getPlanById(planId),
+    [pricingPlans]
+  );
+
+  const handlePlanSelect = useCallback((planId) => {
+    const plan = resolvePlan(planId);
+    if (!plan || plan.ctaHref) return;
+    setSelectedPlanId(planId);
+    router.replace(`/dashboard/my-account/billing?plan=${planId}`, { scroll: false });
+    setModalOpen(true);
+  }, [router, resolvePlan]);
+
+  const handleProceedToPay = async (billingDetails, tax) => {
+    const plan = resolvePlan(selectedPlanId);
+    if (!token || !plan || !razorpayLoaded) {
+      toast.error("Payment gateway is still loading. Please wait.");
+      return;
+    }
+
+    setProcessingPayment(true);
     try {
-      const userProfile = await apiService.getUserProfile(token);
-      if (!userProfile?.success || !userProfile?.user) return;
+      const orderData = await apiService.createRazorpayOrder(token, {
+        amount: plan.price,
+        credits: plan.creditsNumeric ?? plan.credits,
+        planSlug: plan.id,
+        billingDetails: {
+          ...billingDetails,
+          tax_rate: tax.taxRate,
+          cgst_rate: tax.cgstRate,
+          sgst_rate: tax.sgstRate,
+          cgst_amount: tax.cgstAmount,
+          sgst_amount: tax.sgstAmount,
+        },
+      });
 
-      const currentUser = userProfile.user;
-      let organizationId = null;
-
-      if (currentUser?.organization) {
-        if (typeof currentUser.organization === "object" && currentUser.organization.id) {
-          organizationId = currentUser.organization.id;
-        } else if (typeof currentUser.organization === "string") {
-          organizationId = currentUser.organization;
-        }
+      if (!orderData.success) {
+        throw new Error(orderData.error || "Failed to create order");
       }
 
-      if (organizationId) {
-        setIsOrganizationUser(true);
-        const orgData = await apiService.getOrganization(organizationId, token);
-        if (orgData) {
-          setCreditBalance(orgData.credit_balance || 0);
-        }
-      } else {
-        setIsOrganizationUser(false);
-        setCreditBalance(currentUser.credit_balance || 0);
-      }
+      const options = {
+        key: orderData.key_id,
+        amount: (orderData.total_amount || tax.totalAmount) * 100,
+        currency: "INR",
+        name: "Splash AI Studio",
+        description: `Subscribe to ${plan.name} plan`,
+        order_id: orderData.order_id,
+        handler: async (response) => {
+          try {
+            const verifyData = await apiService.verifyRazorpayPayment(
+              token,
+              response.razorpay_order_id,
+              response.razorpay_payment_id,
+              response.razorpay_signature
+            );
+
+            if (verifyData.success) {
+              toast.success(`${plan.credits} credits added to your account!`);
+              setModalOpen(false);
+              router.push("/dashboard");
+            } else {
+              toast.error(verifyData.error || "Payment verification failed.");
+            }
+          } catch (error) {
+            console.error("Payment verification error:", error);
+            toast.error("Payment verification failed. Please contact support.");
+          } finally {
+            setProcessingPayment(false);
+          }
+        },
+        prefill: {
+          email: billingDetails.billing_email,
+          contact: billingDetails.billing_phone,
+          name: billingDetails.billing_name,
+        },
+        theme: { color: "#C9A84C" },
+        modal: { ondismiss: () => setProcessingPayment(false) },
+      };
+
+      new window.Razorpay(options).open();
     } catch (error) {
-      console.error("Failed to fetch credit balance:", error);
-    } finally {
-      setLoading(false);
+      console.error("Payment error:", error);
+      toast.error(error.message || "Failed to initiate payment.");
+      setProcessingPayment(false);
     }
   };
 
@@ -63,52 +225,58 @@ export const SubscriptionBilling = () => {
     );
   }
 
+  if (accessType === "org_member") {
+    return <OrgMemberBlocked orgName={orgName} ownerEmail={ownerEmail} />;
+  }
+
   return (
-    <div className="p-8">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Subscription & Billing</h1>
-        <p className="text-muted-foreground">
-          Need pricing details? Let&apos;s talk.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap');`}</style>
 
-      <div className="max-w-xl mx-auto mb-8">
-        <div className="flex items-center gap-4 p-5 rounded-xl border border-border bg-card shadow-sm">
-          <div className="p-3 rounded-xl bg-accent border border-gold-muted/30">
-            <Coins className="w-6 h-6 text-gold-solid" />
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">
-              {isOrganizationUser ? "Organization credits" : "Your credits"}
-            </p>
-            <p className="text-2xl font-bold text-foreground">{creditBalance.toLocaleString()}</p>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 border-b border-sidebar-border pb-5">
+        <div>
+          <p className="text-xs uppercase tracking-wider text-gold-solid font-medium">Subscription & Billing</p>
+          <h1 className="text-2xl font-semibold text-foreground mt-1">Choose a plan</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Your balance: <span className="text-gold-solid font-semibold">{creditBalance.toLocaleString()} credits</span>
+          </p>
         </div>
       </div>
 
-      <div className="max-w-xl mx-auto text-center rounded-2xl border border-gold-muted/30 bg-card shadow-lg px-8 py-10">
-        <div className="w-14 h-14 mx-auto mb-5 rounded-2xl bg-accent border border-gold-muted/30 flex items-center justify-center">
-          <MessageCircle className="w-7 h-7 text-gold-solid" strokeWidth={1.75} />
-        </div>
+      <PricingPlansSection
+        embedded
+        cardsOnly
+        showHeader={false}
+        dashboard
+        plans={pricingPlans}
+        onPlanSelect={handlePlanSelect}
+      />
 
-        <h2 className="text-2xl font-bold text-foreground mb-3">
-          To get more details, please contact us
-        </h2>
-
-        <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto mb-7">
-          We&apos;ll help you choose the right plan based on your image volume,
-          team size, and business needs.
-        </p>
-
-        <Link
-          href="/dashboard/help/contact"
-          className="inline-flex items-center justify-center min-h-11 px-6 rounded-full bg-gold-gradient text-primary-foreground text-sm font-semibold hover:brightness-110 transition-all shadow-md"
-        >
-          Contact Us
-        </Link>
-      </div>
+      <BillingDetailsModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        planId={selectedPlanId}
+        plan={resolvePlan(selectedPlanId)}
+        taxConfig={taxConfig}
+        defaultEmail={profile?.email || user?.email || ""}
+        defaultName={profile?.full_name || profile?.username || ""}
+        processing={processingPayment}
+        onProceed={handleProceedToPay}
+      />
     </div>
   );
-};
+}
 
-export default SubscriptionBilling;
+export default function SubscriptionBilling() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-gold-solid" />
+        </div>
+      }
+    >
+      <BillingPageContent />
+    </Suspense>
+  );
+}

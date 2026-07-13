@@ -8,6 +8,7 @@ import {
   Share2Icon,
 } from "lucide-react";
 import MarketingNav from "@/components/home/MarketingNav";
+import PricingPlansSection from "@/components/home/PricingPlansSection";
 import { apiService } from "@/lib/api";
 import { HOME_PAGE_DEFAULTS, resolveHomeContent } from "@/lib/pageContentDefaults";
 
@@ -76,7 +77,7 @@ export default function SplashLanding() {
   }, []);
 
   const content = useMemo(() => resolveHomeContent(pageContent), [pageContent]);
-  const { hero, ticker, showcase, how, output, capabilities, who_uses, testimonials, pricing, cta, footer } = content;
+  const { hero, ticker, showcase, how, output, capabilities, who_uses, testimonials, cta, footer } = content;
 
   return (
     <div className="splash-page">
@@ -801,31 +802,7 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
 </section>
 
 {/* PRICING */}
-<section className="price" id="pricing">
-  <div className="eye">{pricing.eye_label}</div>
-  <div className="st pricing-title" dangerouslySetInnerHTML={{ __html: pricing.title_html }} />
-  <div className="price-simple-card">
-    <div className="price-simple-icon">
-      <svg
-        width="26"
-        height="26"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#C9A84C"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
-      </svg>
-    </div>
-    <h2 className="price-simple-title text-xl font-bold">{pricing.card_title}</h2>
-    <p>{pricing.card_description}</p>
-    <a href={pricing.cta_href} className="price-simple-btn">
-      {pricing.cta_text}
-    </a>
-  </div>
-</section>
+<PricingPlansSection className="pricing-embedded" />
 
 {/* CTA */}
 <section className="cta">

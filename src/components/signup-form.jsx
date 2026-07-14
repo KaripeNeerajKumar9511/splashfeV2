@@ -3,9 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { apiService } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { resolveBillingDestination } from "@/lib/billingAccess";
+import { redirectToOrgPayments } from "@/lib/portalSwitch";
 import { useLanguage } from "@/context/LanguageContext";
 import {
     Dialog,
@@ -44,6 +47,8 @@ export default function SignupForm() {
     const [selectedContent, setSelectedContent] = useState(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const { establishSession } = useAuth();
     const [step, setStep] = useState("signup");
     const [otp, setOtp] = useState("");
     const [otpLoading, setOtpLoading] = useState(false);
@@ -145,11 +150,18 @@ export default function SignupForm() {
         }
 
         try {
+            const redirectTo = searchParams.get("redirect");
+            const fromPricing = Boolean(
+                redirectTo &&
+                (redirectTo.includes("/dashboard/my-account/billing") || /[?&]plan=/.test(redirectTo))
+            );
+
             const response = await apiService.register(
                 formData.full_name,
                 formData.username,
                 formData.email,
-                formData.password
+                formData.password,
+                fromPricing ? "pricing" : "direct"
             );
 
             setStep("otp");
@@ -189,13 +201,33 @@ export default function SignupForm() {
                 otp
             );
 
-            // Check if verification was successful
-            if (response && (response.token || response.message)) {
+            if (response?.token && response?.user) {
                 setMessage(response.message || t("auth.emailVerified") || "Email verified successfully!");
+                const sessionUser = establishSession(response.token, response.user, { message: "Account created successfully!" });
+
+                const redirectTo = searchParams.get("redirect");
+                const planMatch = redirectTo?.match(/[?&]plan=([^&]+)/);
+                const planId = planMatch?.[1] || "starter";
 
                 setTimeout(() => {
-                    router.push("/login");
-                }, 1500);
+                    if (!sessionUser.profile_completed) {
+                        router.push("/complete-profile");
+                        return;
+                    }
+
+                    const dest = resolveBillingDestination(sessionUser, planId);
+                    if (dest.type === "org_owner") {
+                        redirectToOrgPayments(planId);
+                    } else if (dest.blocked) {
+                        router.push("/dashboard/my-account/billing");
+                    } else if (redirectTo && redirectTo.startsWith("/")) {
+                        router.push(redirectTo);
+                    } else {
+                        router.push(dest.path);
+                    }
+                }, 800);
+            } else if (response && response.message) {
+                throw new Error(response.error || t("auth.invalidOtp") || "Invalid OTP");
             } else {
                 throw new Error(response?.error || t("auth.invalidOtp") || "Invalid OTP");
             }

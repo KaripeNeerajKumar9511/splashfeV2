@@ -7,7 +7,7 @@ import { Menu, X } from "lucide-react";
 const NAV_LINKS = [
   { label: "How it works", hash: "how" },
   { label: "Who it's for", hash: "who" },
-  { label: "Pricing", hash: "pricing" },
+  { label: "Pricing", href: "/pricing", hash: "pricing" },
 ];
 
 export default function MarketingNav({ isHome = false }) {
@@ -16,7 +16,10 @@ export default function MarketingNav({ isHome = false }) {
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
-  const sectionHref = (hash) => (isHome ? `#${hash}` : `/#${hash}`);
+  const sectionHref = (link) => {
+    if (link.href) return isHome ? `#${link.hash}` : link.href;
+    return isHome ? `#${link.hash}` : `/#${link.hash}`;
+  };
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -113,9 +116,9 @@ export default function MarketingNav({ isHome = false }) {
           aria-hidden={mobileNav && !menuOpen ? true : undefined}
           {...(mobileNav && !menuOpen ? { inert: "" } : {})}
         >
-          {NAV_LINKS.map(({ label, hash }) => (
-            <a key={hash} href={sectionHref(hash)} onClick={closeMenu}>
-              {label}
+          {NAV_LINKS.map((link) => (
+            <a key={link.hash || link.href} href={sectionHref(link)} onClick={closeMenu}>
+              {link.label}
             </a>
           ))}
           <Link href="/signup" className="btn-gold" onClick={closeMenu}>

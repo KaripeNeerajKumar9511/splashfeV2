@@ -4,16 +4,16 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { apiService } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
-import { CreditCard, Check, X, Calendar, DollarSign, Loader2, FileText } from "lucide-react";
-import { InvoiceView } from "@/components/InvoiceView";
+import { CreditCard, Check, X, Calendar, DollarSign, Loader2, Download } from "lucide-react";
+import { downloadInvoicePdf } from "@/lib/invoiceDownload";
+import toast from "react-hot-toast";
 
 export default function PaymentHistoryPage() {
   const { token } = useAuth();
   const { t } = useLanguage();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [invoicePaymentData, setInvoicePaymentData] = useState(null);
+  const [downloadingId, setDownloadingId] = useState(null);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -34,6 +34,18 @@ export default function PaymentHistoryPage() {
     };
     fetchHistory();
   }, [token]);
+
+  const handleDownloadInvoice = async (payment) => {
+    setDownloadingId(payment.id);
+    try {
+      await downloadInvoicePdf({ payment, token });
+    } catch (e) {
+      console.error("Invoice download failed:", e);
+      toast.error("Failed to download invoice. Please try again.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const getStatusChip = (status) => {
     if (status === "completed") {
@@ -104,7 +116,7 @@ export default function PaymentHistoryPage() {
                     Transaction ID
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Actions
+                    Invoice
                   </th>
                 </tr>
               </thead>
@@ -127,7 +139,10 @@ export default function PaymentHistoryPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1 text-foreground">
                         <DollarSign className="w-4 h-4 text-muted-foreground" />
-                        <span>₹{p.total_amount?.toFixed(2) || p.amount?.toFixed(2) || "0.00"}</span>
+                        <span>
+                          {p.currency === "USD" ? "$" : "₹"}
+                          {p.total_amount?.toFixed(2) || p.amount?.toFixed(2) || "0.00"}
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-foreground">
@@ -140,17 +155,22 @@ export default function PaymentHistoryPage() {
                     <td className="px-4 py-3">
                       {p.status === "completed" ? (
                         <button
-                          onClick={() => {
-                            setInvoicePaymentData(p);
-                            setSelectedInvoice(p.id);
-                          }}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gold-solid hover:text-gold-solid hover:bg-accent rounded-lg transition-colors"
+                          type="button"
+                          onClick={() => handleDownloadInvoice(p)}
+                          disabled={downloadingId === p.id}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gold-solid hover:bg-accent rounded-lg transition-colors disabled:opacity-50"
                         >
-                          <FileText className="w-4 h-4" />
-                          View Invoice
+                          {downloadingId === p.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
+                          Download
                         </button>
                       ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
+                        <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-muted text-muted-foreground">
+                          Unpaid
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -160,18 +180,6 @@ export default function PaymentHistoryPage() {
           </div>
         )}
       </div>
-
-      {/* Invoice Modal */}
-      {selectedInvoice && invoicePaymentData && (
-        <InvoiceView
-          transactionId={selectedInvoice}
-          paymentData={invoicePaymentData}
-          onClose={() => {
-            setSelectedInvoice(null);
-            setInvoicePaymentData(null);
-          }}
-        />
-      )}
     </div>
   );
 }

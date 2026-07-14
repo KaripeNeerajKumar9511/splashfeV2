@@ -4,6 +4,8 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiService } from "@/lib/api";
 import toast from "react-hot-toast";
+import { resolveBillingDestination } from "@/lib/billingAccess";
+import { redirectToOrgPayments } from "@/lib/portalSwitch";
 
 const AuthContext = createContext(null);
 
@@ -79,6 +81,37 @@ export function AuthProvider({ children }) {
         }
     }, [router]);
 
+    // Establish session from token + user (signup OTP, etc.)
+    const establishSession = (authToken, userData, options = {}) => {
+        const normalizedUser = {
+            id: userData.id,
+            email: userData.email,
+            role: userData.role,
+            profile_completed: userData.profile_completed,
+            organization: userData.organization,
+            organization_id: userData.organization_id,
+            organization_role: userData.organization_role,
+            preferred_language: userData.preferred_language || "en",
+            full_name: userData.full_name,
+            username: userData.username,
+        };
+
+        setToken(authToken);
+        setUser(normalizedUser);
+        localStorage.setItem("token", authToken);
+        localStorage.setItem("user", JSON.stringify(userData));
+
+        if (userData.preferred_language && typeof window !== "undefined") {
+            localStorage.setItem("preferredLanguage", userData.preferred_language);
+        }
+
+        if (!options.silent) {
+            toast.success(options.message || "Welcome to Splash AI Studio");
+        }
+
+        return normalizedUser;
+    };
+
     // LOGIN function
     const login = async (email, password) => {
         try {
@@ -114,7 +147,21 @@ export function AuthProvider({ children }) {
                 if (!data.user.profile_completed) {
                     router.push("/complete-profile");
                 } else if (isValidRedirect) {
-                    router.push(redirectTo);
+                    const planMatch = redirectTo.match(/[?&]plan=([^&]+)/);
+                    const planId = planMatch?.[1] || "starter";
+                    const sessionUser = {
+                        ...data.user,
+                        organization: data.user.organization,
+                        organization_role: data.user.organization_role,
+                    };
+                    const dest = resolveBillingDestination(sessionUser, planId);
+                    if (dest.type === "org_owner") {
+                        redirectToOrgPayments(planId);
+                    } else if (dest.blocked) {
+                        router.push("/dashboard/my-account/billing");
+                    } else {
+                        router.push(redirectTo);
+                    }
                 } else {
                     router.push("/dashboard");
                 }
@@ -161,6 +208,7 @@ export function AuthProvider({ children }) {
         user,
         token,
         login,
+        establishSession,
         logout,
         refreshUser,
         isAuthenticated: !!token,

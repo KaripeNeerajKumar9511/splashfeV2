@@ -312,13 +312,9 @@ import {
     Image,
     FolderKanban,
     HelpCircle,
-    User,
     ChevronLeft,
     ChevronRight,
     Sparkles,
-    Palette,
-    Users,
-    Grid3x3,
     Images,
     MessageCircle,
     Bell,
@@ -328,24 +324,18 @@ import {
     FileQuestion,
     MessageSquare,
     CreditCard,
-    Shield,
-    FileText,
     Zap,
+    Mail,
 } from "lucide-react";
 import { MdPhotoSizeSelectLarge } from "react-icons/md";
 import { SiGooglecampaignmanager360  } from "react-icons/si";
 import { HiOutlineUserCircle } from "react-icons/hi";
+import { userBelongsToOrganization } from "@/lib/billingAccess";
 
-export function Sidebar({ collapsed, setCollapsed, hovered, setHovered }) {
-    const { t } = useLanguage();
-    const [expandedItems, setExpandedItems] = useState([]);
-    const pathname = usePathname();
-    const router = useRouter();
-    const { logout, user, token } = useAuth();
-    const { isGenerating } = useImageGeneration();
+function buildNavItems(t, belongsToOrganization = false) {
+    const paymentsLabel = t("dashboard.payments") || "Payments";
 
-    // Define all nav items with translations
-    const allNavItems = [
+    const items = [
         {
             label: t("dashboard.dashboard"),
             icon: LayoutDashboard,
@@ -368,168 +358,74 @@ export function Sidebar({ collapsed, setCollapsed, hovered, setHovered }) {
             icon: FolderKanban,
             path: "/dashboard/projects",
         },
-
         {
-            label: t("dashboard.payments") || "Payments",
+            label: paymentsLabel,
             icon: CreditCard,
             path: "/dashboard/payments",
+            individualOnly: true,
             children: [
                 { label: t("dashboard.subscription"), icon: CreditCard, path: "/dashboard/my-account/billing" },
                 { label: t("dashboard.paymentHistory") || "Payment History", icon: CreditCard, path: "/dashboard/payments/history" },
                 { label: t("dashboard.creditsLogs") || "Credits Usage", icon: Zap, path: "/dashboard/credits/logs" },
             ],
         },
-        // {
-            // label: t("dashboard.myAccount"),
-            // icon: User,
-            // path: "/dashboard/account",
-            // children: [
-            //     { label: t("profile.title").split(" & ")[0], icon: User, path: "/dashboard/my-account/profile" },
-                // { label: t("dashboard.subscription"), icon: CreditCard, path: "/dashboard/my-account/billing" },
-                // { label: t("dashboard.security"), icon: Shield, path: "/dashboard/my-account/security" },
-                // { label: t("dashboard.notifications"), icon: Bell, path: "/dashboard/my-account/notification" },
-                // { label: t("dashboard.promptMaster"), icon: FileText, path: "/dashboard/my-account/prompt-master" },
-                
-            // ],
-        // },
         {
-            label: t("dashboard.helpLearning"),
-            icon: HelpCircle,
-            path: "/dashboard/help",
-            children: [
-                { label: t("dashboard.feedback"), icon: MessageSquare, path: "/dashboard/help/feedback" },
-                { label: t("dashboard.tutorials"), icon: BookOpen, path: "/dashboard/help/tutorials" },
-                { label: t("dashboard.helpCenter"), icon: FileQuestion, path: "/dashboard/help/help-center" },
-            ],
+            label: t("dashboard.settings") || "Settings",
+            icon: Settings,
+            path: "/dashboard/settings",
         },
+        // {
+        //     label: t("dashboard.helpLearning"),
+        //     icon: HelpCircle,
+        //     path: "/dashboard/help",
+        //     children: [
+        //         { label: t("dashboard.feedback"), icon: MessageSquare, path: "/dashboard/help/feedback" },
+        //         { label: t("dashboard.tutorials"), icon: BookOpen, path: "/dashboard/help/tutorials" },
+        //         { label: t("dashboard.helpCenter"), icon: FileQuestion, path: "/dashboard/help/help-center" },
+        //         // { label: t("dashboard.contact") || "Contact", icon: Mail, path: "/dashboard/help/contact" },
+        //     ],
+        // },
     ];
 
-    // Check user organization membership and filter nav items
-    const [navItems, setNavItems] = useState(() => {
-        // Initialize with all items, but without Subscription and Payments (safer default - assume user belongs to org)
-        const paymentsLabel = t("dashboard.payments") || "Payments";
-        return allNavItems
-            .filter(item => item.label !== paymentsLabel)
-            .map(item => {
-                if (item.label === "My Account" && item.children) {
-                    return {
-                        ...item,
-                        children: item.children.filter(child => child.label !== "Subscription")
-                    };
-                }
-                return item;
-            });
-    });
+    return items.filter((item) => !(item.individualOnly && belongsToOrganization));
+}
+
+export function Sidebar({ collapsed, setCollapsed, hovered, setHovered }) {
+    const { t } = useLanguage();
+    const [expandedItems, setExpandedItems] = useState([]);
+    const pathname = usePathname();
+    const router = useRouter();
+    const { logout, user, token } = useAuth();
+    const { isGenerating } = useImageGeneration();
+
+    const resolveNavItems = useCallback(
+        (belongsToOrganization) => buildNavItems(t, belongsToOrganization),
+        [t]
+    );
+
+    const [navItems, setNavItems] = useState(() =>
+        resolveNavItems(user ? userBelongsToOrganization(user) : false)
+    );
 
     useEffect(() => {
-        const checkUserOrganization = async () => {
+        const syncNavItems = async () => {
             if (!token) {
-                // If no token, show all items including Subscription and Payments (user not logged in, so not in org)
-                setNavItems(allNavItems);
+                setNavItems(resolveNavItems(false));
                 return;
             }
 
-            const subscriptionLabel = t("dashboard.subscription");
-            const myAccountLabel = t("dashboard.myAccount");
-
             try {
                 const userProfile = await apiService.getUserProfile(token);
-                if (userProfile?.success && userProfile?.user) {
-                    const currentUser = userProfile.user;
-                    
-                    // Check if user belongs to any organization
-                    let belongsToOrganization = false;
-                    
-                    // Check organization_id first (most reliable)
-                    if (currentUser.organization_id && 
-                        currentUser.organization_id !== null && 
-                        currentUser.organization_id !== 'null' && 
-                        currentUser.organization_id !== 'undefined') {
-                        belongsToOrganization = true;
-                    }
-                    // Check organization object
-                    else if (currentUser.organization && 
-                             currentUser.organization !== null && 
-                             currentUser.organization !== undefined) {
-                        // If organization is an object with id
-                        if (typeof currentUser.organization === 'object' && currentUser.organization.id) {
-                            belongsToOrganization = true;
-                        }
-                        // If organization is a string/ObjectId (non-empty)
-                        else if (typeof currentUser.organization === 'string' && currentUser.organization.trim() !== '') {
-                            belongsToOrganization = true;
-                        }
-                        // If organization exists as an object with properties (not empty object)
-                        else if (typeof currentUser.organization === 'object' && Object.keys(currentUser.organization).length > 0) {
-                            belongsToOrganization = true;
-                        }
-                    }
-
-                    // Filter nav items - hide Subscription and Payments if user belongs to organization
-                    const paymentsLabel = t("dashboard.payments") || "Payments";
-                    const filteredNavItems = allNavItems
-                        .filter(item => {
-                            // Hide entire Payments menu if user belongs to organization
-                            if (item.label === paymentsLabel && belongsToOrganization) {
-                                return false;
-                            }
-                            return true;
-                        })
-                        .map(item => {
-                            if (item.label === myAccountLabel && item.children) {
-                                return {
-                                    ...item,
-                                    children: item.children.filter(child => {
-                                        // Hide Subscription if user belongs to any organization
-                                        if (child.label === subscriptionLabel && belongsToOrganization) {
-                                            return false;
-                                        }
-                                        // Show Subscription only if user doesn't belong to organization
-                                        return true;
-                                    })
-                                };
-                            }
-                            return item;
-                        });
-
-                    setNavItems(filteredNavItems);
-                } else {
-                    // If profile fetch fails, hide subscriptions and payments by default (assume user belongs to org)
-                    const paymentsLabel = t("dashboard.payments") || "Payments";
-                    const filteredNavItems = allNavItems
-                        .filter(item => item.label !== paymentsLabel)
-                        .map(item => {
-                            if (item.label === myAccountLabel && item.children) {
-                                return {
-                                    ...item,
-                                    children: item.children.filter(child => child.label !== subscriptionLabel)
-                                };
-                            }
-                            return item;
-                        });
-                    setNavItems(filteredNavItems);
-                }
+                const currentUser = userProfile?.success ? userProfile.user : user;
+                setNavItems(resolveNavItems(userBelongsToOrganization(currentUser)));
             } catch (error) {
-                console.error('Failed to fetch user profile:', error);
-                // On error, hide subscriptions and payments by default (assume user belongs to org)
-                const paymentsLabel = t("dashboard.payments") || "Payments";
-                const filteredNavItems = allNavItems
-                    .filter(item => item.label !== paymentsLabel)
-                    .map(item => {
-                        if (item.label === myAccountLabel && item.children) {
-                            return {
-                                ...item,
-                                children: item.children.filter(child => child.label !== subscriptionLabel)
-                            };
-                        }
-                        return item;
-                    });
-                setNavItems(filteredNavItems);
+                console.error("Failed to fetch user profile:", error);
+                setNavItems(resolveNavItems(userBelongsToOrganization(user)));
             }
         };
 
-        checkUserOrganization();
-    }, [token, t]);
+        syncNavItems();
+    }, [token, user, resolveNavItems]);
 
     const toggleExpanded = (label) => {
         if (isGenerating) return;
@@ -624,34 +520,29 @@ export function Sidebar({ collapsed, setCollapsed, hovered, setHovered }) {
             className={`fixed left-0 top-0 z-40 h-screen border-r border-sidebar-border backdrop-blur-md bg-sidebar text-sidebar-foreground transition-all duration-300 
                 ${isExpanded ? "w-64" : "w-20"}
             `}
-            onMouseEnter={() => setHovered && setHovered(true)}
-            onMouseLeave={() => setHovered && setHovered(false)}
+            onMouseEnter={() => setHovered?.(true)}
+            onMouseLeave={() => setHovered?.(false)}
         >
             {/* Header */}
             <div className="flex items-center h-16 px-3 border-b border-sidebar-border">
-                
-                
-                    <>
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
-                        {collapsed && !hovered && (
-                                <img src="/images/favicon.png" alt="Splash AI Studio" className="w-25 h-25 object-contain"  />
-                            ) }
-                        </div>
-                        {isExpanded && (
-                            <div className="flex items-center justify-center gap-2 group " >
-                            <Link href="/" className="flex items-left justify-center gap-2 group" >
-                                <img
-                                    src="/images/SplashLogoPNG.png"
-                                    alt="Splash AI Studio"
-                                    className="h-25 lg:h-25 w-auto object-contain hover:scale-105 transition-transform duration-300 translate-y-2 mb-px"
-                                />
-                            </Link>
-                            </div>
-                            
-                        )}
-                    </>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+                    {collapsed && !hovered && (
+                        <img src="/images/favicon.png" alt="Splash AI Studio" className="w-25 h-25 object-contain" />
+                    )}
+                </div>
+                {isExpanded && (
+                    <div className="flex items-center justify-center gap-2 group">
+                        <Link href="/" className="flex items-left justify-center gap-2 group">
+                            <img
+                                src="/images/SplashLogoPNG.png"
+                                alt="Splash AI Studio"
+                                className="h-25 lg:h-25 w-auto object-contain hover:scale-105 transition-transform duration-300 translate-y-2 mb-px"
+                            />
+                        </Link>
+                    </div>
+                )}
                     <button
-                    onClick={() => setCollapsed && setCollapsed(!collapsed)}
+                    onClick={() => setCollapsed?.(!collapsed)}
                     className="ml-2 flex items-center justify-center w-9 h-9 rounded-lg bg-secondary hover:bg-sidebar-accent transition"
                 >
                     {collapsed ? (
@@ -786,7 +677,13 @@ export function Sidebar({ collapsed, setCollapsed, hovered, setHovered }) {
                                 <Bell className="w-5 h-5 text-muted-foreground hover:text-sidebar-foreground" />
                                 <span className="absolute top-2 right-2 w-2 h-2 bg-gold-solid rounded-full" />
                             </button>
-                            <button className="p-2 rounded-md hover:bg-sidebar-accent">
+                            <button
+                                type="button"
+                                onClick={() => !isGenerating && router.push("/dashboard/my-account/profile")}
+                                disabled={isGenerating}
+                                className="p-2 rounded-md hover:bg-sidebar-accent disabled:opacity-50"
+                                title={t("dashboard.settings") || "Settings"}
+                            >
                                 <Settings className="w-5 h-5 text-muted-foreground hover:text-sidebar-foreground" />
                             </button>
                         </div>

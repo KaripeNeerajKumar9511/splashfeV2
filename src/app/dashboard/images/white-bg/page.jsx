@@ -10,6 +10,7 @@ import { apiService } from "@/lib/api"
 import Image from "next/image"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
+import { useCredits } from "@/context/CreditsContext"
 import toast from "react-hot-toast"
 import { DimensionsSelector } from "@/components/images/DimensionsSelector"
 import { openImageViewer } from "@/lib/openImageViewer"
@@ -38,6 +39,7 @@ const PlainBackgroundForm = () => {
     const [result, setResult] = useState(null)
     const [error, setError] = useState(null)
     const { token } = useAuth()
+    const { refetchCredits } = useCredits()
     const [regenerateModal, setRegenerateModal] = useState({
         isOpen: false,
         prompt: '',
@@ -173,6 +175,7 @@ const PlainBackgroundForm = () => {
                     loading: false,
                     error: null
                 })
+                refetchCredits?.()
                 toast.success('Image regenerated successfully!')
             } else {
                 throw new Error(response.error || 'Regeneration failed')
@@ -223,17 +226,20 @@ const PlainBackgroundForm = () => {
             }
 
             const response = await apiService.uploadOrnamentWithBackground(formDataToSend, token)
-            console.log("Full response:", response);
-            console.log("response.data:", response.data);
 
             if (response.success) {
                 setResult(response)
+                refetchCredits?.()
             } else {
                 setError(response.error || t("images.failedToGenerate"))
             }
         } catch (err) {
             console.error("Error generating image:", err)
-            setError(err.message || t("images.errorGeneratingImage"))
+            setError(
+                err.response?.data?.error ||
+                err.message ||
+                t("images.errorGeneratingImage")
+            )
         } finally {
             setIsLoading(false)
         }

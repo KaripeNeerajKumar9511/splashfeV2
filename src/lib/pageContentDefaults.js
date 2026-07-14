@@ -417,5 +417,18 @@ export function resolveFaqsContent(raw) {
 }
 
 export function resolveContactContent(raw) {
-  return deepMerge(CONTACT_PAGE_DEFAULTS, raw || {});
+  const merged = deepMerge(CONTACT_PAGE_DEFAULTS, raw || {});
+  const lines = merged?.details?.office?.lines;
+
+  if (!Array.isArray(lines)) {
+    if (typeof lines === "string" && lines.trim()) {
+      merged.details.office.lines = lines.includes("\n")
+        ? lines.split("\n").map((line) => line.trim()).filter(Boolean)
+        : [lines.trim()];
+    } else {
+      merged.details.office.lines = CONTACT_PAGE_DEFAULTS.details.office.lines;
+    }
+  }
+
+  return merged;
 }

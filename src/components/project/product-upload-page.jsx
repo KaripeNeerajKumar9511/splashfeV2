@@ -14,6 +14,7 @@ import {
 } from "./ProductModelTierSelect"
 import { estimateProductUploadCredits } from "@/lib/creditPricing"
 import SmartImage from "@/utils/SmartImage"
+import { openImageViewer } from "@/lib/openImageViewer"
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -905,7 +906,11 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
-                                                                window.open(product.uploaded_image_url, '_blank')
+                                                                openImageViewer([{
+                                                                    localPath: product.uploaded_image_path,
+                                                                    url: product.uploaded_image_url,
+                                                                    label: `Product ${index + 1}`,
+                                                                }])
                                                             }}
                                                             className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg"
                                                             title="View full image"

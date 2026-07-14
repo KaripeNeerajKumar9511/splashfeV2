@@ -6,6 +6,7 @@ import { apiService } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { formatRelativeCommentTime } from "@/lib/comment-time"
 import SmartImage from "@/utils/SmartImage"
+import { openImageViewer } from "@/lib/openImageViewer"
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -662,7 +663,7 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation()
-                                                    window.open(image.url || image.cloud_url, '_blank')
+                                                    openImageViewer([{ localPath: image.local_path, url: image.cloud_url || image.url, label: image.name || "Reference image" }])
                                                 }}
                                                 className="bg-gold-solid text-white rounded-full p-1 hover:bg-gold-solid transition-colors"
                                                 title="View image"
@@ -780,7 +781,7 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation()
-                                                    window.open(image.url || image.cloud_url, '_blank')
+                                                    openImageViewer([{ localPath: image.local_path, url: image.cloud_url || image.url, label: image.name || "Reference image" }])
                                                 }}
                                                 className="bg-gold-solid text-white rounded-full p-1 hover:bg-gold-solid transition-colors"
                                                 title="View image"
@@ -893,7 +894,7 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation()
-                                                    window.open(image.url || image.cloud_url, '_blank')
+                                                    openImageViewer([{ localPath: image.local_path, url: image.cloud_url || image.url, label: image.name || "Reference image" }])
                                                 }}
                                                 className="bg-gold-solid text-white rounded-full p-1 hover:bg-gold-solid transition-colors"
                                                 title="View image"
@@ -1002,7 +1003,7 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation()
-                                                    window.open(image.url || image.cloud_url, '_blank')
+                                                    openImageViewer([{ localPath: image.local_path, url: image.cloud_url || image.url, label: image.name || "Reference image" }])
                                                 }}
                                                 className="bg-gold-solid text-white rounded-full p-1 hover:bg-gold-solid transition-colors"
                                                 title="View image"

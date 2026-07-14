@@ -23,8 +23,9 @@ async function resolveSource(src) {
     return src;
   }
 
+  // Prefer an existing local file; return empty so fallbackSrc (Cloudinary) can take over
   const available = await getImageUrl(src);
-  return available || buildMediaUrl(src);
+  return available || "";
 }
 
 export default function SmartImage({

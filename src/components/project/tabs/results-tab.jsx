@@ -1,13 +1,15 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import Image from "next/image"
 import { Download, Image as ImageIcon, Calendar, Clock, ChevronLeft, ChevronRight, Box, User, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ProductImagesDisplay } from "../product-images-display"
 import { apiService } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { dataCache, cacheKeys } from "@/lib/data-cache"
+import SmartImage from "@/utils/SmartImage"
+import { openImageViewer } from "@/lib/openImageViewer"
+import { downloadSmartImage, pickLocalAndCloud, resolveBestImageUrl, isHttpUrl } from "@/utils/imagehelper"
 
 export default function ResultsTab({ project }) {
 
@@ -222,10 +224,11 @@ export default function ResultsTab({ project }) {
         const images = [];
         historyData.history_by_product.forEach((productHistory) => {
             productHistory.history.forEach((historyItem) => {
-                if (historyItem.image_url) {
+                if (historyItem.image_url || historyItem.local_path) {
                     images.push({
                         id: historyItem.id,
                         image_url: historyItem.image_url,
+                        local_path: historyItem.local_path || (!isHttpUrl(historyItem.image_url) ? historyItem.image_url : ""),
                         image_type: historyItem.image_type,
                         created_at: historyItem.created_at,
                         parent_image_id: historyItem.parent_image_id
@@ -284,57 +287,24 @@ export default function ResultsTab({ project }) {
         }
     };
 
-    const downloadImageAsBlob = async (imageUrl, filename) => {
-        try {
-            // Fetch the image as a blob with no-cors mode if needed
-            const response = await fetch(imageUrl, {
-                mode: 'cors',
-                cache: 'no-cache'
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch image: ${response.statusText}`);
-            }
-
-            const blob = await response.blob();
-
-            // Create a blob URL
-            const blobUrl = window.URL.createObjectURL(blob);
-
-            // Create a temporary link element
-            const link = document.createElement("a");
-            link.href = blobUrl;
-            link.download = filename;
-            link.style.display = 'none';
-
-            // Append to body, click, and remove
-            document.body.appendChild(link);
-            link.click();
-
-            // Small delay before cleanup to ensure download starts
-            setTimeout(() => {
-                link.remove();
-                window.URL.revokeObjectURL(blobUrl);
-            }, 100);
-        } catch (error) {
-            console.error('Error downloading image:', error);
-            // Fallback: try direct download
-            try {
-                const link = document.createElement("a");
-                link.href = imageUrl;
-                link.download = filename;
-                link.target = '_blank';
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
-                setTimeout(() => link.remove(), 100);
-            } catch (fallbackError) {
-                console.error('Fallback download also failed:', fallbackError);
-                // Last resort: open in new tab
-                window.open(imageUrl, '_blank');
-            }
+    const handleDownloadImage = async (image, imageType, productIndex, imageIndex = null, isHistory = false) => {
+        // Generate filename based on context
+        let filename;
+        if (isHistory) {
+            const imageTypeLabel = getImageTypeLabel(imageType).toLowerCase().replace(/\s+/g, '-');
+            const timestamp = Date.now();
+            filename = `product-${productIndex}-${imageTypeLabel}-${timestamp}.png`;
+        } else {
+            const imageTypeLabel = imageType?.replace(/_/g, '-') || 'generated';
+            filename = `product-${productIndex}-${imageTypeLabel}${imageIndex !== null ? `-${imageIndex}` : ''}.png`;
         }
-    };
+
+        const { src, fallbackSrc } = typeof image === 'string'
+            ? pickLocalAndCloud({ image_url: image })
+            : pickLocalAndCloud(image);
+
+        await downloadSmartImage({ src, fallbackSrc, filename });
+    }
 
     const sanitizePathSegment = (value) => {
         return String(value || "unknown")
@@ -363,15 +333,16 @@ export default function ResultsTab({ project }) {
         const usedPaths = new Set();
 
         for (const image of images) {
-            if (!image?.url) continue;
+            const resolvedUrl = await resolveBestImageUrl(image.localPath || image.local_path, image.url || image.cloud_url || image.image_url);
+            if (!resolvedUrl) continue;
             try {
-                const response = await fetch(image.url, { mode: "cors", cache: "no-cache" });
+                const response = await fetch(resolvedUrl, { mode: "cors", cache: "no-cache" });
                 if (!response.ok) {
-                    console.error(`Skipping image (HTTP ${response.status}):`, image.url);
+                    console.error(`Skipping image (HTTP ${response.status}):`, resolvedUrl);
                     continue;
                 }
                 const blob = await response.blob();
-                const extension = guessExtension(image.url, blob.type);
+                const extension = guessExtension(resolvedUrl, blob.type);
                 const folderName = sanitizePathSegment(
                     image.folderName || getImageTypeLabel(image.type) || "generated"
                 );
@@ -395,7 +366,7 @@ export default function ResultsTab({ project }) {
                 usedPaths.add(fullPath);
                 zip.file(fullPath, blob);
             } catch (error) {
-                console.error("Skipping image while creating zip:", image.url, error);
+                console.error("Skipping image while creating zip:", resolvedUrl, error);
             }
         }
 
@@ -421,21 +392,6 @@ export default function ResultsTab({ project }) {
         window.URL.revokeObjectURL(zipUrl);
     };
 
-    const handleDownloadImage = async (imageUrl, imageType, productIndex, imageIndex = null, isHistory = false) => {
-        // Generate filename based on context
-        let filename;
-        if (isHistory) {
-            const imageTypeLabel = getImageTypeLabel(imageType).toLowerCase().replace(/\s+/g, '-');
-            const timestamp = Date.now();
-            filename = `product-${productIndex}-${imageTypeLabel}-${timestamp}.png`;
-        } else {
-            const imageTypeLabel = imageType?.replace(/_/g, '-') || 'generated';
-            filename = `product-${productIndex}-${imageTypeLabel}${imageIndex !== null ? `-${imageIndex}` : ''}.png`;
-        }
-
-        await downloadImageAsBlob(imageUrl, filename);
-    }
-
     const handleDownloadAll = async () => {
         if (isDownloading) {
             return;
@@ -449,9 +405,10 @@ export default function ResultsTab({ project }) {
             collectionData.items[0].product_images.forEach((product, pIdx) => {
                 product.generated_images?.forEach((img, iIdx) => {
                     // Add original image
-                    if (img.cloud_url) {
+                    if (img.cloud_url || img.local_path) {
                         imagesToDownload.push({
                             url: img.cloud_url,
+                            local_path: img.local_path,
                             type: img.type,
                             productIndex: pIdx + 1,
                             imageIndex: iIdx + 1,
@@ -461,9 +418,10 @@ export default function ResultsTab({ project }) {
                     // Add regenerated images
                     if (img.regenerated_images) {
                         img.regenerated_images.forEach((regen, rIdx) => {
-                            if (regen.cloud_url) {
+                            if (regen.cloud_url || regen.local_path) {
                                 imagesToDownload.push({
                                     url: regen.cloud_url,
+                                    local_path: regen.local_path,
                                     type: regen.type || img.type,
                                     productIndex: pIdx + 1,
                                     imageIndex: iIdx + 1,
@@ -475,9 +433,10 @@ export default function ResultsTab({ project }) {
                     // Add enhanced images
                     if (img.enhanced_images) {
                         img.enhanced_images.forEach((enhanced, eIdx) => {
-                            if (enhanced.cloud_url) {
+                            if (enhanced.cloud_url || enhanced.local_path) {
                                 imagesToDownload.push({
                                     url: enhanced.cloud_url,
+                                    local_path: enhanced.local_path,
                                     type: 'enhanced',
                                     productIndex: pIdx + 1,
                                     imageIndex: iIdx + 1,
@@ -494,9 +453,10 @@ export default function ResultsTab({ project }) {
         if (historyData?.history_by_product) {
             historyData.history_by_product.forEach((productHistory, pIdx) => {
                 productHistory.history.forEach((historyItem, hIdx) => {
-                    if (historyItem.image_url) {
+                    if (historyItem.image_url || historyItem.local_path) {
                         imagesToDownload.push({
                             url: historyItem.image_url,
+                            local_path: historyItem.local_path,
                             type: historyItem.image_type,
                             productIndex: pIdx + 1,
                             imageIndex: hIdx + 1,
@@ -546,9 +506,10 @@ export default function ResultsTab({ project }) {
 
         historyData.history_by_product.forEach((productHistory, pIdx) => {
             productHistory.history.forEach((historyItem, hIdx) => {
-                if (historyItem.image_url) {
+                if (historyItem.image_url || historyItem.local_path) {
                     imagesToDownload.push({
                         url: historyItem.image_url,
+                        local_path: historyItem.local_path,
                         type: historyItem.image_type,
                         productIndex: pIdx + 1,
                         imageIndex: hIdx + 1
@@ -820,16 +781,25 @@ export default function ResultsTab({ project }) {
                         {paginatedImages.length > 0 ? (
                             <>
                                 <div className="grid grid-cols-4 gap-4 mb-6">
-                                    {paginatedImages.map((image, index) => (
+                                    {paginatedImages.map((image, index) => {
+                                        const { src: localSrc, fallbackSrc: cloudSrc } = pickLocalAndCloud(image)
+                                        return (
                                         <div key={image.id || index} className="group relative aspect-square rounded-xl overflow-hidden bg-secondary border border-border shadow-sm hover:shadow-md transition-all">
-                                            <Image
-                                                src={image.image_url}
+                                            <SmartImage
+                                                src={localSrc}
+                                                fallbackSrc={cloudSrc}
                                                 alt="Generated"
                                                 fill
                                                 className="object-cover cursor-pointer"
-                                                onClick={() => window.open(image.image_url, "_blank")}
+                                                onClick={() => openImageViewer(paginatedImages.map((img, i) => {
+                                                    const picked = pickLocalAndCloud(img)
+                                                    return {
+                                                        localPath: picked.src,
+                                                        url: picked.fallbackSrc,
+                                                        label: getImageTypeLabel(img.image_type) || `Image ${i + 1}`,
+                                                    }
+                                                }), index)}
                                                 sizes="(max-width: 768px) 50vw, 25vw"
-                                                unoptimized={image.image_url?.includes('cloudinary') || image.image_url?.includes('imagekit') || image.image_url?.includes('localhost') || image.image_url?.includes('127.0.0.1') || image.image_url?.startsWith('/media')}
                                             />
                                             {/* Hover Overlay */}
                                             <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
@@ -852,7 +822,11 @@ export default function ResultsTab({ project }) {
                                                         className="gap-1 text-xs px-2 py-1 h-auto bg-card/90 backdrop-blur-sm hover:bg-card"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            window.open(image.image_url, "_blank");
+                                                            openImageViewer([{
+                                                                localPath: localSrc,
+                                                                url: cloudSrc,
+                                                                label: getImageTypeLabel(image.image_type),
+                                                            }]);
                                                         }}
                                                     >
                                                         <ImageIcon className="w-3 h-3" /> View
@@ -865,7 +839,7 @@ export default function ResultsTab({ project }) {
                                                             e.stopPropagation();
                                                             const globalIndex = (currentPage - 1) * imagesPerPage + index;
                                                             handleDownloadImage(
-                                                                image.image_url,
+                                                                image,
                                                                 image.image_type,
                                                                 Math.floor(globalIndex / 4) + 1,
                                                                 (globalIndex % 4) + 1,
@@ -878,7 +852,8 @@ export default function ResultsTab({ project }) {
                                                 </div>
                                             </div>
                                         </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
 
                                 {/* Pagination */}

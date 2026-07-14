@@ -7,6 +7,8 @@ import { apiService } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { formatRelativeCommentTime } from "@/lib/comment-time"
 import SmartImage from "@/utils/SmartImage"
+import { openImageViewer } from "@/lib/openImageViewer"
+import { pickLocalAndCloud } from "@/utils/imagehelper"
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
 const ALLOWED_REAL_MODEL_TYPES = [
@@ -824,7 +826,8 @@ function AIModelsTab({
                             </h4>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                 {aiModels.map((model, index) => {
-                                    const imageUrl = model.cloud || model.local
+                                    const { src: localSrc, fallbackSrc: cloudSrc } = pickLocalAndCloud(model)
+                                    const imageUrl = cloudSrc || localSrc
                                     const isSelected = tempSelectedModels.includes(imageUrl)
 
                                     return (
@@ -838,8 +841,8 @@ function AIModelsTab({
                                         >
                                             {/* Image */}
                                             <SmartImage
-                                                src={model.local_path}
-                                                fallbackSrc={model.cloud_url}
+                                                src={localSrc}
+                                                fallbackSrc={cloudSrc}
                                                 width={100}
                                                 height={100}
                                                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -882,7 +885,7 @@ function AIModelsTab({
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation()
-                                                        window.open(imageUrl, '_blank')
+                                                        openImageViewer([{ localPath: localSrc, url: cloudSrc, label: `Existing Model ${index + 1}` }])
                                                     }}
                                                     className="bg-card hover:bg-muted text-amber-500 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
                                                 >
@@ -922,7 +925,11 @@ function AIModelsTab({
                             Newly Generated Models
                         </h4>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            {allGeneratedUrls.map((imageUrl, index) => {
+                            {allGeneratedUrls.map((imageItem, index) => {
+                                const { src: localSrc, fallbackSrc: cloudSrc } = pickLocalAndCloud(imageItem)
+                                const imageUrl = typeof imageItem === "string"
+                                    ? imageItem
+                                    : (cloudSrc || localSrc)
                                 const isSelected = tempSelectedModels.includes(imageUrl)
                                 return (
                                     <div
@@ -933,8 +940,12 @@ function AIModelsTab({
                                             : 'border-border hover:border-amber-400/50'
                                             }`}
                                     >
-                                        <img
-                                            src={imageUrl}
+                                        <SmartImage
+                                            src={localSrc}
+                                            fallbackSrc={cloudSrc}
+                                            width={100}
+                                            height={100}
+                                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                             alt={`New Model ${index + 1}`}
                                             className="w-full h-40 object-cover"
                                         />
@@ -951,7 +962,7 @@ function AIModelsTab({
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation()
-                                                    window.open(imageUrl, '_blank')
+                                                    openImageViewer([{ localPath: localSrc, url: cloudSrc, label: `New Model ${index + 1}` }])
                                                 }}
                                                 className="bg-card hover:bg-muted text-amber-500 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
                                             >
@@ -994,7 +1005,7 @@ function AIModelsTab({
                     <h4 className="text-sm font-semibold text-muted-foreground">Your AI Models</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {aiModels.map((model, index) => {
-                            const imageUrl = model.cloud || model.local
+                            const { src: localSrc, fallbackSrc: cloudSrc } = pickLocalAndCloud(model)
                             const selected = isModelSelected(model)
                             console.log("selected ai model : ", selected)
 
@@ -1008,8 +1019,8 @@ function AIModelsTab({
                                         }`}
                                 >
                                     <SmartImage
-                                        src={model.local}
-                                        fallbackSrc={model.cloud}
+                                        src={localSrc}
+                                        fallbackSrc={cloudSrc}
                                         width={100}
                                         height={100}
                                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -1027,7 +1038,7 @@ function AIModelsTab({
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation()
-                                                window.open(imageUrl, '_blank')
+                                                openImageViewer([{ localPath: localSrc, url: cloudSrc, label: `AI Model ${index + 1}` }])
                                             }}
                                             className="bg-card hover:bg-muted text-amber-500 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
                                         >
@@ -1172,7 +1183,7 @@ function RealModelsTab({
                     <h4 className="text-sm font-semibold text-muted-foreground">Your Uploaded Models</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {realModels.map((model, index) => {
-                            const imageUrl = model.cloud || model.local
+                            const { src: localSrc, fallbackSrc: cloudSrc } = pickLocalAndCloud(model)
                             const selected = isModelSelected(model)
 
                             return (
@@ -1186,8 +1197,8 @@ function RealModelsTab({
                                 >
                                     {/* Model image */}
                                     <SmartImage
-                                        src={model.local}
-                                        fallbackSrc={model.cloud}
+                                        src={localSrc}
+                                        fallbackSrc={cloudSrc}
                                         width={100}
                                         height={100}
                                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -1222,7 +1233,7 @@ function RealModelsTab({
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation()
-                                                window.open(imageUrl, '_blank')
+                                                openImageViewer([{ localPath: localSrc, url: cloudSrc, label: `Real Model ${index + 1}` }])
                                             }}
                                             className="bg-card hover:bg-muted text-gold-solid px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
                                         >

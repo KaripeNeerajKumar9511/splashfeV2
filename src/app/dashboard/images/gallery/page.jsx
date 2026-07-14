@@ -11,6 +11,7 @@ import { openImageViewer } from "@/lib/openImageViewer"
 import { ModelTierSelector } from "@/components/images/ModelTierSelector"
 import { resolveRegenerationTier } from "@/lib/creditPricing"   
 import GeneratedSmartImage, { toViewerItem } from "@/components/images/GeneratedSmartImage"
+import { downloadSmartImage } from "@/utils/imagehelper"
 
 function getRegenContextForImageType(type) {
     if (type === "campaign_shot_advanced") return "campaign"
@@ -132,37 +133,21 @@ export default function GalleryPage() {
 
 
 
-    // Download image function using blob approach
-    const downloadImage = async (url, filename = "image.png") => {
+    // Download image: local disk first, then Cloudinary
+    const downloadImage = async (imageOrUrl, filename = "image.png") => {
         try {
-            const response = await fetch(url, {
-                mode: 'cors',
-                cache: 'no-cache'
-            })
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch image: ${response.statusText}`)
+            if (imageOrUrl && typeof imageOrUrl === "object") {
+                await downloadSmartImage({
+                    src: imageOrUrl.generated_image_path,
+                    fallbackSrc: imageOrUrl.generated_image_url,
+                    filename,
+                })
+            } else {
+                await downloadSmartImage({ fallbackSrc: imageOrUrl, filename })
             }
-
-            const blob = await response.blob()
-            const blobUrl = window.URL.createObjectURL(blob)
-
-            const link = document.createElement("a")
-            link.href = blobUrl
-            link.download = filename
-            link.style.display = 'none'
-
-            document.body.appendChild(link)
-            link.click()
-
-            setTimeout(() => {
-                link.remove()
-                window.URL.revokeObjectURL(blobUrl)
-            }, 100)
+            toast.success(t("images.downloadStarted") || "Download started")
         } catch (error) {
             console.error('Error downloading image:', error)
-            // Fallback: open in new tab
-            window.open(url, '_blank')
             toast.error(t("images.downloadFailed"))
         }
     }
@@ -171,7 +156,7 @@ export default function GalleryPage() {
         const imageType = getImageCategory(image.type).toLowerCase().replace(/\s+/g, '-')
         const timestamp = image.created_at ? new Date(image.created_at).getTime() : Date.now()
         const filename = `image-${imageType}-${timestamp}.png`
-        downloadImage(image.generated_image_url, filename)
+        downloadImage(image, filename)
     }
 
     const handleView = (image) => {

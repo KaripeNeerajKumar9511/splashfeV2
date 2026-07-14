@@ -1,5 +1,6 @@
 import React from 'react'
 import { Palette, Upload } from 'lucide-react'
+import SmartImage from "@/utils/SmartImage"
 
 export function SelectedColorsDisplay({ collectionData, canEdit = true }) {
     const item = collectionData?.items?.[0]
@@ -56,11 +57,14 @@ export function SelectedColorsDisplay({ collectionData, canEdit = true }) {
                         </div>
                         <div className="grid grid-cols-4 gap-2">
                             {item.uploaded_color_images.map((image, index) => (
-                                <div key={index} className="relative group">
-                                    <img
-                                        src={image.cloud_url}
+                                <div key={index} className="relative group h-16 rounded border overflow-hidden">
+                                    <SmartImage
+                                        src={image.local_path}
+                                        fallbackSrc={image.cloud_url}
                                         alt={image.original_filename}
-                                        className="w-full h-16 object-cover rounded border"
+                                        fill
+                                        sizes="80px"
+                                        className="object-cover"
                                     />
                                 </div>
                             ))}

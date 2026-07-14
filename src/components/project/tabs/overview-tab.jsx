@@ -235,7 +235,6 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import Image from "next/image"
 import { CircleDot, Clock, Calendar, FileText, Image as ImageIcon, Package, User, CheckCircle, Palette, MapPin, Camera, Sparkles } from "lucide-react"
 import { ProductImagesDisplay } from "../product-images-display"
 import { apiService } from "@/lib/api"
@@ -510,8 +509,9 @@ export default function OverviewTab({ project }) {
                                     <div className="grid grid-cols-4 gap-4">
                                         {item.uploaded_color_images.map((img, idx) => (
                                             <div key={idx} className="relative w-full h-24 rounded-lg border border-border overflow-hidden">
-                                                <Image
-                                                    src={img.cloud_url || img.local_url}
+                                                <SmartImage
+                                                    src={img.local_path || img.local_url}
+                                                    fallbackSrc={img.cloud_url}
                                                     alt={`Color ${idx + 1}`}
                                                     fill
                                                     className="object-cover"

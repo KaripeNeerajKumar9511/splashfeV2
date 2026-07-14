@@ -20,6 +20,7 @@ import toast from "react-hot-toast"
 import { openImageViewer } from "@/lib/openImageViewer"
 import GeneratedSmartImage, { toViewerItem } from "@/components/images/GeneratedSmartImage"
 import { mergeRegenerationResult } from "@/lib/regeneration"
+import { downloadSmartImage } from "@/utils/imagehelper"
 import { SiGooglecampaignmanager360  } from "react-icons/si";
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
@@ -128,58 +129,21 @@ export default function CampaignForm() {
       };
       
 
-    const downloadImage = async (url, filename = "image.png") => {
+    const downloadImage = async (imageOrUrl, filename = "image.png") => {
         try {
-            // First try with fetch and blob approach
-            const response = await fetch(url, {
-                mode: 'cors',
-                cache: 'no-cache',
-                credentials: 'omit'
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch image: ${response.statusText}`);
+            if (imageOrUrl && typeof imageOrUrl === "object") {
+                await downloadSmartImage({
+                    src: imageOrUrl.generated_image_path,
+                    fallbackSrc: imageOrUrl.generated_image_url,
+                    filename,
+                });
+            } else {
+                await downloadSmartImage({ fallbackSrc: imageOrUrl, filename });
             }
-
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = blobUrl;
-            link.download = filename;
-            link.style.display = 'none';
-            link.setAttribute('download', filename);
-
-            document.body.appendChild(link);
-            link.click();
-
-            // Clean up after a delay
-            setTimeout(() => {
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(blobUrl);
-            }, 200);
-
             toast.success(t("images.downloadStarted"));
         } catch (error) {
             console.error('Error downloading image:', error);
-            // Fallback: try direct download link
-            try {
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = filename;
-                link.target = '_blank';
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                }, 200);
-                toast.success(t("images.downloadStarted"));
-            } catch (fallbackError) {
-                console.error('Fallback download also failed:', fallbackError);
-                // Last resort: open in new tab
-                window.open(url, '_blank');
-                toast.error(t("images.downloadFailed"));
-            }
+            toast.error(t("images.downloadFailed"));
         }
     };
 
@@ -957,7 +921,7 @@ text-foreground text-sm">
                                                     <div className="p-4 flex flex-wrap gap-3 justify-center border-t border-gold-muted/10 items-center">
                                                         <span className="text-sm font-medium text-gold-solid bg-card px-2 py-1 rounded border border-gold-muted/20">Image {idx + 1}</span>
                                                         <button type="button" onClick={() => handleView(img)} className="px-4 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/30 flex items-center gap-2"><Eye size={16} />{t("images.view")}</button>
-                                                        <button type="button" onClick={() => downloadImage(img.generated_image_url, `campaign-${idx + 1}.png`)} className="px-4 py-3 bg-gold-solid text-white rounded-xl font-semibold flex items-center gap-2"><Download size={16} />{t("images.download")}</button>
+                                                        <button type="button" onClick={() => downloadImage(img, `campaign-${idx + 1}.png`)} className="px-4 py-3 bg-gold-solid text-white rounded-xl font-semibold flex items-center gap-2"><Download size={16} />{t("images.download")}</button>
                                                         <button type="button" onClick={() => handleRegenerate({ ...img, index: idx })} className="px-4 py-3 border-2 border-gold-muted text-gold-solid rounded-xl font-semibold hover:bg-gold-solid/10 flex items-center gap-2"><RefreshCw size={16} />{t("images.regenerate")}</button>
                                                     </div>
                                                 </div>
@@ -983,7 +947,7 @@ text-foreground text-sm">
                                             </div>
                                             <div className="grid grid-cols-3 gap-3">
                                                 <button onClick={() => handleView(result)} className="px-4 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/30 transition-all flex items-center justify-center gap-2"><Eye size={16} />{t("images.view")}</button>
-                                                <button onClick={() => downloadImage(result.generated_image_url, "campaign-shot.png")} className="px-4 py-3 bg-gold-gradient text-white rounded-xl font-semibold hover:scale-105 transition-all flex items-center justify-center gap-2"><Download size={16} />{t("images.download")}</button>
+                                                <button onClick={() => downloadImage(result, "campaign-shot.png")} className="px-4 py-3 bg-gold-gradient text-white rounded-xl font-semibold hover:scale-105 transition-all flex items-center justify-center gap-2"><Download size={16} />{t("images.download")}</button>
                                                 <button onClick={() => handleRegenerate(result)} className="px-4 py-3 border-2 border-gold-muted text-gold-solid hover:bg-gold-solid/10 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"><RefreshCw size={16} />{t("images.regenerate")}</button>
                                             </div>
                                             <button onClick={() => { setResult(null); setFormData({ modelType: "ai_model", modelImage: null, ornamentImages: [], ornamentNames: [], ornamentTypes: [], ornamentMeasurements: [], themeImages: [], prompt: "", dimension: "1:1" }); setModelPreview(null); setOrnamentPreviews([]); setThemePreviews([]); setThemeReferenceAnalyses([]); }} className="w-full px-4 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/30">{t("images.newCampaign")}</button>

@@ -10,6 +10,8 @@ import { formatRelativeCommentTime } from "@/lib/comment-time"
 import { ModelTierSelector } from "@/components/images/ModelTierSelector"
 import { resolveRegenerationTier } from "@/lib/creditPricing"
 import SmartImage from "@/utils/SmartImage"
+import { openImageViewer } from "@/lib/openImageViewer"
+import { downloadSmartImage, pickLocalAndCloud } from "@/utils/imagehelper"
 
 function getProjectRegenContext(imageType) {
     if (imageType === "campaign_image") return "campaign"
@@ -372,59 +374,7 @@ export function ProductImagesDisplay({
         }
     }
 
-    const downloadImageAsBlob = async (imageUrl, filename) => {
-        try {
-            // Fetch the image as a blob
-            const response = await fetch(imageUrl, {
-                mode: 'cors',
-                cache: 'no-cache'
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch image: ${response.statusText}`);
-            }
-
-            const blob = await response.blob();
-
-            // Create a blob URL
-            const blobUrl = window.URL.createObjectURL(blob);
-
-            // Create a temporary link element
-            const link = document.createElement("a");
-            link.href = blobUrl;
-            link.download = filename;
-            link.style.display = 'none';
-
-            // Append to body, click, and remove
-            document.body.appendChild(link);
-            link.click();
-
-            // Small delay before cleanup to ensure download starts
-            setTimeout(() => {
-                link.remove();
-                window.URL.revokeObjectURL(blobUrl);
-            }, 100);
-        } catch (error) {
-            console.error('Error downloading image:', error);
-            // Fallback: try direct download
-            try {
-                const link = document.createElement("a");
-                link.href = imageUrl;
-                link.download = filename;
-                link.target = '_blank';
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
-                setTimeout(() => link.remove(), 100);
-            } catch (fallbackError) {
-                console.error('Fallback download also failed:', fallbackError);
-                // Last resort: open in new tab
-                window.open(imageUrl, '_blank');
-            }
-        }
-    };
-
-    const handleDownloadImage = async (imageUrl, imageType, productIndex, imageIndex, versionType = '', versionIndex = null) => {
+    const handleDownloadImage = async (image, imageType, productIndex, imageIndex, versionType = '', versionIndex = null) => {
         // Generate filename
         const imageTypeLabel = imageType?.replace(/_/g, '-') || 'generated';
         let filename = `product-${productIndex}-${imageTypeLabel}-${imageIndex}`;
@@ -437,7 +387,11 @@ export function ProductImagesDisplay({
 
         filename += '.png';
 
-        await downloadImageAsBlob(imageUrl, filename);
+        const { src, fallbackSrc } = typeof image === 'string'
+            ? pickLocalAndCloud({ cloud_url: image })
+            : pickLocalAndCloud(image);
+
+        await downloadSmartImage({ src, fallbackSrc, filename });
     }
 
     console.log("products", products)
@@ -522,7 +476,11 @@ export function ProductImagesDisplay({
                                                     priority={productIndex === 0}
                                                     alt={`Product ${productIndex + 1}`}
                                                     className="w-full h-full object-cover cursor-zoom-in transition-transform hover:scale-105"
-                                                    onClick={() => setZoomedImage(product.uploaded_image_url)}
+                                                    onClick={() => openImageViewer([{
+                                                        localPath: product.uploaded_image_path,
+                                                        url: product.uploaded_image_url,
+                                                        label: `Product ${productIndex + 1}`,
+                                                    }])}
                                                 />
                                             </div>
                                             <div className="absolute top-3 left-3 bg-gold-solid text-white text-xs px-2 py-1 rounded-full font-medium">
@@ -576,7 +534,11 @@ export function ProductImagesDisplay({
                                                                     priority={imgIndex === 0}
                                                                     alt={`${imageToShow.type} ${imgIndex + 1}`}
                                                                     className="w-full h-full object-cover cursor-zoom-in transition-transform hover:scale-105"
-                                                                    onClick={() => setZoomedImage(imageToShow.cloud_url)}
+                                                                    onClick={() => openImageViewer([{
+                                                                        localPath: imageToShow.local_path,
+                                                                        url: imageToShow.cloud_url,
+                                                                        label: `${imageToShow.type || "Generated"} ${imgIndex + 1}`,
+                                                                    }])}
                                                                 />
 
                                                                 {/* Hover Overlay */}
@@ -636,7 +598,11 @@ export function ProductImagesDisplay({
                                                                                 size="sm"
                                                                                 variant="secondary"
                                                                                 className="gap-1 text-xs px-2 py-1 h-auto bg-card/90 backdrop-blur-sm hover:bg-card"
-                                                                                onClick={() => window.open(imageToShow.cloud_url, "_blank")}
+                                                                                onClick={() => openImageViewer([{
+                                                                                    localPath: imageToShow.local_path,
+                                                                                    url: imageToShow.cloud_url,
+                                                                                    label: `${imageToShow.type || "Generated"} ${imgIndex + 1}`,
+                                                                                }])}
                                                                             >
                                                                                 <ExternalLink className="w-3 h-3" /> View
                                                                             </Button>
@@ -659,7 +625,7 @@ export function ProductImagesDisplay({
                                                                                         }
                                                                                     }
                                                                                     handleDownloadImage(
-                                                                                        imageToShow.cloud_url,
+                                                                                        imageToShow,
                                                                                         img.type || imageToShow.type,
                                                                                         productIndex + 1,
                                                                                         imgIndex + 1,
@@ -896,11 +862,14 @@ export function ProductImagesDisplay({
                                 <label className="block text-sm font-semibold text-foreground mb-3">
                                     Original Product
                                 </label>
-                                <div className="border-2 border-gold-solid rounded-xl overflow-hidden shadow-sm">
-                                    <img
-                                        src={showPromptModal.product.uploaded_image_url}
+                                <div className="relative border-2 border-gold-solid rounded-xl overflow-hidden shadow-sm h-48">
+                                    <SmartImage
+                                        src={showPromptModal.product.uploaded_image_path}
+                                        fallbackSrc={showPromptModal.product.uploaded_image_url}
                                         alt="Original Product"
-                                        className="w-full h-48 object-cover"
+                                        fill
+                                        sizes="200px"
+                                        className="object-cover"
                                     />
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-2 font-medium">
@@ -1005,10 +974,13 @@ export function ProductImagesDisplay({
                                                             : 'border-border hover:border-gold-muted'
                                                             }`}
                                                     >
-                                                        <img
-                                                            src={model.cloud}
+                                                        <SmartImage
+                                                            src={model.local}
+                                                            fallbackSrc={model.cloud}
                                                             alt="AI Model"
-                                                            className="w-full h-full object-cover"
+                                                            fill
+                                                            sizes="80px"
+                                                            className="object-cover"
                                                         />
                                                         {selectedModel?.local === model.local && (
                                                             <div className="absolute inset-0 bg-gold-solid/20 flex items-center justify-center">
@@ -1039,10 +1011,13 @@ export function ProductImagesDisplay({
                                                             : 'border-border hover:border-green-300'
                                                             }`}
                                                     >
-                                                        <img
-                                                            src={model.cloud}
+                                                        <SmartImage
+                                                            src={model.local}
+                                                            fallbackSrc={model.cloud}
                                                             alt="Real Model"
-                                                            className="w-full h-full object-cover"
+                                                            fill
+                                                            sizes="80px"
+                                                            className="object-cover"
                                                         />
                                                         {selectedModel?.local === model.local && (
                                                             <div className="absolute inset-0 bg-green-600/20 flex items-center justify-center">

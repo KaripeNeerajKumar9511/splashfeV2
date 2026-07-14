@@ -1,7 +1,7 @@
 "use client"
 
 import SmartImage from "@/utils/SmartImage"
-import { isHttpUrl } from "@/utils/imagehelper"
+import { isHttpUrl, pickLocalAndCloud } from "@/utils/imagehelper"
 
 /** Resolve primary (local) and fallback (Cloudinary) URLs from a generated image object. */
 export function getGeneratedImageSources(image) {
@@ -9,15 +9,9 @@ export function getGeneratedImageSources(image) {
     return { src: "", fallbackSrc: "" }
   }
 
-  const primary =
-    image.generated_image_path ||
-    image.local ||
-    image.local_path ||
-    ""
+  const { src: primary, fallbackSrc: urlField } = pickLocalAndCloud(image)
 
-  const urlField = image.generated_image_url || image.cloud || ""
-
-  if (isHttpUrl(urlField)) {
+  if (urlField && isHttpUrl(urlField)) {
     const fallbackSrc =
       urlField && image.id ? `${urlField}?v=${image.id}` : urlField
 

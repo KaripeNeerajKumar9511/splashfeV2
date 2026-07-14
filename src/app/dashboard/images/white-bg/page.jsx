@@ -19,6 +19,7 @@ const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 import GeneratedSmartImage, { toViewerItem } from "@/components/images/GeneratedSmartImage"
 import { mergeRegenerationResult } from "@/lib/regeneration"
+import { downloadSmartImage } from "@/utils/imagehelper"
 const PlainBackgroundForm = () => {
     const router = useRouter()
     const { t } = useLanguage()
@@ -114,58 +115,21 @@ const PlainBackgroundForm = () => {
         openImageViewer(viewerItems, activeIndex)
     };
 
-    const downloadImage = async (url, filename = "image.png") => {
+    const downloadImage = async (imageOrUrl, filename = "image.png") => {
         try {
-            // First try with fetch and blob approach
-            const response = await fetch(url, {
-                mode: 'cors',
-                cache: 'no-cache',
-                credentials: 'omit'
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch image: ${response.statusText}`);
+            if (imageOrUrl && typeof imageOrUrl === "object") {
+                await downloadSmartImage({
+                    src: imageOrUrl.generated_image_path,
+                    fallbackSrc: imageOrUrl.generated_image_url,
+                    filename,
+                });
+            } else {
+                await downloadSmartImage({ fallbackSrc: imageOrUrl, filename });
             }
-
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = blobUrl;
-            link.download = filename;
-            link.style.display = 'none';
-            link.setAttribute('download', filename);
-
-            document.body.appendChild(link);
-            link.click();
-
-            // Clean up after a delay
-            setTimeout(() => {
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(blobUrl);
-            }, 200);
-
             toast.success('Download started!');
         } catch (error) {
             console.error('Error downloading image:', error);
-            // Fallback: try direct download link
-            try {
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = filename;
-                link.target = '_blank';
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                }, 200);
-                toast.success('Download started!');
-            } catch (fallbackError) {
-                console.error('Fallback download also failed:', fallbackError);
-                // Last resort: open in new tab
-                window.open(url, '_blank');
-                toast.error('Download failed. Image opened in new tab.');
-            }
+            toast.error('Download failed. Please try again.');
         }
     };
 
@@ -490,7 +454,7 @@ const PlainBackgroundForm = () => {
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => downloadImage(result.generated_image_url, "generated-image.png")}
+                                            onClick={() => downloadImage(result, "generated-image.png")}
                                             className="px-4 py-3 bg-gold-gradient text-white rounded-xl font-semibold hover:scale-105 transition-all flex items-center justify-center gap-2"
                                         >
                                             <Download size={16} />

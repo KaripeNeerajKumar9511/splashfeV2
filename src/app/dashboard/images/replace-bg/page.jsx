@@ -16,6 +16,7 @@ import { getGenerationCreditCost } from "@/lib/creditPricing"
 import { openImageViewer } from "@/lib/openImageViewer"
 import GeneratedSmartImage, { toViewerItem } from "@/components/images/GeneratedSmartImage"
 import { mergeRegenerationResult } from "@/lib/regeneration"
+import { downloadSmartImage } from "@/utils/imagehelper"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -136,58 +137,21 @@ const BackgroundReplaceForm = () => {
         openImageViewer(viewerItems, activeIndex >= 0 ? activeIndex : 0)
     };
 
-    const downloadImage = async (url, filename = "image.png") => {
+    const downloadImage = async (imageOrUrl, filename = "image.png") => {
         try {
-            // First try with fetch and blob approach
-            const response = await fetch(url, {
-                mode: 'cors',
-                cache: 'no-cache',
-                credentials: 'omit'
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch image: ${response.statusText}`);
+            if (imageOrUrl && typeof imageOrUrl === "object") {
+                await downloadSmartImage({
+                    src: imageOrUrl.generated_image_path,
+                    fallbackSrc: imageOrUrl.generated_image_url,
+                    filename,
+                });
+            } else {
+                await downloadSmartImage({ fallbackSrc: imageOrUrl, filename });
             }
-
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = blobUrl;
-            link.download = filename;
-            link.style.display = 'none';
-            link.setAttribute('download', filename);
-
-            document.body.appendChild(link);
-            link.click();
-
-            // Clean up after a delay
-            setTimeout(() => {
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(blobUrl);
-            }, 200);
-            
             toast.success('Download started!');
         } catch (error) {
             console.error('Error downloading image:', error);
-            // Fallback: try direct download link
-            try {
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = filename;
-                link.target = '_blank';
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                }, 200);
-                toast.success('Download started!');
-            } catch (fallbackError) {
-                console.error('Fallback download also failed:', fallbackError);
-                // Last resort: open in new tab
-                window.open(url, '_blank');
-                toast.error('Download failed. Image opened in new tab.');
-            }
+            toast.error('Download failed. Please try again.');
         }
     };
 
@@ -743,7 +707,7 @@ const BackgroundReplaceForm = () => {
                                                     <div className="p-4 flex flex-wrap gap-3 justify-center border-t border-border">
                                                         <span className="text-sm font-medium text-gold-solid bg-card px-2 py-1 rounded border border-gold-muted">Image {idx + 1}</span>
                                                         <button type="button" onClick={() => handleView(img)} className="px-4 py-3 border border-border text-foreground rounded-xl font-semibold hover:bg-accent flex items-center gap-2"><Eye size={16} />{t("images.view")}</button>
-                                                        <button type="button" onClick={() => downloadImage(img.generated_image_url, `themed-${idx + 1}.png`)} className="px-4 py-3 bg-gold-gradient text-primary-foreground rounded-xl font-semibold flex items-center gap-2"><Download size={16} />{t("images.download")}</button>
+                                                        <button type="button" onClick={() => downloadImage(img, `themed-${idx + 1}.png`)} className="px-4 py-3 bg-gold-gradient text-primary-foreground rounded-xl font-semibold flex items-center gap-2"><Download size={16} />{t("images.download")}</button>
                                                         <button type="button" onClick={() => handleRegenerate({ ...img, index: idx })} className="px-4 py-3 border border-gold-muted text-gold-solid rounded-xl font-semibold hover:bg-accent flex items-center gap-2"><RefreshCw size={16} />{t("images.regenerate")}</button>
                                                     </div>
                                                 </div>
@@ -762,7 +726,7 @@ const BackgroundReplaceForm = () => {
                                             </div>
                                             <div className="grid grid-cols-3 gap-3">
                                                 <button onClick={() => handleView(result)} className="px-4 py-3 border border-border text-foreground rounded-xl font-semibold hover:bg-accent transition-all flex items-center justify-center gap-2"><Eye size={16} />{t("images.view")}</button>
-                                                <button onClick={() => downloadImage(result.generated_image_url, "themed-image.png")} className="px-4 py-3 bg-gold-gradient text-primary-foreground rounded-xl font-semibold transition-all flex items-center justify-center gap-2"><Download size={16} />{t("images.download")}</button>
+                                                <button onClick={() => downloadImage(result, "themed-image.png")} className="px-4 py-3 bg-gold-gradient text-primary-foreground rounded-xl font-semibold transition-all flex items-center justify-center gap-2"><Download size={16} />{t("images.download")}</button>
                                                 <button onClick={handleRegenerate} className="px-4 py-3 border border-gold-muted text-gold-solid rounded-xl font-semibold hover:bg-accent transition-all flex items-center justify-center gap-2"><RefreshCw size={18} />{t("images.regenerate")}</button>
                                             </div>
                                             <button onClick={() => { setResult(null); setFormData({ productImages: [], referenceImage: null, backgroundColor: "#ffffff", prompt: "", dimension: "1:1" }); setProductPreviews([]); setReferencePreview(null); setReferenceAnalysis(""); }} className="w-full px-4 py-3 border border-border text-foreground rounded-xl font-semibold hover:bg-accent transition-all">{t("images.newImage")}</button>

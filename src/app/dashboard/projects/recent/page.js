@@ -18,6 +18,9 @@ import {
     Camera
 } from 'lucide-react';
 import Link from 'next/link';
+import SmartImage from "@/utils/SmartImage";
+import { openImageViewer } from "@/lib/openImageViewer";
+import { downloadSmartImage, pickLocalAndCloud } from "@/utils/imagehelper";
 
 export default function ProjectsRecentPage() {
     const { user, token } = useAuth();
@@ -259,24 +262,21 @@ export default function ProjectsRecentPage() {
                                 <div className="flex items-start gap-4">
                                     {/* Image Preview */}
                                     <div className="flex-shrink-0">
-                                        <div className="w-20 h-20 bg-muted rounded-xl overflow-hidden border-2 border-border group-hover:border-gold-muted transition-colors">
-                                            {item.image_url ? (
-                                                <img
-                                                    src={item.image_url}
+                                        <div className="relative w-20 h-20 bg-muted rounded-xl overflow-hidden border-2 border-border group-hover:border-gold-muted transition-colors">
+                                            {(item.image_url || item.local_path) ? (
+                                                <SmartImage
+                                                    src={pickLocalAndCloud(item).src}
+                                                    fallbackSrc={pickLocalAndCloud(item).fallbackSrc}
                                                     alt={item.image_type}
-                                                    className="w-full h-full object-cover"
-                                                    onError={(e) => {
-                                                        e.target.style.display = 'none';
-                                                        e.target.nextSibling.style.display = 'flex';
-                                                    }}
+                                                    fill
+                                                    sizes="80px"
+                                                    className="object-cover"
                                                 />
-                                            ) : null}
-                                            <div
-                                                className="w-full h-full flex items-center justify-center bg-muted"
-                                                style={{ display: item.image_url ? 'none' : 'flex' }}
-                                            >
-                                                <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                                            </div>
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-muted">
+                                                    <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -317,9 +317,16 @@ export default function ProjectsRecentPage() {
                                         )}
 
                                         <div className="flex items-center gap-3">
-                                            {item.image_url && (
+                                            {(item.image_url || item.local_path) && (
                                                 <button
-                                                    onClick={() => window.open(item.image_url, '_blank')}
+                                                    onClick={() => {
+                                                        const picked = pickLocalAndCloud(item)
+                                                        openImageViewer([{
+                                                            localPath: picked.src,
+                                                            url: picked.fallbackSrc,
+                                                            label: getImageTypeLabel(item.image_type),
+                                                        }])
+                                                    }}
                                                     className="flex items-center gap-1 px-3 py-1.5 text-sm text-gold-solid hover:brightness-110 hover:bg-gold-solid/10 rounded-lg transition-colors"
                                                 >
                                                     <Eye className="w-4 h-4" />
@@ -327,13 +334,15 @@ export default function ProjectsRecentPage() {
                                                 </button>
                                             )}
 
-                                            {item.image_url && (
+                                            {(item.image_url || item.local_path) && (
                                                 <button
                                                     onClick={() => {
-                                                        const link = document.createElement('a');
-                                                        link.href = item.image_url;
-                                                        link.download = `image-${item.id}.png`;
-                                                        link.click();
+                                                        const picked = pickLocalAndCloud(item)
+                                                        downloadSmartImage({
+                                                            src: picked.src,
+                                                            fallbackSrc: picked.fallbackSrc,
+                                                            filename: `image-${item.id}.png`,
+                                                        })
                                                     }}
                                                     className="flex items-center gap-1 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                                                 >

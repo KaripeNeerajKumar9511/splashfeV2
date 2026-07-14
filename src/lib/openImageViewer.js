@@ -4,11 +4,54 @@ export function openImageViewer(items = [], initialIndex = 0) {
   if (typeof window === "undefined") return
 
   const normalized = items
-    .map((item, idx) => ({
-      localPath: item?.localPath || item?.generated_image_path || item?.local_path || "",
-      url: item?.url || item?.fallbackSrc || item?.generated_image_url || "",
-      label: item?.label || `Image ${idx + 1}`,
-    }))
+    .map((item, idx) => {
+      // Support plain string items and mixed API shapes
+      if (typeof item === "string") {
+        const isRemote = /^https?:\/\//i.test(item)
+        return {
+          localPath: isRemote ? "" : item,
+          url: isRemote ? item : "",
+          label: `Image ${idx + 1}`,
+        }
+      }
+
+      const localPath =
+        item?.localPath ||
+        item?.generated_image_path ||
+        item?.local_path ||
+        item?.local ||
+        item?.uploaded_image_path ||
+        ""
+
+      let url =
+        item?.url ||
+        item?.fallbackSrc ||
+        item?.generated_image_url ||
+        item?.cloud_url ||
+        item?.cloud ||
+        item?.uploaded_image_url ||
+        ""
+
+      // Some history APIs store a local media path in image_url
+      const imageUrl = item?.image_url || ""
+      if (imageUrl) {
+        if (/^https?:\/\//i.test(imageUrl)) {
+          if (!url) url = imageUrl
+        } else if (!localPath) {
+          return {
+            localPath: imageUrl,
+            url,
+            label: item?.label || `Image ${idx + 1}`,
+          }
+        }
+      }
+
+      return {
+        localPath,
+        url,
+        label: item?.label || `Image ${idx + 1}`,
+      }
+    })
     .filter((item) => Boolean(item.localPath || item.url))
 
   if (!normalized.length) return

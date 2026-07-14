@@ -7,6 +7,7 @@ import { apiService } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { formatRelativeCommentTime } from "@/lib/comment-time"
 import SmartImage from "@/utils/SmartImage"
+import { openImageViewer } from "@/lib/openImageViewer"
 export function ColorPalette({ showSuggestions = false, collectionData, project, onSave, onSelectionsChange, onImagesChange, canEdit = true }) {
     const { token } = useAuth()
     const [selectedOutfits, setSelectedOutfits] = useState([])
@@ -466,7 +467,7 @@ export function ColorPalette({ showSuggestions = false, collectionData, project,
                                             
                                         <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
-                                                onClick={(e) => { e.stopPropagation(); window.open(image.url || image.cloud_url, "_blank") }}
+                                                onClick={(e) => { e.stopPropagation(); openImageViewer([{ localPath: image.local_path, url: image.cloud_url || image.url, label: image.name || "Outfit image" }]) }}
                                                 className="bg-gold-solid text-white rounded-full p-1 hover:bg-gold-solid transition-colors"
                                                 title="View image"
                                             >
@@ -549,7 +550,7 @@ export function ColorPalette({ showSuggestions = false, collectionData, project,
                                             alt={image.name} className="w-full h-16 object-cover rounded border" />
                                         <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
-                                                onClick={(e) => { e.stopPropagation(); window.open(image.url || image.cloud_url, "_blank") }}
+                                                onClick={(e) => { e.stopPropagation(); openImageViewer([{ localPath: image.local_path, url: image.cloud_url || image.url, label: image.name || "Color image" }]) }}
                                                 className="bg-gold-solid text-white rounded-full p-1 hover:bg-gold-solid transition-colors"
                                                 title="View image"
                                             >

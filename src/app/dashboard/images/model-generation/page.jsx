@@ -18,6 +18,7 @@ import toast from "react-hot-toast"
 import { openImageViewer } from "@/lib/openImageViewer"
 import GeneratedSmartImage, { toViewerItem } from "@/components/images/GeneratedSmartImage"
 import { mergeRegenerationResult } from "@/lib/regeneration"
+import { downloadSmartImage } from "@/utils/imagehelper"
 import { HiOutlineUserCircle } from "react-icons/hi";
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
@@ -188,58 +189,21 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
         openImageViewer(viewerItems, activeIndex >= 0 ? activeIndex : 0)
     };
 
-    const downloadImage = async (url, filename = "image.png") => {
+    const downloadImage = async (imageOrUrl, filename = "image.png") => {
         try {
-            // First try with fetch and blob approach
-            const response = await fetch(url, {
-                mode: 'cors',
-                cache: 'no-cache',
-                credentials: 'omit'
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch image: ${response.statusText}`);
+            if (imageOrUrl && typeof imageOrUrl === "object") {
+                await downloadSmartImage({
+                    src: imageOrUrl.generated_image_path,
+                    fallbackSrc: imageOrUrl.generated_image_url || imageOrUrl.or_image_url,
+                    filename,
+                });
+            } else {
+                await downloadSmartImage({ fallbackSrc: imageOrUrl, filename });
             }
-
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = blobUrl;
-            link.download = filename;
-            link.style.display = 'none';
-            link.setAttribute('download', filename);
-
-            document.body.appendChild(link);
-            link.click();
-
-            // Clean up after a delay
-            setTimeout(() => {
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(blobUrl);
-            }, 200);
-
             toast.success(t("images.downloadStarted"));
         } catch (error) {
             console.error('Error downloading image:', error);
-            // Fallback: try direct download link
-            try {
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = filename;
-                link.target = '_blank';
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                }, 200);
-                toast.success(t("images.downloadStarted"));
-            } catch (fallbackError) {
-                console.error('Fallback download also failed:', fallbackError);
-                // Last resort: open in new tab
-                window.open(url, '_blank');
-                toast.error(t("images.downloadFailed"));
-            }
+            toast.error(t("images.downloadFailed"));
         }
     };
 
@@ -1242,7 +1206,7 @@ text-foreground text-sm leading-snug">
                                                     <div className="p-4 flex flex-wrap gap-3 justify-center border-t border-gold-muted/10 items-center">
                                                         <span className="text-sm font-medium text-gold-solid bg-card px-2 py-1 rounded border border-gold-muted/20">Image {idx + 1}</span>
                                                         <button type="button" onClick={() => handleView(img)} className="px-4 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/30 flex items-center gap-2"><Eye size={16} />{t("images.view")}</button>
-                                                        <button type="button" onClick={() => downloadImage(img.generated_image_url, `model-${idx + 1}.png`)} className="px-4 py-3 bg-gold-solid text-white rounded-xl font-semibold flex items-center gap-2"><Download size={16} />{t("images.download")}</button>
+                                                        <button type="button" onClick={() => downloadImage(img, `model-${idx + 1}.png`)} className="px-4 py-3 bg-gold-solid text-white rounded-xl font-semibold flex items-center gap-2"><Download size={16} />{t("images.download")}</button>
                                                         <button type="button" onClick={() => (activeTab === "ai_model" ? setAiRegenerateModal({ isOpen: true, prompt: '', loading: false, error: null, image: { ...img, index: idx }, modelTier }) : setRealRegenerateModal({ isOpen: true, prompt: '', loading: false, error: null, image: { ...img, index: idx }, modelTier }))} className="px-4 py-3 border-2 border-gold-muted text-gold-solid rounded-xl font-semibold hover:bg-gold-solid/10 flex items-center gap-2"><RefreshCw size={16} />{t("images.regenerate")}</button>
                                                     </div>
                                                 </div>
@@ -1268,7 +1232,7 @@ text-foreground text-sm leading-snug">
                                             </div>
                                             <div className="grid grid-cols-3 gap-3">
                                                 <button onClick={() => handleView(currentState.result)} className="px-4 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/30 transition-all flex items-center justify-center gap-2"><Eye size={16} />{t("images.view")}</button>
-                                                <button onClick={() => downloadImage(currentState.result.generated_image_url, "model-generated.png")} className="px-4 py-3 bg-gold-gradient text-white rounded-xl font-semibold hover:scale-105 transition-all flex items-center justify-center gap-2"><Download size={16} />{t("images.download")}</button>
+                                                <button onClick={() => downloadImage(currentState.result, "model-generated.png")} className="px-4 py-3 bg-gold-gradient text-white rounded-xl font-semibold hover:scale-105 transition-all flex items-center justify-center gap-2"><Download size={16} />{t("images.download")}</button>
                                                 <button onClick={activeTab === "ai_model" ? handleAiRegenerate : handleRealRegenerate} className="px-4 py-3 border-2 border-gold-muted text-gold-solid hover:bg-gold-solid/10 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"><RefreshCw size={16} />{t("images.regenerate")}</button>
                                             </div>
                                             <button onClick={() => { if (activeTab === "ai_model") { setAiResult(null); setAiFormData({ ornamentImage: null, poseImage: null, prompt: "", measurements: "", dimension: "1:1" }); setAiOrnamentType(""); setAiOrnamentMeasurements({}); setAiOrnamentPreview(null); setAiPosePreview(null); } else { setRealResult(null); setRealFormData({ modelImage: null, ornamentImage: null, poseImage: null, prompt: "", measurements: "", dimension: "1:1" }); setRealOrnamentType(""); setRealOrnamentMeasurements({}); setRealModelPreview(null); setRealOrnamentPreview(null); setRealPosePreview(null); } }} className="w-full px-4 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-secondary/30">{activeTab === "ai_model" ? t("images.newModel") : t("images.newImage")}</button>

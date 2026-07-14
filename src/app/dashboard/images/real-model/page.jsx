@@ -13,6 +13,7 @@ import toast from "react-hot-toast"
 import { Badge } from "@/components/ui/badge"
 import GeneratedSmartImage from "@/components/images/GeneratedSmartImage"
 import { mergeRegenerationResult } from "@/lib/regeneration"
+import { downloadSmartImage } from "@/utils/imagehelper"
 
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
@@ -47,36 +48,21 @@ export default function RealModelForm() {
         error: null
     })
 
-    const downloadImage = async (url, filename = "image.png") => {
+    const downloadImage = async (imageOrUrl, filename = "image.png") => {
         try {
-            const response = await fetch(url, {
-                mode: 'cors',
-                cache: 'no-cache'
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch image: ${response.statusText}`);
+            if (imageOrUrl && typeof imageOrUrl === "object") {
+                await downloadSmartImage({
+                    src: imageOrUrl.generated_image_path,
+                    fallbackSrc: imageOrUrl.generated_image_url || imageOrUrl.or_image_url,
+                    filename,
+                });
+            } else {
+                await downloadSmartImage({ fallbackSrc: imageOrUrl, filename });
             }
-
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = blobUrl;
-            link.download = filename;
-            link.style.display = 'none';
-
-            document.body.appendChild(link);
-            link.click();
-
-            setTimeout(() => {
-                link.remove();
-                window.URL.revokeObjectURL(blobUrl);
-            }, 100);
+            toast.success(t("images.downloadStarted"));
         } catch (error) {
             console.error('Error downloading image:', error);
-            // Fallback: open in new tab
-            window.open(url, '_blank');
-                toast.error(t("images.downloadFailed"));
+            toast.error(t("images.downloadFailed"));
         }
     };
       
@@ -463,7 +449,7 @@ export default function RealModelForm() {
                                         <div className="grid grid-cols-2 gap-3">
                                         <button
   onClick={() =>
-    downloadImage(result.or_image_url, "original-image.png")
+    downloadImage(result, "original-image.png")
   }
   className="px-4 py-3 bg-gold-gradient text-white rounded-xl font-semibold hover:scale-105 transition-all flex items-center justify-center gap-2"
 >

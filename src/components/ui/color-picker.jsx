@@ -79,7 +79,7 @@ export function ColorPicker({ selectedColors = [], onColorsChange, disabled = fa
             <Button
                 type="button"
                 variant="outline"
-                className="w-full bg-transparent justify-start"
+                className="w-full bg-transparent justify-start text-gold-solid"
                 onClick={() => setIsOpen(!isOpen)}
                 disabled={disabled}
             >

@@ -589,6 +589,11 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   color: rgba(255, 255, 255, 0.55);
   font-size: 14px;
   text-align: center;
+  line-height: 1.5;
+}
+.footer-center em {
+  font-style: italic;
+  color: #E8D08A;
 }
 
 /* LINKS */
@@ -606,6 +611,10 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   color: rgba(255, 255, 255, 0.65);
   text-decoration: none;
   transition: color 0.25s ease;
+}
+.flinks a em {
+  font-style: italic;
+  color: #E8D08A;
 }
 
 .flinks a:hover {
@@ -829,13 +838,11 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   <ul className="flinks">
     {footer.links.map((link) => (
       <li key={`${link.label}-${link.href}`}>
-        <a href={link.href}>{link.label}</a>
+        <a href={link.href} dangerouslySetInnerHTML={{ __html: link.label }} />
       </li>
     ))}
   </ul>
-  <div className="footer-center">
-    {footer.copyright}
-  </div>
+  <div className="footer-center" dangerouslySetInnerHTML={{ __html: footer.copyright }} />
 </footer>
     </div>
   );

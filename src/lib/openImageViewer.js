@@ -15,12 +15,13 @@ export function openImageViewer(items = [], initialIndex = 0) {
         }
       }
 
+      // Prefer generated / explicit paths only — do not fall back to uploaded
+      // reference images (those belong to upload UIs, not the generated gallery).
       const localPath =
         item?.localPath ||
         item?.generated_image_path ||
         item?.local_path ||
         item?.local ||
-        item?.uploaded_image_path ||
         ""
 
       let url =
@@ -29,7 +30,6 @@ export function openImageViewer(items = [], initialIndex = 0) {
         item?.generated_image_url ||
         item?.cloud_url ||
         item?.cloud ||
-        item?.uploaded_image_url ||
         ""
 
       // Some history APIs store a local media path in image_url

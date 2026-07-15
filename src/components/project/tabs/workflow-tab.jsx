@@ -551,10 +551,10 @@ export function WorkflowTab({ project }) {
 
             {renderStepContent()}
 
-            <div className="flex items-center justify-between pt-8 border-t border-border">
+            <div className="flex items-center justify-between pt-8 border-t border-border ">
                 <Button
                     variant="outline"
-                    className="gap-2 bg-transparent"
+                    className="gap-2 bg-transparent text-gold-solid"
                     onClick={() => !isGenerating && setActiveStep(prev => Math.max(prev - 1, 1))}
                     disabled={loading || isGenerating}
                 >
@@ -633,7 +633,7 @@ export function WorkflowTab({ project }) {
                 </Button>
 
                 <Button
-                    variant="ghost"
+                    variant="outline"
                     className="text-gold-solid"
                     onClick={() => {
                         if (isGenerating) return;

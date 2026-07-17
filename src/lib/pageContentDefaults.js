@@ -23,7 +23,7 @@ export const HOME_PAGE_DEFAULTS = {
     subtitle:
       "Upload a reference photo — or nothing at all. Splash understands jewelry and generates product shots, model imagery, and campaign visuals in minutes.",
     cta_primary_text: "Get a demo",
-    cta_primary_href: "/contact",
+    cta_primary_href: "https://calendly.com/mousumi-gosplash/30min",
     cta_secondary_text: "Start creating for free",
     cta_secondary_href: "/signup",
     note: "No credit card required · No prompts needed · First images on us",
@@ -346,6 +346,16 @@ function buildWhatsappHref(number, fallbackHref) {
   return fallbackHref || "";
 }
 
+const DEMO_CALENDLY_URL = "https://calendly.com/mousumi-gosplash/30min";
+
+function resolveDemoHref(href) {
+  const value = String(href || "").trim();
+  if (!value || value === "/contact" || value.endsWith("/contact")) {
+    return DEMO_CALENDLY_URL;
+  }
+  return value;
+}
+
 export function resolveHomeContent(raw) {
   const merged = deepMerge(HOME_PAGE_DEFAULTS, raw || {});
   const hero = { ...merged.hero };
@@ -359,6 +369,7 @@ export function resolveHomeContent(raw) {
   if (raw?.hero?.bottom_text && !raw?.hero?.subtitle) {
     hero.subtitle = raw.hero.bottom_text;
   }
+  hero.cta_primary_href = resolveDemoHref(hero.cta_primary_href);
 
   const showcase = { ...merged.showcase, cta_href: merged.showcase?.cta_href || "/gallery" };
   if (!raw?.showcase?.title_html) {

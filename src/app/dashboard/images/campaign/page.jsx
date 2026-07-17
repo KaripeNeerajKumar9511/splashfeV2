@@ -55,6 +55,7 @@ export default function CampaignForm() {
     const [themePreviews, setThemePreviews] = useState([])
     const [themeReferenceAnalyses, setThemeReferenceAnalyses] = useState([]) // kept for backward-compat; backend now analyzes theme images
     const [modelReferenceAnalysis, setModelReferenceAnalysis] = useState("")
+    const [modelDressAnalysis, setModelDressAnalysis] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const [isDimensionValid, setIsDimensionValid] = useState(true)
     const [showReferenceModal, setShowReferenceModal] = useState(false)
@@ -152,6 +153,7 @@ export default function CampaignForm() {
       
         setUploadErrors((p) => ({ ...p, modelImage: null }));
         setModelReferenceAnalysis("");
+        setModelDressAnalysis("");
       
         if (file.size > MAX_IMAGE_BYTES) {
           setUploadErrors((p) => ({
@@ -177,11 +179,17 @@ export default function CampaignForm() {
         reader.onloadend = () => setModelPreview(reader.result);
         reader.readAsDataURL(file);
 
-        // Analyze model reference for real-model campaign: pose, attire, styling
+        // Analyze model reference for real-model campaign: pose + dress
         apiService
             .analyzeReferenceImage(file, "model", token)
-            .then((data) => setModelReferenceAnalysis(data?.analysis_text || ""))
-            .catch(() => setModelReferenceAnalysis(""));
+            .then((data) => {
+                setModelReferenceAnalysis(data?.analysis_text || "")
+                setModelDressAnalysis(data?.dress || "")
+            })
+            .catch(() => {
+                setModelReferenceAnalysis("")
+                setModelDressAnalysis("")
+            });
       };
       
 
@@ -462,6 +470,9 @@ const submitRegenerate = async () => {
             })
             if (formData.modelType === "real_model" && modelReferenceAnalysis) {
                 formDataToSend.append("reference_analysis", modelReferenceAnalysis)
+            }
+            if (formData.modelType === "real_model" && modelDressAnalysis) {
+                formDataToSend.append("dress", modelDressAnalysis)
             }
             formDataToSend.append("prompt", formData.prompt || t("images.createProfessionalCampaignShot"))
             formDataToSend.append("dimension", formData.dimension)

@@ -575,7 +575,7 @@ export default function PublicGallery({ images = [] }) {
         </h2>
         <p>Upload your jewelry and get studio-quality visuals in minutes.</p>
         <div className="gallery-cta-actions">
-          <Link href="/contact" className="btn-gold">
+          <Link href="https://calendly.com/mousumi-gosplash/30min" className="btn-gold" target="_blank">
             Get a Demo
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
           </Link>

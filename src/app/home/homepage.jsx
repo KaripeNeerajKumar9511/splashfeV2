@@ -78,6 +78,8 @@ export default function SplashLanding() {
 
   const content = useMemo(() => resolveHomeContent(pageContent), [pageContent]);
   const { hero, ticker, showcase, how, output, capabilities, who_uses, testimonials, cta, footer } = content;
+  const demoHref = hero.cta_primary_href;
+  const demoIsExternal = /^https?:\/\//i.test(demoHref);
 
   return (
     <div className="splash-page">
@@ -656,7 +658,14 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
     <a href={hero.cta_secondary_href} className="btn-o">
       {hero.cta_secondary_text}
     </a>
-    <a href={hero.cta_primary_href} className="btn-p">{hero.cta_primary_text}
+    <a
+      href={demoHref}
+      className="btn-p"
+      {...(demoIsExternal
+        ? { target: "_blank", rel: "noopener noreferrer" }
+        : {})}
+    >
+      {hero.cta_primary_text}
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
     </a>
   </div>

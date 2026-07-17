@@ -205,7 +205,17 @@ function BillingPageContent() {
           contact: billingDetails.billing_phone,
           name: billingDetails.billing_name,
         },
+
         theme: { color: "#C9A84C" },
+        config: {
+          display: {
+            hide: [
+              {
+                method: "emi",
+              },
+            ],
+          },
+        },
         modal: { ondismiss: () => setProcessingPayment(false) },
       };
 

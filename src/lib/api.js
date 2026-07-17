@@ -179,7 +179,7 @@ class ApiService {
         });
     }
 
-    async register(full_name, username, email, password, signupSource = null) {
+    async register(full_name, username, email, password, signupSource = null, phoneData = null) {
         return this.request('/api/register/', {
             method: 'POST',
             body: JSON.stringify({
@@ -188,8 +188,55 @@ class ApiService {
                 email,
                 password,
                 ...(signupSource ? { signup_source: signupSource } : {}),
+                ...(phoneData || {}),
             }),
         })
+    }
+
+    async verifyEmailOtp(email, otp) {
+        return this.request('/api/verify-email-otp/', {
+            method: 'POST',
+            body: JSON.stringify({ email, otp }),
+        });
+    }
+
+    async verifyPhoneOtp(email, msg91AccessToken, mobile = null) {
+        return this.request('/api/verify-phone-access-token/', {
+            method: 'POST',
+            body: JSON.stringify({
+                email,
+                msg91_access_token: msg91AccessToken,
+                ...(mobile ? { mobile } : {}),
+            }),
+        });
+    }
+
+    async resendEmailOtp(email) {
+        return this.request('/api/resend-email-otp/', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        });
+    }
+
+    async completePhoneSignup(payload) {
+        return this.request('/api/auth/complete-phone-signup/', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+    }
+
+    async completeSignup(email) {
+        return this.request('/api/complete-signup/', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        });
+    }
+
+    async signupStatus(email) {
+        return this.request('/api/signup-status/', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        });
     }
 
     async getUserProfile(token, options = {}) {
@@ -277,20 +324,6 @@ class ApiService {
             headers: {
                 'Authorization': `Bearer ${token || ''}`,
             },
-        });
-    }
-
-    async verifyEmailOtp(email, otp) {
-        return this.request('/api/verify-email-otp/', {
-            method: 'POST',
-            body: JSON.stringify({ email, otp }),
-        });
-    }
-
-    async resendEmailOtp(email) {
-        return this.request('/api/resend-email-otp/', {
-            method: 'POST',
-            body: JSON.stringify({ email }),
         });
     }
 
@@ -1079,13 +1112,14 @@ class ApiService {
 
     /**
      * Analyze a reference image for themed / model / campaign context.
-     * Returns { success, analysis_text }.
+     * Returns { success, analysis_text, dress }.
+     * For model context, dress is a separate analysis (empty when no attire worn).
      * @param {File} imageFile - reference image file
      * @param {string} context - 'themed' | 'model' | 'campaign'
      * @param {string} token - auth token
      */
     async analyzeReferenceImage(imageFile, context, token) {
-        if (!imageFile) return { success: false, analysis_text: '' };
+        if (!imageFile) return { success: false, analysis_text: '', dress: '' };
         const formData = new FormData();
         formData.append('image', imageFile);
         formData.append('context', context || 'themed');

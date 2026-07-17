@@ -124,6 +124,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
     const [aiOrnamentPreview, setAiOrnamentPreview] = useState(null)
     const [aiPosePreview, setAiPosePreview] = useState(null)
     const [aiReferenceAnalysis, setAiReferenceAnalysis] = useState("")
+    const [aiDressAnalysis, setAiDressAnalysis] = useState("")
     const [aiResult, setAiResult] = useState(null)
     const [aiError, setAiError] = useState(null)
     const [aiIsLoading, setAiIsLoading] = useState(false)
@@ -152,6 +153,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
     const [realOrnamentPreview, setRealOrnamentPreview] = useState(null)
     const [realPosePreview, setRealPosePreview] = useState(null)
     const [realReferenceAnalysis, setRealReferenceAnalysis] = useState("")
+    const [realDressAnalysis, setRealDressAnalysis] = useState("")
     const [realResult, setRealResult] = useState(null)
     const [realError, setRealError] = useState(null)
     const [realIsLoading, setRealIsLoading] = useState(false)
@@ -265,8 +267,12 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
         reader.readAsDataURL(file);
         if (type === "poseImage") {
           setAiReferenceAnalysis("");
+          setAiDressAnalysis("");
           apiService.analyzeReferenceImage(file, "model", token).then((data) => {
-            if (data?.success && data.analysis_text) setAiReferenceAnalysis(data.analysis_text);
+            if (data?.success) {
+              if (data.analysis_text) setAiReferenceAnalysis(data.analysis_text);
+              setAiDressAnalysis(data.dress || "");
+            }
           }).catch(() => {});
         }
       };
@@ -284,6 +290,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
         setAiFormData((prev) => ({ ...prev, poseImage: null }));
         setAiPosePreview(null);
         setAiReferenceAnalysis("");
+        setAiDressAnalysis("");
         setAiUploadErrors((p) => ({ ...p, poseImage: null }));
         const input = document.getElementById("ai-pose-input");
         if (input) input.value = "";
@@ -396,6 +403,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                 formDataToSend.append("pose_style", aiFormData.poseImage)
             }
             if (aiReferenceAnalysis) formDataToSend.append("reference_analysis", aiReferenceAnalysis)
+            if (aiDressAnalysis) formDataToSend.append("dress", aiDressAnalysis)
             formDataToSend.append("prompt", aiFormData.prompt || t("images.generateAIModelWearingOrnament"))
             formDataToSend.append("measurements", aiFormData.measurements || "")
             formDataToSend.append("ornament_type", aiOrnamentType || "")
@@ -456,8 +464,12 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
         reader.readAsDataURL(file);
         if (type === "poseImage") {
           setRealReferenceAnalysis("");
+          setRealDressAnalysis("");
           apiService.analyzeReferenceImage(file, "model", token).then((data) => {
-            if (data?.success && data.analysis_text) setRealReferenceAnalysis(data.analysis_text);
+            if (data?.success) {
+              if (data.analysis_text) setRealReferenceAnalysis(data.analysis_text);
+              setRealDressAnalysis(data.dress || "");
+            }
           }).catch(() => {});
         }
       };
@@ -483,6 +495,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
         setRealFormData((prev) => ({ ...prev, poseImage: null }));
         setRealPosePreview(null);
         setRealReferenceAnalysis("");
+        setRealDressAnalysis("");
         setRealUploadErrors((p) => ({ ...p, poseImage: null }));
         const input = document.getElementById("real-pose-input");
         if (input) input.value = "";
@@ -601,6 +614,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                 formDataToSend.append("pose_style", realFormData.poseImage)
             }
             if (realReferenceAnalysis) formDataToSend.append("reference_analysis", realReferenceAnalysis)
+            if (realDressAnalysis) formDataToSend.append("dress", realDressAnalysis)
             formDataToSend.append("prompt", realFormData.prompt || t("images.generateRealisticImageWithModel"))
             formDataToSend.append("measurements", realFormData.measurements || "")
             formDataToSend.append("ornament_type", realOrnamentType || "")

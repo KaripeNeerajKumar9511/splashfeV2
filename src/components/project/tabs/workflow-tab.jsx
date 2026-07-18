@@ -7,6 +7,14 @@ import { ThemesAndBackgrounds } from "@/components/project/themes-and-background
 import { ColorPalette } from "@/components/project/color-palette"
 import { GlobalInstructions } from "@/components/project/global-instructions"
 import { Button } from "@/components/ui/button"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { ChevronLeft, Lock } from "lucide-react"
 import { ModelSelectionSection } from "@/components/project/model-selection-section"
 import { ProductUploadPage } from "@/components/project/product-upload-page"
@@ -73,13 +81,72 @@ export function WorkflowTab({ project }) {
         colors: []
     })
 
+    // Moodboard image removals held until Save and Continue
+    const [pendingImageRemovals, setPendingImageRemovals] = useState([])
+
     // State to hold selected model from ModelSelectionSection
     const [selectedModel, setSelectedModel] = useState(null)
+
+    // Unsaved-changes guard (steps 1–4). Step 5 has no Save and Continue.
+    const [isDirty, setIsDirty] = useState(false)
+    const [showSaveRequiredDialog, setShowSaveRequiredDialog] = useState(false)
+    const allowDirtyRef = useRef(false)
+
+    // After step/data loads, ignore hydration callbacks briefly so Save stays inactive
+    useEffect(() => {
+        allowDirtyRef.current = false
+        setIsDirty(false)
+        const timer = setTimeout(() => {
+            allowDirtyRef.current = true
+        }, 500)
+        return () => clearTimeout(timer)
+    }, [activeStep, collectionData?.id])
+
+    const markDirty = useCallback(() => {
+        if (!allowDirtyRef.current || activeStep === 5 || !canEdit) return
+        setIsDirty(true)
+    }, [activeStep, canEdit])
+
+    const clearDirty = useCallback(() => {
+        setIsDirty(false)
+    }, [])
 
     // Memoized callback for global instructions change
     const handleGlobalInstructionsChange = useCallback((instructions) => {
         setCurrentSelections(prev => ({ ...prev, globalInstructions: instructions }))
-    }, [])
+        markDirty()
+    }, [markDirty])
+
+    const handleImageRemoved = useCallback((removal) => {
+        if (!removal) return
+        setPendingImageRemovals((prev) => {
+            if (removal.cloudUrl && prev.some((item) => item.cloudUrl === removal.cloudUrl)) {
+                return prev
+            }
+            return [...prev, removal]
+        })
+        markDirty()
+    }, [markDirty])
+
+    const handleBriefFormDataChange = useCallback((data) => {
+        setBriefFormData(data)
+        markDirty()
+    }, [markDirty])
+
+    const handleMoodboardSelectionsChange = useCallback((selections) => {
+        setCurrentSelections(prev => ({ ...prev, ...selections }))
+        markDirty()
+    }, [markDirty])
+
+    const handleMoodboardImagesChange = useCallback((images) => {
+        setUploadedImages(prev => ({ ...prev, ...images }))
+        markDirty()
+    }, [markDirty])
+
+    const handleModelSelectionChange = useCallback((model) => {
+        setSelectedModel(model)
+        markDirty()
+    }, [markDirty])
 
     // Handlers for sequential display logic
     const handleRequestSuggestions = async (description, targetAudience = null, campaignSeason = null) => {
@@ -123,6 +190,7 @@ export function WorkflowTab({ project }) {
                 // Step 1 is saved when targetAudience and campaignSeason are saved (description is optional)
                 // This will automatically unlock step 2 via isStepUnlocked
                 setSavedSteps(prev => new Set([...prev, 1]))
+                clearDirty()
 
                 // Navigate to step 2 (Moodboard Setup)
                 setActiveStep(2)
@@ -284,9 +352,24 @@ export function WorkflowTab({ project }) {
                     // handleRequestSuggestions already navigates to step 2, so we don't need to do it here
                     return
                 case 2:
-                    // Moodboard setup step - save selections for themes, backgrounds, poses, locations, and colors
-                    // Also generates prompts using Gemini AI
+                    // Moodboard setup step - flush pending image deletes, then save selections + generate prompts
                     if (project?.id && collectionData?.id) {
+                        for (const removal of pendingImageRemovals) {
+                            try {
+                                await apiService.removeWorkflowImage(
+                                    project.id,
+                                    collectionData.id,
+                                    removal.imageId,
+                                    removal.category,
+                                    token,
+                                    removal.cloudUrl
+                                )
+                            } catch (removeErr) {
+                                console.error('Failed to remove moodboard image on save:', removeErr)
+                            }
+                        }
+                        setPendingImageRemovals([])
+
                         const response = await apiService.updateCollectionSelections(
                             project.id,
                             collectionData.id,
@@ -300,6 +383,7 @@ export function WorkflowTab({ project }) {
 
                             // Mark step 2 as saved - this will automatically unlock step 3 via isStepUnlocked
                             setSavedSteps(prev => new Set([...prev, 2]))
+                            clearDirty()
 
                             // Refresh collection data after saving
                             const updatedData = await apiService.getCollection(collectionData.id, token)
@@ -324,6 +408,7 @@ export function WorkflowTab({ project }) {
                             if (response.success) {
                                 // Mark step 3 as saved - this will automatically unlock step 4 via isStepUnlocked
                                 setSavedSteps(prev => new Set([...prev, 3]))
+                                clearDirty()
                                 const updatedData = await apiService.getCollection(collectionData.id, token)
                                 setCollectionData(updatedData)
                                 setSuccessMessage('Model selected successfully!')
@@ -341,6 +426,7 @@ export function WorkflowTab({ project }) {
                     } else if (stepData.modelsSaved && collectionData?.id) {
                         // Handle case when AI models are saved (from handleSaveAIModels)
                         setSavedSteps(prev => new Set([...prev, 3]))
+                        clearDirty()
                         const updatedData = await apiService.getCollection(collectionData.id, token)
                         setCollectionData(updatedData)
                         setSuccessMessage('Models saved successfully!')
@@ -351,17 +437,17 @@ export function WorkflowTab({ project }) {
                     }
                     break
                 case 4:
-                    // Product upload step - when products are uploaded, they're already saved to backend
-                    if (stepData.productsUploaded && collectionData?.id) {
-                        // Mark step 4 as saved - this will automatically unlock step 5 via isStepUnlocked
-                        setSavedSteps(prev => new Set([...prev, 4]))
+                    // Product upload / delete already hits the API; generation selections still need Save and Continue
+                    if ((stepData.productsUploaded || stepData.productsUpdated) && collectionData?.id) {
                         const updatedData = await apiService.getCollection(collectionData.id, token)
                         setCollectionData(updatedData)
-                        setSuccessMessage('Products uploaded successfully!')
+                        setSuccessMessage(
+                            stepData.productsUploaded
+                                ? 'Products uploaded successfully!'
+                                : 'Product updated successfully!'
+                        )
                         setTimeout(() => setSuccessMessage(null), 3000)
-                        // Don't navigate automatically - let "Save and Continue" button handle navigation
                     }
-                    // Note: Generation selections are saved when "Save and Continue" is clicked, not automatically
                     break
                 case 5:
                     // Image generation step - refresh data if images were generated
@@ -436,7 +522,7 @@ export function WorkflowTab({ project }) {
                         onRequestSuggestions={handleRequestSuggestions}
                         suggestionsRequested={suggestionsRequested}
                         canEdit={canEdit}
-                        onFormDataChange={setBriefFormData}
+                        onFormDataChange={handleBriefFormDataChange}
                     />
                 )
             case 2:
@@ -452,8 +538,10 @@ export function WorkflowTab({ project }) {
                             collectionData={collectionData}
                             onSave={handleStepSave}
                             showSuggestions={shouldShowSuggestions}
-                            onSelectionsChange={(selections) => setCurrentSelections(prev => ({ ...prev, ...selections }))}
-                            onImagesChange={(images) => setUploadedImages(prev => ({ ...prev, ...images }))}
+                            onSelectionsChange={handleMoodboardSelectionsChange}
+                            onImagesChange={handleMoodboardImagesChange}
+                            onImageRemoved={handleImageRemoved}
+                            pendingRemovals={pendingImageRemovals}
                             canEdit={canEdit}
                         />
                         <ColorPalette
@@ -461,8 +549,10 @@ export function WorkflowTab({ project }) {
                             collectionData={collectionData}
                             onSave={handleStepSave}
                             showSuggestions={shouldShowSuggestions}
-                            onSelectionsChange={(selections) => setCurrentSelections(prev => ({ ...prev, ...selections }))}
-                            onImagesChange={(images) => setUploadedImages(prev => ({ ...prev, ...images }))}
+                            onSelectionsChange={handleMoodboardSelectionsChange}
+                            onImagesChange={handleMoodboardImagesChange}
+                            onImageRemoved={handleImageRemoved}
+                            pendingRemovals={pendingImageRemovals}
                             canEdit={canEdit}
                         />
 
@@ -483,7 +573,7 @@ export function WorkflowTab({ project }) {
                         collectionData={collectionData}
                         onSave={handleStepSave}
                         canEdit={canEdit}
-                        onModelSelectionChange={setSelectedModel}
+                        onModelSelectionChange={handleModelSelectionChange}
                     />
                 )
             case 4:
@@ -495,6 +585,7 @@ export function WorkflowTab({ project }) {
                         collectionData={collectionData}
                         onSave={handleStepSave}
                         canEdit={canEdit}
+                        onDirtyChange={markDirty}
                     />
                 )
             case 5:
@@ -531,10 +622,87 @@ export function WorkflowTab({ project }) {
         return savedSteps.has(stepNumber - 1)
     }
 
-    // Function to handle step click with locking logic
+    // Block next/previous/step clicks when unsaved changes exist (steps 1–4)
+    const requestStepChange = (stepNumber) => {
+        if (isGenerating || loading) return
+        if (stepNumber === activeStep) return
+        if (!isStepUnlocked(stepNumber)) return
+
+        const saveRequired = activeStep !== 5 && isDirty
+        if (saveRequired) {
+            setShowSaveRequiredDialog(true)
+            return
+        }
+        setActiveStep(stepNumber)
+    }
+
     const handleStepClick = (stepNumber) => {
-        if (isStepUnlocked(stepNumber) && !isGenerating) {
-            setActiveStep(stepNumber)
+        requestStepChange(stepNumber)
+    }
+
+    const handleSaveAndContinue = async () => {
+        if (isGenerating || activeStep === 5) return
+        if (!isDirty) return
+        try {
+            setError(null)
+            await handleStepSave({})
+            if (activeStep === 1) {
+                // Step 1 navigates inside handleRequestSuggestions
+                return
+            }
+            if (activeStep === 3 && collectionData?.id) {
+                try {
+                    const updatedData = await apiService.getCollection(collectionData.id, token)
+                    setCollectionData(updatedData)
+                    const item = updatedData.items?.[0]
+                    const hasModel = item?.selected_model || (item?.uploaded_models && item.uploaded_models.length > 0)
+                    if (hasModel) {
+                        setSavedSteps(prev => new Set([...prev, 3]))
+                        clearDirty()
+                        setActiveStep(4)
+                        return
+                    }
+                } catch (err) {
+                    console.error('Error checking step 3:', err)
+                }
+            }
+            if (activeStep === 4 && collectionData?.id) {
+                try {
+                    if (productUploadPageRef?.current?.hasPendingUploads?.()) {
+                        setError('Please upload your selected product images before continuing')
+                        return
+                    }
+                    if (productUploadPageRef?.current?.saveSelections) {
+                        const saveResult = await productUploadPageRef.current.saveSelections()
+                        if (!saveResult.success) {
+                            setError(saveResult.error || 'Failed to save generation selections')
+                            return
+                        }
+                    }
+
+                    const updatedData = await apiService.getCollection(collectionData.id, token)
+                    setCollectionData(updatedData)
+                    const item = updatedData.items?.[0]
+                    const hasProducts = item?.product_images && item.product_images.length > 0
+                    if (hasProducts) {
+                        setSavedSteps(prev => new Set([...prev, 4]))
+                        clearDirty()
+                        setActiveStep(5)
+                        return
+                    }
+                } catch (err) {
+                    console.error('Error checking step 4:', err)
+                    setError('Failed to save generation selections')
+                    return
+                }
+            }
+            clearDirty()
+            const nextStep = Math.min(activeStep + 1, 5)
+            if (isStepUnlocked(nextStep) || savedSteps.has(activeStep)) {
+                setActiveStep(nextStep)
+            }
+        } catch (err) {
+            console.error('Error in Save and Continue:', err)
         }
     }
 
@@ -555,99 +723,73 @@ export function WorkflowTab({ project }) {
                 <Button
                     variant="outline"
                     className="gap-2 bg-transparent text-gold-solid"
-                    onClick={() => !isGenerating && setActiveStep(prev => Math.max(prev - 1, 1))}
-                    disabled={loading || isGenerating}
+                    onClick={() => requestStepChange(Math.max(activeStep - 1, 1))}
+                    disabled={loading || isGenerating || activeStep === 1}
                 >
                     <ChevronLeft className="w-4 h-4" />
                     Back
                 </Button>
 
-                <Button
-                    className="bg-gold-gradient hover:brightness-110 text-white px-8"
-                    onClick={async () => {
-                        if (isGenerating) return;
-                        try {
-                            setError(null) // Clear any previous errors
-                            await handleStepSave({})
-                            // Only move to next step if we're not on step 1 (step 1 handles navigation in handleRequestSuggestions)
-                            if (!error && activeStep !== 1) {
-                                // For step 3, the model is saved in handleStepSave, so just navigate
-                                if (activeStep === 3 && collectionData?.id) {
-                                    try {
-                                        const updatedData = await apiService.getCollection(collectionData.id, token)
-                                        setCollectionData(updatedData)
-                                        const item = updatedData.items?.[0]
-                                        const hasModel = item?.selected_model || (item?.uploaded_models && item.uploaded_models.length > 0)
-                                        if (hasModel) {
-                                            // Step 3 is saved, mark it and navigate to step 4
-                                            setSavedSteps(prev => new Set([...prev, 3]))
-                                            setActiveStep(4)
-                                            return
-                                        }
-                                    } catch (err) {
-                                        console.error('Error checking step 3:', err)
-                                    }
-                                }
-                                if (activeStep === 4 && collectionData?.id) {
-                                    try {
-                                        // Save generation selections if ProductUploadPage ref is available
-                                        if (productUploadPageRef?.current?.saveSelections) {
-                                            const saveResult = await productUploadPageRef.current.saveSelections()
-                                            if (!saveResult.success) {
-                                                setError(saveResult.error || 'Failed to save generation selections')
-                                                return
-                                            }
-                                        }
-                                        
-                                        // Refresh collection data after saving selections
-                                        const updatedData = await apiService.getCollection(collectionData.id, token)
-                                        setCollectionData(updatedData)
-                                        const item = updatedData.items?.[0]
-                                        const hasProducts = item?.product_images && item.product_images.length > 0
-                                        if (hasProducts) {
-                                            // Step 4 is saved, mark it and navigate to step 5
-                                            setSavedSteps(prev => new Set([...prev, 4]))
-                                            setActiveStep(5)
-                                            return
-                                        }
-                                    } catch (err) {
-                                        console.error('Error checking step 4:', err)
-                                        setError('Failed to save generation selections')
-                                    }
-                                }
-                                // For other steps, navigate to next unlocked step
-                                const nextStep = Math.min(activeStep + 1, 5)
-                                if (isStepUnlocked(nextStep)) {
-                                    setActiveStep(nextStep)
-                                }
-                            }
-                        } catch (err) {
-                            // Error is already set in handleStepSave, just log it
-                            console.error('Error in Save and Continue:', err)
+                {activeStep !== 5 ? (
+                    <Button
+                        className="bg-gold-gradient hover:brightness-110 text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={handleSaveAndContinue}
+                        disabled={loading || !canEdit || isGenerating || !isDirty}
+                        title={
+                            isGenerating
+                                ? "Image generation in progress..."
+                                : !canEdit
+                                    ? "You need Editor or Owner role to save changes"
+                                    : !isDirty
+                                        ? "No changes to save"
+                                        : "Save your changes and continue"
                         }
-                    }}
-                    disabled={loading || !canEdit || isGenerating}
-                    title={isGenerating ? "Image generation in progress..." : (canEdit ? "" : "You need Editor or Owner role to save changes")}
-                >
-                    {loading ? (activeStep === 1 ? 'Generating Suggestions...' : 'Saving...') : 'Save and Continue'}
-                </Button>
+                    >
+                        {loading ? (activeStep === 1 ? 'Generating Suggestions...' : 'Saving...') : 'Save and Continue'}
+                    </Button>
+                ) : (
+                    <div className="px-8" />
+                )}
 
                 <Button
                     variant="outline"
                     className="text-gold-solid"
-                    onClick={() => {
-                        if (isGenerating) return;
-                        const nextStep = Math.min(activeStep + 1, 5)
-                        if (isStepUnlocked(nextStep)) {
-                            setActiveStep(nextStep)
-                        }
-                    }}
-                    disabled={loading || !isStepUnlocked(Math.min(activeStep + 1, 5)) || isGenerating}
-                    title={isGenerating ? "Image generation in progress..." : (!isStepUnlocked(Math.min(activeStep + 1, 5)) ? "Complete the current step to unlock the next step" : "")}
+                    onClick={() => requestStepChange(Math.min(activeStep + 1, 5))}
+                    disabled={loading || !isStepUnlocked(Math.min(activeStep + 1, 5)) || isGenerating || activeStep === 5}
+                    title={
+                        isGenerating
+                            ? "Image generation in progress..."
+                            : isDirty && activeStep !== 5
+                                ? "Save your changes before going to the next step"
+                                : (!isStepUnlocked(Math.min(activeStep + 1, 5))
+                                    ? "Complete the current step to unlock the next step"
+                                    : "")
+                    }
                 >
                     Next
                 </Button>
             </div>
+
+            <Dialog open={showSaveRequiredDialog} onOpenChange={setShowSaveRequiredDialog}>
+                <DialogContent className="sm:max-w-md border-border bg-card">
+                    <DialogHeader>
+                        <DialogTitle className="text-foreground">Save required</DialogTitle>
+                        <DialogDescription className="text-muted-foreground">
+                            You have unsaved changes on this step. Please click{" "}
+                            <span className="text-gold-solid font-medium">Save and Continue</span>{" "}
+                            before moving to another step.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            className="bg-gold-gradient hover:brightness-110 text-white"
+                            onClick={() => setShowSaveRequiredDialog(false)}
+                        >
+                            OK
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

@@ -9,6 +9,7 @@ import { HierarchicalOrnamentSelect } from "./hierarchical-ornament-select"
 import { formatRelativeCommentTime } from "@/lib/comment-time"
 import {
     ProductModelTierSelect,
+    ProductAspectRatioSelect,
     defaultProductRowSelection,
     mergeProductRowSelection,
 } from "./ProductModelTierSelect"
@@ -20,7 +21,7 @@ const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 
-export const ProductUploadPage = React.forwardRef(({ project, collectionData, onSave, canEdit = true }, ref) => {
+export const ProductUploadPage = React.forwardRef(({ project, collectionData, onSave, canEdit = true, onDirtyChange }, ref) => {
     const [selectedFiles, setSelectedFiles] = useState([])
     const [uploadError, setUploadError] = useState(null);
 
@@ -59,6 +60,67 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                 },
             }
         })
+        onDirtyChange?.()
+    }
+
+    const updateAspectRatio = (index, typeKey, ratio) => {
+        setSelections((prev) => {
+            const row = mergeProductRowSelection(prev[index] || {})
+            return {
+                ...prev,
+                [index]: {
+                    ...row,
+                    aspectRatios: { ...row.aspectRatios, [typeKey]: ratio || "1:1" },
+                },
+            }
+        })
+        onDirtyChange?.()
+    }
+
+    const renderTypeControls = (index, typeKey, context) => {
+        const row = mergeProductRowSelection(selections[index] || {})
+        const checked = Boolean(row[typeKey])
+        return (
+            <div className="flex flex-col items-center gap-1.5">
+                <button
+                    type="button"
+                    onClick={() => {
+                        setSelections((prev) => {
+                            const current = mergeProductRowSelection(prev[index] || {})
+                            return {
+                                ...prev,
+                                [index]: {
+                                    ...current,
+                                    [typeKey]: !current[typeKey],
+                                },
+                            }
+                        })
+                        onDirtyChange?.()
+                    }}
+                    className="flex items-center justify-center hover:opacity-70 transition-opacity"
+                    disabled={!canEdit}
+                >
+                    {checked ? (
+                        <CheckSquare className="w-6 h-6 text-gold-solid" />
+                    ) : (
+                        <Square className="w-6 h-6 text-muted-foreground/70" />
+                    )}
+                </button>
+                <ProductAspectRatioSelect
+                    value={row.aspectRatios?.[typeKey] || "1:1"}
+                    onChange={(ratio) => updateAspectRatio(index, typeKey, ratio)}
+                    disabled={!canEdit}
+                />
+                {checked ? (
+                    <ProductModelTierSelect
+                        value={row.modelTiers?.[typeKey] || "regular"}
+                        onChange={(tier) => updateModelTier(index, typeKey, tier)}
+                        context={context}
+                        disabled={!canEdit}
+                    />
+                ) : null}
+            </div>
+        )
     }
     
     // Column header selection state
@@ -355,6 +417,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
           newPreviews[actualIndex] = URL.createObjectURL(file);
         });
         setFilePreviews(newPreviews);
+        onDirtyChange?.();
       
         // allow reselect same file
         e.target.value = "";
@@ -413,6 +476,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
             })
             return newRules
         })
+        onDirtyChange?.()
     }
 
     const handleOrnamentTypeChange = (fileIndex, ornamentType) => {
@@ -420,6 +484,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
             ...prev,
             [fileIndex]: ornamentType
         }))
+        onDirtyChange?.()
     }
 
     const handleOrnamentRulesChange = (fileIndex, rules) => {
@@ -427,6 +492,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
             ...prev,
             [fileIndex]: rules || ""
         }))
+        onDirtyChange?.()
     }
 
     // Clean up preview URLs on unmount
@@ -458,6 +524,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                 if (updatedCollection.items?.[0]?.product_images) {
                     setUploadedProducts(updatedCollection.items[0].product_images)
                 }
+                onDirtyChange?.()
                 // Notify parent component
                 if (onSave) {
                     await onSave({ productsUpdated: true })
@@ -523,6 +590,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                 setFilePreviews({})
                 setFileOrnamentTypes({})
                 setFileOrnamentRules({})
+                onDirtyChange?.()
                 if (onSave) {
                     await onSave({ productsUploaded: true })
                 }
@@ -564,7 +632,8 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
     // Expose selections and save function to parent component via ref
     useImperativeHandle(ref, () => ({
         getSelections: () => selections,
-        saveSelections: saveSelections
+        saveSelections: saveSelections,
+        hasPendingUploads: () => selectedFiles.length > 0,
     }))
 
     const hasProducts = uploadedProducts.length > 0
@@ -734,6 +803,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                     })
                                     setSelections(newSelections)
                                     setColumnSelections(allSelected)
+                                    onDirtyChange?.()
                                 }}
                                 variant="outline"
                                 className="flex items-center gap-2 border-gold-solid text-gold-solid hover:bg-gold-solid/15"
@@ -756,6 +826,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                     })
                                     setSelections(newSelections)
                                     setColumnSelections(allUnselected)
+                                    onDirtyChange?.()
                                 }}
                                 variant="outline"
                                 className="flex items-center gap-2 border-border text-muted-foreground hover:bg-secondary"
@@ -789,6 +860,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                             newSelections[index].plainBg = newValue
                                                         })
                                                         setSelections(newSelections)
+                                                        onDirtyChange?.()
                                                     }}
                                                     className="flex items-center gap-2 hover:opacity-70 transition-opacity"
                                                     disabled={!canEdit}
@@ -816,6 +888,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                             newSelections[index].bgReplace = newValue
                                                         })
                                                         setSelections(newSelections)
+                                                        onDirtyChange?.()
                                                     }}
                                                     className="flex items-center gap-2 hover:opacity-70 transition-opacity"
                                                     disabled={!canEdit}
@@ -843,6 +916,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                             newSelections[index].model = newValue
                                                         })
                                                         setSelections(newSelections)
+                                                        onDirtyChange?.()
                                                     }}
                                                     className="flex items-center gap-2 hover:opacity-70 transition-opacity"
                                                     disabled={!canEdit}
@@ -870,6 +944,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                             newSelections[index].campaign = newValue
                                                         })
                                                         setSelections(newSelections)
+                                                        onDirtyChange?.()
                                                     }}
                                                     className="flex items-center gap-2 hover:opacity-70 transition-opacity"
                                                     disabled={!canEdit}
@@ -929,128 +1004,16 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                 </div>
                                             </td>
                                             <td className="px-4 py-4 text-center">
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelections(prev => ({
-                                                                ...prev,
-                                                                [index]: {
-                                                                    ...(prev[index] || defaultProductRowSelection()),
-                                                                    plainBg: !(prev[index]?.plainBg || false)
-                                                                }
-                                                            }))
-                                                        }}
-                                                        className="flex items-center justify-center hover:opacity-70 transition-opacity"
-                                                        disabled={!canEdit}
-                                                    >
-                                                        {selections[index]?.plainBg ? (
-                                                            <CheckSquare className="w-6 h-6 text-gold-solid" />
-                                                        ) : (
-                                                            <Square className="w-6 h-6 text-muted-foreground/70" />
-                                                        )}
-                                                    </button>
-                                                    {selections[index]?.plainBg ? (
-                                                        <ProductModelTierSelect
-                                                            value={selections[index]?.modelTiers?.plainBg || "regular"}
-                                                            onChange={(tier) => updateModelTier(index, "plainBg", tier)}
-                                                            context="themed"
-                                                            disabled={!canEdit}
-                                                        />
-                                                    ) : null}
-                                                </div>
+                                                {renderTypeControls(index, "plainBg", "themed")}
                                             </td>
                                             <td className="px-4 py-4 text-center">
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelections(prev => ({
-                                                                ...prev,
-                                                                [index]: {
-                                                                    ...(prev[index] || defaultProductRowSelection()),
-                                                                    bgReplace: !(prev[index]?.bgReplace || false)
-                                                                }
-                                                            }))
-                                                        }}
-                                                        className="flex items-center justify-center hover:opacity-70 transition-opacity"
-                                                        disabled={!canEdit}
-                                                    >
-                                                        {selections[index]?.bgReplace ? (
-                                                            <CheckSquare className="w-6 h-6 text-gold-solid" />
-                                                        ) : (
-                                                            <Square className="w-6 h-6 text-muted-foreground/70" />
-                                                        )}
-                                                    </button>
-                                                    {selections[index]?.bgReplace ? (
-                                                        <ProductModelTierSelect
-                                                            value={selections[index]?.modelTiers?.bgReplace || "regular"}
-                                                            onChange={(tier) => updateModelTier(index, "bgReplace", tier)}
-                                                            context="themed"
-                                                            disabled={!canEdit}
-                                                        />
-                                                    ) : null}
-                                                </div>
+                                                {renderTypeControls(index, "bgReplace", "themed")}
                                             </td>
                                             <td className="px-4 py-4 text-center">
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelections(prev => ({
-                                                                ...prev,
-                                                                [index]: {
-                                                                    ...(prev[index] || defaultProductRowSelection()),
-                                                                    model: !(prev[index]?.model || false)
-                                                                }
-                                                            }))
-                                                        }}
-                                                        className="flex items-center justify-center hover:opacity-70 transition-opacity"
-                                                        disabled={!canEdit}
-                                                    >
-                                                        {selections[index]?.model ? (
-                                                            <CheckSquare className="w-6 h-6 text-gold-solid" />
-                                                        ) : (
-                                                            <Square className="w-6 h-6 text-muted-foreground/70" />
-                                                        )}
-                                                    </button>
-                                                    {selections[index]?.model ? (
-                                                        <ProductModelTierSelect
-                                                            value={selections[index]?.modelTiers?.model || "regular"}
-                                                            onChange={(tier) => updateModelTier(index, "model", tier)}
-                                                            context="model"
-                                                            disabled={!canEdit}
-                                                        />
-                                                    ) : null}
-                                                </div>
+                                                {renderTypeControls(index, "model", "model")}
                                             </td>
                                             <td className="px-4 py-4 text-center">
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelections(prev => ({
-                                                                ...prev,
-                                                                [index]: {
-                                                                    ...(prev[index] || defaultProductRowSelection()),
-                                                                    campaign: !(prev[index]?.campaign || false)
-                                                                }
-                                                            }))
-                                                        }}
-                                                        className="flex items-center justify-center hover:opacity-70 transition-opacity"
-                                                        disabled={!canEdit}
-                                                    >
-                                                        {selections[index]?.campaign ? (
-                                                            <CheckSquare className="w-6 h-6 text-gold-solid" />
-                                                        ) : (
-                                                            <Square className="w-6 h-6 text-muted-foreground/70" />
-                                                        )}
-                                                    </button>
-                                                    {selections[index]?.campaign ? (
-                                                        <ProductModelTierSelect
-                                                            value={selections[index]?.modelTiers?.campaign || "regular"}
-                                                            onChange={(tier) => updateModelTier(index, "campaign", tier)}
-                                                            context="campaign"
-                                                            disabled={!canEdit}
-                                                        />
-                                                    ) : null}
-                                                </div>
+                                                {renderTypeControls(index, "campaign", "campaign")}
                                             </td>
                                             <td className="px-4 py-4 text-center">
                                                 {canEdit && (

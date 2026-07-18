@@ -18,7 +18,7 @@ const DEFAULT_COMMENTS_BY_FIELD = {
 };
 
 
-export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, project, onSave, onSelectionsChange, onImagesChange, canEdit = true }) {
+export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, project, onSave, onSelectionsChange, onImagesChange, onImageRemoved, pendingRemovals = [], canEdit = true }) {
     const { token } = useAuth()
     const [selectedThemes, setSelectedThemes] = useState([])
     const [selectedBackgrounds, setSelectedBackgrounds] = useState([])
@@ -127,63 +127,55 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
             setSelectedPoses(item.selected_poses || [])
             setSelectedLocations(item.selected_locations || [])
 
-            // Load existing uploaded images from server
-            const existingImages = {
-                themes: (item.uploaded_theme_images || []).map(img => ({
-                    id: img.id || Date.now() + Math.random(),
-                    local_path: img.local_path,
-                    cloud_url: img.cloud_url,
-                    original_filename: img.original_filename,
-                    uploaded_by: img.uploaded_by,
-                    uploaded_at: img.uploaded_at,
-                    file_size: img.file_size,
-                    category: img.category,
-                    url: img.cloud_url,
-                    name: img.original_filename,
-                    isFromServer: true // Flag to indicate this image was loaded from server
-                })),
-                backgrounds: (item.uploaded_background_images || []).map(img => ({
-                    id: img.id || Date.now() + Math.random(),
-                    local_path: img.local_path,
-                    cloud_url: img.cloud_url,
-                    original_filename: img.original_filename,
-                    uploaded_by: img.uploaded_by,
-                    uploaded_at: img.uploaded_at,
-                    file_size: img.file_size,
-                    category: img.category,
-                    url: img.cloud_url,
-                    name: img.original_filename,
-                    isFromServer: true
-                })),
-                poses: (item.uploaded_pose_images || []).map(img => ({
-                    id: img.id || Date.now() + Math.random(),
-                    local_path: img.local_path,
-                    cloud_url: img.cloud_url,
-                    original_filename: img.original_filename,
-                    uploaded_by: img.uploaded_by,
-                    uploaded_at: img.uploaded_at,
-                    file_size: img.file_size,
-                    category: img.category,
-                    url: img.cloud_url,
-                    name: img.original_filename,
-                    isFromServer: true
-                })),
-                locations: (item.uploaded_location_images || []).map(img => ({
-                    id: img.id || Date.now() + Math.random(),
-                    local_path: img.local_path,
-                    cloud_url: img.cloud_url,
-                    original_filename: img.original_filename,
-                    uploaded_by: img.uploaded_by,
-                    uploaded_at: img.uploaded_at,
-                    file_size: img.file_size,
-                    category: img.category,
-                    url: img.cloud_url,
-                    name: img.original_filename,
-                    isFromServer: true
-                }))
+            const removedByCategory = (categoryKey) => new Set(
+                (pendingRemovals || [])
+                    .filter((removal) => removal?.category === categoryKey && removal?.cloudUrl)
+                    .map((removal) => removal.cloudUrl)
+            )
+
+            const mapServerImages = (images, categoryKey) => {
+                const removed = removedByCategory(categoryKey)
+                return (images || [])
+                    .filter((img) => !img?.cloud_url || !removed.has(img.cloud_url))
+                    .map((img) => ({
+                        id: img.id || Date.now() + Math.random(),
+                        local_path: img.local_path,
+                        cloud_url: img.cloud_url,
+                        original_filename: img.original_filename,
+                        uploaded_by: img.uploaded_by,
+                        uploaded_at: img.uploaded_at,
+                        file_size: img.file_size,
+                        category: img.category,
+                        url: img.cloud_url,
+                        name: img.original_filename,
+                        isFromServer: true,
+                    }))
             }
 
-            setUploadedImages(existingImages)
+            // Load existing uploaded images from server (skip locally pending deletes)
+            const existingImages = {
+                themes: mapServerImages(item.uploaded_theme_images, "themes"),
+                backgrounds: mapServerImages(item.uploaded_background_images, "backgrounds"),
+                poses: mapServerImages(item.uploaded_pose_images, "poses"),
+                locations: mapServerImages(item.uploaded_location_images, "locations"),
+            }
+
+            setUploadedImages((prev) => {
+                // Preserve newly uploaded images not yet reflected in collectionData
+                const mergeCategory = (serverList, prevList) => {
+                    const urls = new Set(serverList.map((img) => img.cloud_url).filter(Boolean))
+                    const localOnly = (prevList || []).filter(
+                        (img) => img && !img.isFromServer && img.cloud_url && !urls.has(img.cloud_url)
+                    )
+                    return [...serverList, ...localOnly]
+                }
+                return {
+                    themes: mergeCategory(existingImages.themes, prev.themes),
+                    backgrounds: mergeCategory(existingImages.backgrounds, prev.backgrounds),
+                    poses: mergeCategory(existingImages.poses, prev.poses),
+                    locations: mergeCategory(existingImages.locations, prev.locations),
+                }
+            })
             console.log('Loaded existing images from server:', existingImages)
         }
     }, [item])
@@ -498,14 +490,8 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
       };
       
 
-    // Remove uploaded image
+    // Remove uploaded image locally; backend delete happens on Save and Continue
     const removeUploadedImage = async (category, imageId) => {
-        if (!project?.id || !collectionData?.id) {
-            console.error('Missing project or collection data')
-            return
-        }
-
-        // Find the image to get its cloud_url
         const image = uploadedImages[category]?.find(img => img.id === imageId)
         if (!image) {
             console.error('Image not found in local state')
@@ -513,29 +499,16 @@ export function ThemesAndBackgrounds({ showSuggestions = false, collectionData, 
         }
 
         try {
-            const response = await apiService.removeWorkflowImage(
-                project.id,
-                collectionData.id,
-                imageId,
-                category,
-                token,
-                image.cloud_url || image.url
-            )
-
-            if (response.success) {
-                // Remove from local state
-                setUploadedImages(prev => ({
-                    ...prev,
-                    [category]: prev[category].filter(img => img.id !== imageId)
-                }))
-
-                // Refresh collection data
-                const updatedData = await apiService.getCollection(collectionData.id, token)
-                if (updatedData && onSave) {
-                    await onSave({ imagesUpdated: true })
-                }
-            } else {
-                console.error('Failed to remove image:', response.error)
+            setUploadedImages(prev => ({
+                ...prev,
+                [category]: prev[category].filter(img => img.id !== imageId)
+            }))
+            if (onImageRemoved) {
+                onImageRemoved({
+                    category,
+                    imageId,
+                    cloudUrl: image.cloud_url || image.url || null,
+                })
             }
         } catch (error) {
             console.error('Error removing image:', error)

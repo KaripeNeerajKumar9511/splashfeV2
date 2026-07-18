@@ -52,23 +52,47 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
         loadSelectedModel()
     }, [collectionData, token])
 
-    // Poll for selections from ProductUploadPage
+    // Load selections (including aspect ratios) from saved product data and/or live ProductUploadPage
     useEffect(() => {
-        const updateSelections = () => {
-            if (productUploadPageRef && productUploadPageRef.current) {
-                const currentSelections = productUploadPageRef.current.getSelections()
-                setSelections(currentSelections)
-            }
+        const buildFromCollection = () => {
+            const products = collectionData?.items?.[0]?.product_images || []
+            if (!products.length) return null
+            const fromCollection = {}
+            products.forEach((product, index) => {
+                const sel = product.generation_selections || {}
+                fromCollection[index] = {
+                    plainBg: Boolean(sel.plainBg),
+                    bgReplace: Boolean(sel.bgReplace),
+                    model: Boolean(sel.model),
+                    campaign: Boolean(sel.campaign),
+                    modelTiers: sel.modelTiers || {},
+                    aspectRatios: sel.aspectRatios || {
+                        plainBg: "1:1",
+                        bgReplace: "1:1",
+                        model: "1:1",
+                        campaign: "1:1",
+                    },
+                }
+            })
+            return fromCollection
         }
-        
-        // Update immediately
+
+        const updateSelections = () => {
+            if (productUploadPageRef?.current?.getSelections) {
+                const currentSelections = productUploadPageRef.current.getSelections()
+                if (currentSelections && Object.keys(currentSelections).length > 0) {
+                    setSelections(currentSelections)
+                    return
+                }
+            }
+            const fromCollection = buildFromCollection()
+            if (fromCollection) setSelections(fromCollection)
+        }
+
         updateSelections()
-        
-        // Poll every 500ms to catch selection changes
         const interval = setInterval(updateSelections, 500)
-        
         return () => clearInterval(interval)
-    }, [productUploadPageRef])
+    }, [productUploadPageRef, collectionData])
 
     const handleGenerate = async () => {
         if (!collectionData?.id) {
@@ -93,19 +117,36 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
         setSuccess(null)
 
         try {
-            // Get image type selections from ProductUploadPage if ref is available
+            // Prefer live ProductUploadPage selections; otherwise use saved generation_selections
+            // (includes aspectRatios chosen in Product Upload)
             let imageTypeSelections = null
-            if (productUploadPageRef && productUploadPageRef.current) {
+            if (productUploadPageRef?.current?.getSelections) {
                 const currentSelections = productUploadPageRef.current.getSelections()
-                // Convert selections to the format expected by backend
-                // Frontend format: { 0: { plainBg: true, bgReplace: false, ... }, ... }
-                // Backend expects the same format
                 if (currentSelections && Object.keys(currentSelections).length > 0) {
                     imageTypeSelections = currentSelections
                 }
-            } else if (selections && Object.keys(selections).length > 0) {
-                // Fallback to state if ref not available
+            }
+            if (!imageTypeSelections && selections && Object.keys(selections).length > 0) {
                 imageTypeSelections = selections
+            }
+            if (!imageTypeSelections && productImages?.length) {
+                imageTypeSelections = {}
+                productImages.forEach((product, index) => {
+                    const sel = product.generation_selections || {}
+                    imageTypeSelections[index] = {
+                        plainBg: Boolean(sel.plainBg),
+                        bgReplace: Boolean(sel.bgReplace),
+                        model: Boolean(sel.model),
+                        campaign: Boolean(sel.campaign),
+                        modelTiers: sel.modelTiers || {},
+                        aspectRatios: sel.aspectRatios || {
+                            plainBg: "1:1",
+                            bgReplace: "1:1",
+                            model: "1:1",
+                            campaign: "1:1",
+                        },
+                    }
+                })
             }
 
             // Validate that at least one image type is selected

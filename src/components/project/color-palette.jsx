@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext"
 import { formatRelativeCommentTime } from "@/lib/comment-time"
 import SmartImage from "@/utils/SmartImage"
 import { openImageViewer } from "@/lib/openImageViewer"
-export function ColorPalette({ showSuggestions = false, collectionData, project, onSave, onSelectionsChange, onImagesChange, canEdit = true }) {
+export function ColorPalette({ showSuggestions = false, collectionData, project, onSave, onSelectionsChange, onImagesChange, onImageRemoved, pendingRemovals = [], canEdit = true }) {
     const { token } = useAuth()
     const [selectedOutfits, setSelectedOutfits] = useState([])
     const [selectedColors, setSelectedColors] = useState([])
@@ -63,36 +63,46 @@ export function ColorPalette({ showSuggestions = false, collectionData, project,
             setPickedColors(item.picked_colors || [])
             setColorInstructions(item.color_instructions || "")
 
-            const existingOutfitImages = (item.uploaded_outfit_images || []).map(img => ({
-                id: img.id || Date.now() + Math.random(),
-                local_path: img.local_path,
-                cloud_url: img.cloud_url,
-                original_filename: img.original_filename,
-                uploaded_by: img.uploaded_by,
-                uploaded_at: img.uploaded_at,
-                file_size: img.file_size,
-                category: img.category,
-                url: img.cloud_url,
-                name: img.original_filename,
-                isFromServer: true
-            }))
-            const existingColorImages = (item.uploaded_color_images || []).map(img => ({
-                id: img.id || Date.now() + Math.random(),
-                local_path: img.local_path,
-                cloud_url: img.cloud_url,
-                original_filename: img.original_filename,
-                uploaded_by: img.uploaded_by,
-                uploaded_at: img.uploaded_at,
-                file_size: img.file_size,
-                category: img.category,
-                url: img.cloud_url,
-                name: img.original_filename,
-                isFromServer: true
-            }))
+            const removedByCategory = (categoryKey) => new Set(
+                (pendingRemovals || [])
+                    .filter((removal) => removal?.category === categoryKey && removal?.cloudUrl)
+                    .map((removal) => removal.cloudUrl)
+            )
 
-            setUploadedImages({
-                outfits: existingOutfitImages,
-                colors: existingColorImages,
+            const mapServerImages = (images, categoryKey) => {
+                const removed = removedByCategory(categoryKey)
+                return (images || [])
+                    .filter((img) => !img?.cloud_url || !removed.has(img.cloud_url))
+                    .map((img) => ({
+                        id: img.id || Date.now() + Math.random(),
+                        local_path: img.local_path,
+                        cloud_url: img.cloud_url,
+                        original_filename: img.original_filename,
+                        uploaded_by: img.uploaded_by,
+                        uploaded_at: img.uploaded_at,
+                        file_size: img.file_size,
+                        category: img.category,
+                        url: img.cloud_url,
+                        name: img.original_filename,
+                        isFromServer: true,
+                    }))
+            }
+
+            const existingOutfitImages = mapServerImages(item.uploaded_outfit_images, "outfits")
+            const existingColorImages = mapServerImages(item.uploaded_color_images, "colors")
+
+            setUploadedImages((prev) => {
+                const mergeCategory = (serverList, prevList) => {
+                    const urls = new Set(serverList.map((img) => img.cloud_url).filter(Boolean))
+                    const localOnly = (prevList || []).filter(
+                        (img) => img && !img.isFromServer && img.cloud_url && !urls.has(img.cloud_url)
+                    )
+                    return [...serverList, ...localOnly]
+                }
+                return {
+                    outfits: mergeCategory(existingOutfitImages, prev.outfits),
+                    colors: mergeCategory(existingColorImages, prev.colors),
+                }
             })
         }
     }, [item])
@@ -348,26 +358,22 @@ export function ColorPalette({ showSuggestions = false, collectionData, project,
         }
     }
 
+    // Local-only remove; backend delete is flushed on Save and Continue
     const removeUploadedImage = async (category, imageId) => {
-        if (!project?.id || !collectionData?.id) return
         const image = uploadedImages[category]?.find((img) => img.id === imageId)
         if (!image) return
-
-        const removeCategory = category === "outfits" ? "outfits" : "colors"
-        const response = await apiService.removeWorkflowImage(
-            project.id,
-            collectionData.id,
-            imageId,
-            removeCategory,
-            token,
-            image.cloud_url || image.url
-        )
-        if (!response?.success) return
 
         setUploadedImages((prev) => ({
             ...prev,
             [category]: prev[category].filter((img) => img.id !== imageId),
         }))
+        if (onImageRemoved) {
+            onImageRemoved({
+                category: category === "outfits" ? "outfits" : "colors",
+                imageId,
+                cloudUrl: image.cloud_url || image.url || null,
+            })
+        }
     }
 
     const handleFileInputChange = async (category, event) => {

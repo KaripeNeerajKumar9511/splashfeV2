@@ -25,6 +25,20 @@ function getUserFriendlyError(error) {
     return error.message || "Something went wrong. Please try again."
 }
 
+function selectionNeedsModel(imageTypeSelections) {
+    if (!imageTypeSelections) return false
+    return Object.values(imageTypeSelections).some(
+        (sel) => sel && typeof sel === "object" && (sel.model || sel.campaign)
+    )
+}
+
+function selectionHasProductOnlyTypes(imageTypeSelections) {
+    if (!imageTypeSelections) return false
+    return Object.values(imageTypeSelections).some(
+        (sel) => sel && typeof sel === "object" && (sel.plainBg || sel.bgReplace)
+    )
+}
+
 export function GenerateSection({ project, collectionData, onGenerate, canEdit, isOwner = false, productUploadPageRef = null }) {
     const [generating, setGenerating] = useState(false)
     const [error, setError] = useState(null)
@@ -43,9 +57,12 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
                     const response = await apiService.getAllModels(collectionData.id, token)
                     if (response.success && response.selected_model) {
                         setSelectedModel(response.selected_model.local || response.selected_model.cloud)
+                    } else {
+                        setSelectedModel(null)
                     }
                 } catch (err) {
                     console.error('Error loading selected model:', err)
+                    setSelectedModel(null)
                 }
             }
         }
@@ -94,6 +111,39 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
         return () => clearInterval(interval)
     }, [productUploadPageRef, collectionData])
 
+    const resolveImageTypeSelections = (productImages) => {
+        let imageTypeSelections = null
+        if (productUploadPageRef?.current?.getSelections) {
+            const currentSelections = productUploadPageRef.current.getSelections()
+            if (currentSelections && Object.keys(currentSelections).length > 0) {
+                imageTypeSelections = currentSelections
+            }
+        }
+        if (!imageTypeSelections && selections && Object.keys(selections).length > 0) {
+            imageTypeSelections = selections
+        }
+        if (!imageTypeSelections && productImages?.length) {
+            imageTypeSelections = {}
+            productImages.forEach((product, index) => {
+                const sel = product.generation_selections || {}
+                imageTypeSelections[index] = {
+                    plainBg: Boolean(sel.plainBg),
+                    bgReplace: Boolean(sel.bgReplace),
+                    model: Boolean(sel.model),
+                    campaign: Boolean(sel.campaign),
+                    modelTiers: sel.modelTiers || {},
+                    aspectRatios: sel.aspectRatios || {
+                        plainBg: "1:1",
+                        bgReplace: "1:1",
+                        model: "1:1",
+                        campaign: "1:1",
+                    },
+                }
+            })
+        }
+        return imageTypeSelections
+    }
+
     const handleGenerate = async () => {
         if (!collectionData?.id) {
             setError('No collection found')
@@ -106,8 +156,17 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
             return
         }
 
-        if (!selectedModel) {
-            setError('No model selected. Please generate and save models in Step 2')
+        const imageTypeSelections = resolveImageTypeSelections(productImages)
+        const needsModel = selectionNeedsModel(imageTypeSelections)
+        const hasProductOnly = selectionHasProductOnlyTypes(imageTypeSelections)
+
+        if (needsModel && !selectedModel) {
+            setError('Model Image and Campaign Image require a model. Please go to the Models tab and select a model.')
+            return
+        }
+
+        if (!selectedModel && !hasProductOnly) {
+            setError('Select Plain BG or BG Replace to generate without a model, or go to the Models tab to select a model.')
             return
         }
 
@@ -117,54 +176,34 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
         setSuccess(null)
 
         try {
-            // Prefer live ProductUploadPage selections; otherwise use saved generation_selections
-            // (includes aspectRatios chosen in Product Upload)
-            let imageTypeSelections = null
-            if (productUploadPageRef?.current?.getSelections) {
-                const currentSelections = productUploadPageRef.current.getSelections()
-                if (currentSelections && Object.keys(currentSelections).length > 0) {
-                    imageTypeSelections = currentSelections
-                }
-            }
-            if (!imageTypeSelections && selections && Object.keys(selections).length > 0) {
-                imageTypeSelections = selections
-            }
-            if (!imageTypeSelections && productImages?.length) {
-                imageTypeSelections = {}
-                productImages.forEach((product, index) => {
-                    const sel = product.generation_selections || {}
-                    imageTypeSelections[index] = {
-                        plainBg: Boolean(sel.plainBg),
-                        bgReplace: Boolean(sel.bgReplace),
-                        model: Boolean(sel.model),
-                        campaign: Boolean(sel.campaign),
-                        modelTiers: sel.modelTiers || {},
-                        aspectRatios: sel.aspectRatios || {
-                            plainBg: "1:1",
-                            bgReplace: "1:1",
-                            model: "1:1",
-                            campaign: "1:1",
-                        },
-                    }
-                })
-            }
-
-            // Validate that at least one image type is selected
             if (imageTypeSelections) {
                 const hasAnySelection = Object.values(imageTypeSelections).some(sel => 
                     sel && typeof sel === 'object' && (sel.plainBg || sel.bgReplace || sel.model || sel.campaign)
                 )
                 if (!hasAnySelection) {
-                    setError('Please select at least one image type to generate in Step 3 (Product Upload)')
+                    setError('Please select at least one image type to generate in Product Upload')
                     setGenerating(false)
                     setIsGenerating(false)
                     return
                 }
             }
 
+            // Without a model, only send product-only types
+            let selectionsToSend = imageTypeSelections
+            if (!selectedModel && imageTypeSelections) {
+                selectionsToSend = {}
+                Object.entries(imageTypeSelections).forEach(([key, sel]) => {
+                    selectionsToSend[key] = {
+                        ...sel,
+                        model: false,
+                        campaign: false,
+                    }
+                })
+            }
+
             const response = await apiService.generateProductModelImagesWithPolling(
                 collectionData.id,
-                imageTypeSelections,
+                selectionsToSend,
                 token,
                 (jobStatus) => {
                     // jobStatus from /api/jobs/{job_id}/images/
@@ -196,11 +235,10 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
             setIsGenerating(false)
         }
     }
-    console.log("canEdit", canEdit);
+
     const hasProducts = collectionData?.items?.[0]?.product_images?.length > 0
     const hasModelSelected = selectedModel !== null
 
-    // Calculate total selected images
     const totalSelectedImages = useMemo(() => {
         if (!selections || Object.keys(selections).length === 0) return null
         
@@ -209,12 +247,26 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
             if (sel && typeof sel === 'object') {
                 if (sel.plainBg) total++
                 if (sel.bgReplace) total++
-                if (sel.model) total++
-                if (sel.campaign) total++
+                if (hasModelSelected) {
+                    if (sel.model) total++
+                    if (sel.campaign) total++
+                }
             }
         })
         return total > 0 ? total : null
+    }, [selections, hasModelSelected])
+
+    const canGenerateWithoutModel = useMemo(() => {
+        if (!selections) return false
+        return selectionHasProductOnlyTypes(selections)
     }, [selections])
+
+    const generateEnabled =
+        !generating &&
+        hasProducts &&
+        isOwner &&
+        (hasModelSelected || canGenerateWithoutModel) &&
+        !(totalSelectedImages !== null && totalSelectedImages === 0)
 
     return (
         <div className="mb-8">
@@ -224,24 +276,32 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
                     <p className="text-sm text-muted-foreground">
                         Combine products with AI models to create final images
                     </p>
-                    {hasProducts && hasModelSelected && (
+                    {hasProducts && (hasModelSelected || canGenerateWithoutModel) && (
                         <p className="text-xs text-green-400 mt-1">
                             {totalSelectedImages !== null && totalSelectedImages > 0 ? (
                                 <>✓ Ready to generate {totalSelectedImages} image{totalSelectedImages !== 1 ? 's' : ''} ({totalSelectedImages} credits required)</>
                             ) : (
-                                <>⚠️ Select image types in Step 3 (Product Upload) to generate</>
+                                <>⚠️ Select image types in Product Upload to generate</>
                             )}
+                        </p>
+                    )}
+                    {hasProducts && !hasModelSelected && canGenerateWithoutModel && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Generating without a model — Plain BG and BG Replace only. Select a model in the Models tab for Model/Campaign images.
                         </p>
                     )}
                 </div>
                 <Button
                     onClick={handleGenerate}
-                    disabled={generating || !hasProducts || !hasModelSelected || !isOwner || (totalSelectedImages !== null && totalSelectedImages === 0)}
+                    disabled={!generateEnabled}
                     variant="brand"
                     className="gap-2"
                     title={
                         !isOwner ? "You need Owner role to generate images" :
-                        (totalSelectedImages === 0 ? "Please select at least one image type in Step 3" : "")
+                        (totalSelectedImages === 0 ? "Please select at least one image type in Product Upload" :
+                        (!hasModelSelected && !canGenerateWithoutModel
+                            ? "Select Plain BG / BG Replace, or go to the Models tab to select a model"
+                            : ""))
                     }
                 >
                     <Sparkles className="w-4 h-4" />
@@ -280,11 +340,10 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
                 </div>
             )}
 
-            {(!hasProducts || !hasModelSelected) && !error && (
+            {!hasProducts && !error && (
                 <div className="mt-4 bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
                     <p className="text-amber-300 text-sm">
-                        {!hasModelSelected && '⚠️ Please select a model (AI or Real) in Step 2'}
-                        {!hasProducts && hasModelSelected && '⚠️ Please upload product images in Step 3'}
+                        ⚠️ Please upload product images in Product Upload
                     </p>
                 </div>
             )}

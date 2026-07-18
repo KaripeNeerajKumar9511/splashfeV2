@@ -145,6 +145,13 @@ export function WorkflowTab({ project }) {
 
     const handleModelSelectionChange = useCallback((model) => {
         setSelectedModel(model)
+        // Keep collectionData in sync so Product Upload enables/disables Model/Campaign immediately
+        setCollectionData((prev) => {
+            if (!prev?.items?.[0]) return prev
+            const items = [...prev.items]
+            items[0] = { ...items[0], selected_model: model || null }
+            return { ...prev, items }
+        })
         markDirty()
     }, [markDirty])
 
@@ -290,13 +297,14 @@ export function WorkflowTab({ project }) {
                         }
                     }
 
-                    // Check if step 3 is saved (has models saved to backend)
-                    // Step 4 unlocks only when step 3 is fully saved
+                    // Step 3 (Model) is optional — unlock Product Upload once Moodboard is done.
+                    // Still track selected model when present.
                     if (data.items && data.items.length > 0) {
                         const item = data.items[0]
+                        if (newSavedSteps.has(2)) {
+                            newSavedSteps.add(3)
+                        }
                         if (item.selected_model || (item.uploaded_models && item.uploaded_models.length > 0)) {
-                            newSavedSteps.add(3) // Step 3 is saved - this will unlock step 4 via isStepUnlocked
-                            // Initialize selectedModel from backend if it exists
                             if (item.selected_model) {
                                 setSelectedModel(item.selected_model)
                             }
@@ -431,9 +439,27 @@ export function WorkflowTab({ project }) {
                         setCollectionData(updatedData)
                         setSuccessMessage('Models saved successfully!')
                         setTimeout(() => setSuccessMessage(null), 3000)
-                    } else if (!selectedModel) {
-                        setError('Please select a model before continuing')
-                        throw new Error('No model selected')
+                    } else if (collectionData?.id) {
+                        // No model selected (or user unselected) — clear backend selection and continue
+                        try {
+                            setLoading(true)
+                            await apiService.selectModel(collectionData.id, null, null, { clear: true })
+                            setSavedSteps(prev => new Set([...prev, 3]))
+                            clearDirty()
+                            const updatedData = await apiService.getCollection(collectionData.id, token)
+                            setCollectionData(updatedData)
+                            setSuccessMessage('Continued without a model')
+                            setTimeout(() => setSuccessMessage(null), 3000)
+                        } catch (err) {
+                            console.error('Error clearing model selection:', err)
+                            setSavedSteps(prev => new Set([...prev, 3]))
+                            clearDirty()
+                        } finally {
+                            setLoading(false)
+                        }
+                    } else {
+                        setSavedSteps(prev => new Set([...prev, 3]))
+                        clearDirty()
                     }
                     break
                 case 4:
@@ -616,9 +642,11 @@ export function WorkflowTab({ project }) {
     // Function to check if a step is unlocked
     const isStepUnlocked = (stepNumber) => {
         if (stepNumber === 1) return true // Step 1 is always accessible
+        // Model step (3) is optional: Product Upload (4) unlocks after Moodboard (2)
+        if (stepNumber === 4) {
+            return savedSteps.has(2) || savedSteps.has(3)
+        }
         // A step is unlocked if the previous step is saved
-        // Step 2 unlocks only when step 1 is saved
-        // Step 3 unlocks only when step 2 is saved, etc.
         return savedSteps.has(stepNumber - 1)
     }
 
@@ -632,6 +660,10 @@ export function WorkflowTab({ project }) {
         if (saveRequired) {
             setShowSaveRequiredDialog(true)
             return
+        }
+        // Skipping Model step via Next marks it complete so Product Upload stays unlocked
+        if (activeStep === 3 && stepNumber > 3) {
+            setSavedSteps(prev => new Set([...prev, 3]))
         }
         setActiveStep(stepNumber)
     }
@@ -654,16 +686,16 @@ export function WorkflowTab({ project }) {
                 try {
                     const updatedData = await apiService.getCollection(collectionData.id, token)
                     setCollectionData(updatedData)
-                    const item = updatedData.items?.[0]
-                    const hasModel = item?.selected_model || (item?.uploaded_models && item.uploaded_models.length > 0)
-                    if (hasModel) {
-                        setSavedSteps(prev => new Set([...prev, 3]))
-                        clearDirty()
-                        setActiveStep(4)
-                        return
-                    }
+                    setSavedSteps(prev => new Set([...prev, 3]))
+                    clearDirty()
+                    setActiveStep(4)
+                    return
                 } catch (err) {
                     console.error('Error checking step 3:', err)
+                    setSavedSteps(prev => new Set([...prev, 3]))
+                    clearDirty()
+                    setActiveStep(4)
+                    return
                 }
             }
             if (activeStep === 4 && collectionData?.id) {

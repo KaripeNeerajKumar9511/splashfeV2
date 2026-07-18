@@ -846,13 +846,18 @@ class ApiService {
         });
     }
 
-    async selectModel(collectionId, modelType, modelData) {
+    async selectModel(collectionId, modelType, modelData, options = {}) {
+        const clear = Boolean(options.clear) || (!modelType && !modelData)
         return this.request(`/probackendapp/api/collections/${collectionId}/select-model/`, {
             method: 'POST',
-            body: JSON.stringify({
-                type: modelType,
-                model: modelData,
-            }),
+            body: JSON.stringify(
+                clear
+                    ? { clear: true }
+                    : {
+                        type: modelType,
+                        model: modelData,
+                    }
+            ),
         });
     }
 

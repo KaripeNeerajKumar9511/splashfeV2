@@ -48,8 +48,49 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
     
     // Selection state: { productIndex: { plainBg, bgReplace, model, campaign, modelTiers } }
     const [selections, setSelections] = useState({})
+    // Column header selection state
+    const [columnSelections, setColumnSelections] = useState({
+        plainBg: false,
+        bgReplace: false,
+        model: false,
+        campaign: false
+    })
+    // Credit settings state
+    const [creditSettings, setCreditSettings] = useState({
+        credits_per_image_generation: 2 // Default fallback
+    })
+
+    const item = collectionData?.items?.[0]
+    const hasModelSelected = Boolean(
+        item?.selected_model || (item?.uploaded_models && item.uploaded_models.length > 0)
+    )
+    const modelRequiredTypes = new Set(["model", "campaign"])
+
+    // Without a model, Model/Campaign must stay off
+    useEffect(() => {
+        if (hasModelSelected) return
+        setSelections((prev) => {
+            let changed = false
+            const next = {}
+            Object.keys(prev).forEach((key) => {
+                const row = mergeProductRowSelection(prev[key] || {})
+                if (row.model || row.campaign) {
+                    changed = true
+                    next[key] = { ...row, model: false, campaign: false }
+                } else {
+                    next[key] = row
+                }
+            })
+            return changed ? next : prev
+        })
+        setColumnSelections((prev) => {
+            if (!prev.model && !prev.campaign) return prev
+            return { ...prev, model: false, campaign: false }
+        })
+    }, [hasModelSelected])
 
     const updateModelTier = (index, typeKey, tier) => {
+        if (modelRequiredTypes.has(typeKey) && !hasModelSelected) return
         setSelections((prev) => {
             const row = mergeProductRowSelection(prev[index] || {})
             return {
@@ -64,6 +105,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
     }
 
     const updateAspectRatio = (index, typeKey, ratio) => {
+        if (modelRequiredTypes.has(typeKey) && !hasModelSelected) return
         setSelections((prev) => {
             const row = mergeProductRowSelection(prev[index] || {})
             return {
@@ -80,11 +122,14 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
     const renderTypeControls = (index, typeKey, context) => {
         const row = mergeProductRowSelection(selections[index] || {})
         const checked = Boolean(row[typeKey])
+        const requiresModel = modelRequiredTypes.has(typeKey)
+        const typeDisabled = !canEdit || (requiresModel && !hasModelSelected)
         return (
             <div className="flex flex-col items-center gap-1.5">
                 <button
                     type="button"
                     onClick={() => {
+                        if (typeDisabled) return
                         setSelections((prev) => {
                             const current = mergeProductRowSelection(prev[index] || {})
                             return {
@@ -97,8 +142,15 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                         })
                         onDirtyChange?.()
                     }}
-                    className="flex items-center justify-center hover:opacity-70 transition-opacity"
-                    disabled={!canEdit}
+                    className={`flex items-center justify-center transition-opacity ${
+                        typeDisabled ? "opacity-40 cursor-not-allowed" : "hover:opacity-70"
+                    }`}
+                    disabled={typeDisabled}
+                    title={
+                        requiresModel && !hasModelSelected
+                            ? "Go to the Models tab and select a model to enable this option"
+                            : undefined
+                    }
                 >
                     {checked ? (
                         <CheckSquare className="w-6 h-6 text-gold-solid" />
@@ -109,32 +161,20 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                 <ProductAspectRatioSelect
                     value={row.aspectRatios?.[typeKey] || "1:1"}
                     onChange={(ratio) => updateAspectRatio(index, typeKey, ratio)}
-                    disabled={!canEdit}
+                    disabled={typeDisabled}
                 />
-                {checked ? (
+                {checked && !typeDisabled ? (
                     <ProductModelTierSelect
                         value={row.modelTiers?.[typeKey] || "regular"}
                         onChange={(tier) => updateModelTier(index, typeKey, tier)}
                         context={context}
-                        disabled={!canEdit}
+                        disabled={typeDisabled}
                     />
                 ) : null}
             </div>
         )
     }
-    
-    // Column header selection state
-    const [columnSelections, setColumnSelections] = useState({
-        plainBg: false,
-        bgReplace: false,
-        model: false,
-        campaign: false
-    })
 
-    // Credit settings state
-    const [creditSettings, setCreditSettings] = useState({
-        credits_per_image_generation: 2 // Default fallback
-    })
     const commentFieldConfig = {
         product_upload: {
             payloadKey: "product_upload_comments",
@@ -794,8 +834,8 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                     const allSelected = {
                                         plainBg: true,
                                         bgReplace: true,
-                                        model: true,
-                                        campaign: true
+                                        model: hasModelSelected,
+                                        campaign: hasModelSelected,
                                     }
                                     const newSelections = {}
                                     uploadedProducts.forEach((_, index) => {
@@ -837,6 +877,17 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                             </Button>
                         </div>
                     </div>
+
+                    {!hasModelSelected && (
+                        <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+                            <p className="text-sm text-amber-300">
+                                Model Image and Campaign Image are disabled. Go to the{" "}
+                                <span className="font-medium text-amber-200">Models</span>{" "}
+                                tab and select a model to enable them. You can still generate
+                                Plain BG and BG Replace images without a model.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="bg-card rounded-lg border border-border overflow-hidden shadow-sm">
                         <div className="overflow-x-auto">
@@ -906,6 +957,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                             <div className="flex items-center justify-center gap-2">
                                                 <button
                                                     onClick={() => {
+                                                        if (!hasModelSelected) return
                                                         const newValue = !columnSelections.model
                                                         setColumnSelections(prev => ({ ...prev, model: newValue }))
                                                         const newSelections = { ...selections }
@@ -918,8 +970,17 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                         setSelections(newSelections)
                                                         onDirtyChange?.()
                                                     }}
-                                                    className="flex items-center gap-2 hover:opacity-70 transition-opacity"
-                                                    disabled={!canEdit}
+                                                    className={`flex items-center gap-2 transition-opacity ${
+                                                        !canEdit || !hasModelSelected
+                                                            ? "opacity-40 cursor-not-allowed"
+                                                            : "hover:opacity-70"
+                                                    }`}
+                                                    disabled={!canEdit || !hasModelSelected}
+                                                    title={
+                                                        !hasModelSelected
+                                                            ? "Go to the Models tab and select a model to enable this option"
+                                                            : undefined
+                                                    }
                                                 >
                                                     {columnSelections.model ? (
                                                         <CheckSquare className="w-5 h-5 text-gold-solid" />
@@ -927,13 +988,16 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                         <Square className="w-5 h-5 text-muted-foreground/70" />
                                                     )}
                                                 </button>
-                                                <span>Model Image</span>
+                                                <span className={!hasModelSelected ? "text-muted-foreground" : undefined}>
+                                                    Model Image
+                                                </span>
                                             </div>
                                         </th>
                                         <th className="px-4 py-4 text-center text-sm font-semibold text-foreground min-w-[150px]">
                                             <div className="flex items-center justify-center gap-2">
                                                 <button
                                                     onClick={() => {
+                                                        if (!hasModelSelected) return
                                                         const newValue = !columnSelections.campaign
                                                         setColumnSelections(prev => ({ ...prev, campaign: newValue }))
                                                         const newSelections = { ...selections }
@@ -946,8 +1010,17 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                         setSelections(newSelections)
                                                         onDirtyChange?.()
                                                     }}
-                                                    className="flex items-center gap-2 hover:opacity-70 transition-opacity"
-                                                    disabled={!canEdit}
+                                                    className={`flex items-center gap-2 transition-opacity ${
+                                                        !canEdit || !hasModelSelected
+                                                            ? "opacity-40 cursor-not-allowed"
+                                                            : "hover:opacity-70"
+                                                    }`}
+                                                    disabled={!canEdit || !hasModelSelected}
+                                                    title={
+                                                        !hasModelSelected
+                                                            ? "Go to the Models tab and select a model to enable this option"
+                                                            : undefined
+                                                    }
                                                 >
                                                     {columnSelections.campaign ? (
                                                         <CheckSquare className="w-5 h-5 text-gold-solid" />
@@ -955,7 +1028,9 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                         <Square className="w-5 h-5 text-muted-foreground/70" />
                                                     )}
                                                 </button>
-                                                <span>Campaign Image</span>
+                                                <span className={!hasModelSelected ? "text-muted-foreground" : undefined}>
+                                                    Campaign Image
+                                                </span>
                                             </div>
                                         </th>
                                         <th className="px-4 py-4 text-center text-sm font-semibold text-foreground min-w-[100px]">

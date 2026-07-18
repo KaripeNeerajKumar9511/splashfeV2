@@ -35,6 +35,8 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
 
     // Common State
     const [selectedModel, setSelectedModel] = useState(null)
+    const skipAutoSelectRef = useRef(false)
+    const hasHydratedSelectionRef = useRef(false)
     console.log(`DEBUG: selectedModel: ${selectedModel}`)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
@@ -66,10 +68,14 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
     const activeCommentConfig = activeCommentField ? commentFieldConfig[activeCommentField] : null
     const currentComments = activeCommentField ? (commentsByField[activeCommentField] || []) : []
 
-    // Load existing models from collection data
+    // Load existing models once per collection (do not re-run when selection sync updates collectionData)
     useEffect(() => {
+        hasHydratedSelectionRef.current = false
+        skipAutoSelectRef.current = false
+        setSelectedModel(null)
         loadAllModels()
-    }, [collectionData])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [collectionData?.id, token])
 
     useEffect(() => {
         setCommentsByField({
@@ -270,6 +276,20 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
             </button>
         )
     }
+    const makeSelectionKey = (model, type, index) => {
+        const normalizedType = (type || "").toLowerCase() === "real" ? "real" : "ai"
+        const cloud = model?.cloud || ""
+        const local = model?.local || ""
+        return `${normalizedType}:${index}:${cloud}:${local}`
+    }
+
+    const modelPathsMatch = (a, b) => {
+        if (!a || !b) return false
+        if (a.cloud && b.cloud && a.cloud === b.cloud) return true
+        if (a.local && b.local && a.local === b.local) return true
+        return false
+    }
+
     const handleDeleteModel = async (model, type) => {
         if (!window.confirm("Are you sure you want to delete this model?")) return
 
@@ -280,6 +300,11 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
         try {
             const response = await apiService.removeModel(collectionData.id, type, model, token)
             if (response.success) {
+                if (selectedModel && modelPathsMatch(selectedModel, model)) {
+                    skipAutoSelectRef.current = true
+                    setSelectedModel(null)
+                    onModelSelectionChange?.(null)
+                }
                 await loadAllModels()
                 setSuccess("Model deleted successfully!")
             } else {
@@ -300,29 +325,52 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
             const response = await apiService.getAllModels(collectionData.id, token)
 
             if (response.success) {
-                setAiModels(response.ai_models || [])
-                setRealModels(response.real_models || [])
+                const nextAi = response.ai_models || []
+                const nextReal = response.real_models || []
+                setAiModels(nextAi)
+                setRealModels(nextReal)
 
-                // Set selected model if exists
-                if (response.selected_model) {
-                    // 🧠 Only set selectedModel if none currently chosen
-                    // prevents overwriting user's immediate selection
-                    setSelectedModel(prev => {
-                        if (!prev) {
-                            // Notify parent about the loaded model
-                            if (onModelSelectionChange) {
-                                onModelSelectionChange(response.selected_model)
-                            }
-                            return response.selected_model
+                // One-time hydrate from backend. Never re-apply after user unselects.
+                // Only accept a selection that matches a model currently in the list.
+                if (
+                    response.selected_model &&
+                    !skipAutoSelectRef.current &&
+                    !hasHydratedSelectionRef.current
+                ) {
+                    const hydratedType =
+                        (response.selected_model.type || "").toLowerCase() === "real"
+                            ? "real"
+                            : "ai"
+                    const list = hydratedType === "real" ? nextReal : nextAi
+                    const matchIndex = list.findIndex((m) =>
+                        modelPathsMatch(response.selected_model, m)
+                    )
+
+                    hasHydratedSelectionRef.current = true
+
+                    if (matchIndex >= 0) {
+                        const matched = list[matchIndex]
+                        setSelectedModel({
+                            ...matched,
+                            type: hydratedType,
+                            _selectionKey: makeSelectionKey(matched, hydratedType, matchIndex),
+                        })
+                        if (hydratedType === "real") {
+                            setActiveTab("real")
+                        } else {
+                            setActiveTab("ai")
                         }
-                        return prev
-                    })
-
-                    if (response.selected_model.type === 'real') {
-                        setActiveTab('real')
+                    } else {
+                        // Stale backend selection that matches no current model
+                        setSelectedModel(null)
                     }
+                } else if (!response.selected_model) {
+                    hasHydratedSelectionRef.current = true
+                    if (!skipAutoSelectRef.current) {
+                        setSelectedModel(null)
+                    }
+                    skipAutoSelectRef.current = false
                 }
-
             }
         } catch (err) {
             console.error('Error loading models:', err)
@@ -443,36 +491,66 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
       };
       
 
-    const handleSelectModel = (model, type) => {
-        console.log(`DEBUG: handleSelectModel: ${model}, ${type}`)
+    const isModelSelected = (model, type, index) => {
+        if (!selectedModel || !model) return false
+        const normalizedType = (type || "").toLowerCase() === "real" ? "real" : "ai"
+        if ((selectedModel.type || "").toLowerCase() !== normalizedType) return false
+
+        // Prefer exact key from user click (handles duplicate image URLs)
+        if (selectedModel._selectionKey != null && typeof index === "number") {
+            return selectedModel._selectionKey === makeSelectionKey(model, normalizedType, index)
+        }
+
+        if (!modelPathsMatch(selectedModel, model)) return false
+
+        // Hydrated from backend without key: if duplicates share URLs, only first match is selected
+        const list = normalizedType === "real" ? realModels : aiModels
+        const firstIdx = list.findIndex((m) => modelPathsMatch(selectedModel, m))
+        if (typeof index === "number") {
+            return firstIdx === index
+        }
+        return firstIdx === 0
+    }
+
+    const handleSelectModel = (model, type, index = 0) => {
         setError(null)
         setSuccess(null)
 
-        // ✅ Only update local state - no API call
-        const newSelectedModel = { ...model, type }
+        const normalizedType = (type || "").toLowerCase() === "real" ? "real" : "ai"
+
+        // Clicking an already-selected model unselects it
+        if (isModelSelected(model, normalizedType, index)) {
+            skipAutoSelectRef.current = true
+            setSelectedModel(null)
+            if (onModelSelectionChange) {
+                onModelSelectionChange(null)
+            }
+            return
+        }
+
+        // Single selection only
+        skipAutoSelectRef.current = false
+        const newSelectedModel = {
+            ...model,
+            type: normalizedType,
+            _selectionKey: makeSelectionKey(model, normalizedType, index),
+        }
         setSelectedModel(newSelectedModel)
 
-        // Notify parent component about the selection change
         if (onModelSelectionChange) {
-            onModelSelectionChange(newSelectedModel)
+            // Persist without internal UI key
+            const { _selectionKey, ...forParent } = newSelectedModel
+            onModelSelectionChange(forParent)
         }
     }
 
-    const isModelSelected = (model, type) => {
-        if (!selectedModel) return false
-        if (selectedModel.type !== type) return false
-
-        // ✅ Compare by ID if available
-        if (selectedModel.id && model.id) {
-            return selectedModel.id === model.id
-        }
-
-        // ✅ Fallback: compare Cloudinary/local URLs
-        const selectedPath = selectedModel.cloud || selectedModel.local
-        const modelPath = model.cloud || model.local
-
-        return selectedPath && modelPath && selectedPath === modelPath
-    }
+    // Card "Selected" only when a concrete model thumbnail is selected
+    const isRealModelChosen = realModels.some((model, index) =>
+        isModelSelected(model, "real", index)
+    )
+    const isAiModelChosen = aiModels.some((model, index) =>
+        isModelSelected(model, "ai", index)
+    )
 
 
     return (
@@ -504,13 +582,13 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Human Model Preview Card (Real Models) */}
                 <div
-                    className={`relative bg-card rounded-xl border-2 transition-all duration-300 hover:shadow-lg ${activeTab === 'real'
+                    className={`relative bg-card rounded-xl border-2 transition-all duration-300 hover:shadow-lg ${isRealModelChosen
                         ? 'border-gold-solid shadow-md'
                         : 'border-border hover:border-border'
                         }`}
                 >
-                    {/* Selected Badge */}
-                    {activeTab === 'real' && (
+                    {/* Selected Badge — only when a real model is actually chosen */}
+                    {isRealModelChosen && (
                         <div className="absolute top-4 right-4 bg-gold-solid text-white text-xs font-semibold px-3 py-1.5 rounded-md z-10 animate-fade-in shadow-sm">
                             Selected
                         </div>
@@ -522,9 +600,9 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
                         className="p-6 border-b border-border cursor-pointer"
                     >
                         <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${activeTab === 'real' ? 'bg-gold-solid' : 'bg-muted'
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${isRealModelChosen ? 'bg-gold-solid' : 'bg-muted'
                                 }`}>
-                                <Users className={`w-5 h-5 transition-colors ${activeTab === 'real' ? 'text-white' : 'text-muted-foreground'
+                                <Users className={`w-5 h-5 transition-colors ${isRealModelChosen ? 'text-white' : 'text-muted-foreground'
                                     }`} />
                             </div>
                             <div className="flex-1">
@@ -545,11 +623,11 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
   loading={loading}
   selectedModel={selectedModel}
   onUpload={handleUploadRealModels}
-  isModelSelected={(model) => isModelSelected(model, 'real')}
+  isModelSelected={(model, index) => isModelSelected(model, 'real', index)}
   canEdit={canEdit}
   onDelete={handleDeleteModel}
   uploadError={realUploadError}
-  onSelect={(model) => handleSelectModel(model, 'real')}
+  onSelect={(model, index) => handleSelectModel(model, 'real', index)}
 />
 
                     </div>
@@ -557,14 +635,14 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
 
                 {/* AI Model Preview Card */}
                 <div
-                    className={`relative bg-card rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:border-gold-muted/50 ${activeTab === 'ai'
-                        ? 'border-amber-400 shadow-md'
+                    className={`relative bg-card rounded-xl border-2 transition-all duration-300 hover:shadow-lg ${isAiModelChosen
+                        ? 'border-gold-solid shadow-md'
                         : 'border-border hover:border-border'
                         }`}
                 >
-                    {/* Selected Badge */}
-                    {activeTab === 'ai' && (
-                        <div className="absolute top-4 right-4 bg-amber-400 text-white text-xs font-semibold px-3 py-1.5 rounded-md z-10 animate-fade-in shadow-sm">
+                    {/* Selected Badge — only when an AI model is actually chosen */}
+                    {isAiModelChosen && (
+                        <div className="absolute top-4 right-4 bg-gold-solid text-white text-xs font-semibold px-3 py-1.5 rounded-md z-10 animate-fade-in shadow-sm">
                             Selected
                         </div>
                     )}
@@ -575,9 +653,9 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
                         className="p-6 border-b border-border cursor-pointer"
                     >
                         <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${activeTab === 'ai' ? 'bg-gold-solid' : 'bg-muted'
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${isAiModelChosen ? 'bg-gold-solid' : 'bg-muted'
                                 }`}>
-                                <Sparkles className={`w-5 h-5 transition-colors ${activeTab === 'ai' ? 'text-white' : 'text-muted-foreground'
+                                <Sparkles className={`w-5 h-5 transition-colors ${isAiModelChosen ? 'text-white' : 'text-muted-foreground'
                                     }`} />
                             </div>
                             <div className="flex-1">
@@ -600,8 +678,8 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
                             selectedModel={selectedModel}
                             onGenerate={handleGenerateAIModels}
                             onSave={handleSaveAIModels}
-                            onSelect={(model) => handleSelectModel(model, 'ai')}
-                            isModelSelected={(model) => isModelSelected(model, 'ai')}
+                            onSelect={(model, index) => handleSelectModel(model, 'ai', index)}
+                            isModelSelected={(model, index) => isModelSelected(model, 'ai', index)}
                             canEdit={canEdit}
                             onDelete={handleDeleteModel}
                         />
@@ -835,8 +913,8 @@ function AIModelsTab({
                                             key={`existing-${index}`}
                                             onClick={() => canEdit && toggleTempSelection(imageUrl)}
                                             className={`group relative border-2 rounded-lg overflow-hidden transition-all cursor-pointer ${isSelected
-                                                ? 'border-amber-400 shadow-lg'
-                                                : 'border-border hover:border-amber-400/50'
+                                                ? 'border-gold-solid shadow-lg ring-2 ring-gold-solid ring-offset-1'
+                                                : 'border-border hover:border-gold-solid/50'
                                                 }`}
                                         >
                                             {/* Image */}
@@ -853,7 +931,7 @@ function AIModelsTab({
 
                                             {/* Selected checkmark */}
                                             {isSelected && (
-                                                <div className="absolute top-2 right-2 bg-amber-400 rounded-full p-1 shadow-md z-10">
+                                                <div className="absolute top-2 right-2 bg-gold-solid rounded-full p-1 shadow-md z-10">
                                                     <CheckCircle className="w-4 h-4 text-white" />
                                                 </div>
                                             )}
@@ -887,7 +965,7 @@ function AIModelsTab({
                                                         e.stopPropagation()
                                                         openImageViewer([{ localPath: localSrc, url: cloudSrc, label: `Existing Model ${index + 1}` }])
                                                     }}
-                                                    className="bg-card hover:bg-muted text-amber-500 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
+                                                    className="bg-card hover:bg-muted text-gold-solid px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
                                                 >
                                                     <Eye className="w-3.5 h-3.5" />
                                                     View
@@ -898,7 +976,7 @@ function AIModelsTab({
                                                             e.stopPropagation()
                                                             toggleTempSelection(imageUrl)
                                                         }}
-                                                        className="bg-amber-400 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
+                                                        className="bg-gold-solid hover:brightness-110 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
                                                     >
                                                         <CheckCircle className="w-3.5 h-3.5" />
                                                         {isSelected ? 'Deselect' : 'Select'}
@@ -936,8 +1014,8 @@ function AIModelsTab({
                                         key={`new-${index}`}
                                         onClick={() => canEdit && toggleTempSelection(imageUrl)}
                                         className={`group relative border-2 rounded-lg overflow-hidden transition-all cursor-pointer ${isSelected
-                                            ? 'border-amber-400 shadow-lg'
-                                            : 'border-border hover:border-amber-400/50'
+                                            ? 'border-gold-solid shadow-lg ring-2 ring-gold-solid ring-offset-1'
+                                            : 'border-border hover:border-gold-solid/50'
                                             }`}
                                     >
                                         <SmartImage
@@ -947,10 +1025,10 @@ function AIModelsTab({
                                             height={100}
                                             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                             alt={`New Model ${index + 1}`}
-                                            className="w-full h-40 object-cover"
+                                            className="w-full h-40 object-cover group-hover:scale-[1.03] transition-transform duration-300"
                                         />
                                         {isSelected && (
-                                            <div className="absolute top-2 right-2 bg-amber-400 rounded-full p-1 z-10 shadow-md">
+                                            <div className="absolute top-2 right-2 bg-gold-solid rounded-full p-1 z-10 shadow-md">
                                                 <CheckCircle className="w-4 h-4 text-white" />
                                             </div>
                                         )}
@@ -964,7 +1042,7 @@ function AIModelsTab({
                                                     e.stopPropagation()
                                                     openImageViewer([{ localPath: localSrc, url: cloudSrc, label: `New Model ${index + 1}` }])
                                                 }}
-                                                className="bg-card hover:bg-muted text-amber-500 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
+                                                className="bg-card hover:bg-muted text-gold-solid px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
                                             >
                                                 <Eye className="w-3.5 h-3.5" />
                                                 View
@@ -975,7 +1053,7 @@ function AIModelsTab({
                                                         e.stopPropagation()
                                                         toggleTempSelection(imageUrl)
                                                     }}
-                                                    className="bg-amber-400 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
+                                                    className="bg-gold-solid hover:brightness-110 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
                                                 >
                                                     <CheckCircle className="w-3.5 h-3.5" />
                                                     {isSelected ? 'Deselect' : 'Select'}
@@ -1006,16 +1084,15 @@ function AIModelsTab({
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {aiModels.map((model, index) => {
                             const { src: localSrc, fallbackSrc: cloudSrc } = pickLocalAndCloud(model)
-                            const selected = isModelSelected(model)
-                            console.log("selected ai model : ", selected)
+                            const selected = isModelSelected(model, index)
 
                             return (
                                 <div
-                                    key={index}
-                                    onClick={() => canEdit && onSelect(model)}
+                                    key={`ai-saved-${index}-${model.cloud || model.local || index}`}
+                                    onClick={() => canEdit && onSelect(model, index)}
                                     className={`group relative border-2 rounded-lg overflow-hidden transition-all cursor-pointer ${selected
-                                        ? 'border-amber-400 shadow-lg ring-2 ring-amber-400 ring-offset-1'
-                                        : 'border-border hover:border-amber-400/50'
+                                        ? 'border-gold-solid shadow-lg ring-2 ring-gold-solid ring-offset-1'
+                                        : 'border-border hover:border-gold-solid/50'
                                         }`}
                                 >
                                     <SmartImage
@@ -1026,21 +1103,21 @@ function AIModelsTab({
                                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                         priority={index === 0}
                                         alt={`AI Model ${index + 1}`}
-                                        className="w-full h-40 object-cover"
+                                        className="w-full h-40 object-cover group-hover:scale-[1.03] transition-transform duration-300"
                                     />
                                     {selected && (
-                                        <div className="absolute top-2 right-2 bg-amber-400 rounded-full p-1 shadow-md z-10">
+                                        <div className="absolute top-2 right-2 bg-gold-solid rounded-full p-1 shadow-md z-10">
                                             <CheckCircle className="w-4 h-4 text-white" />
                                         </div>
                                     )}
-                                    {/* Hover overlay with View and Select buttons */}
+                                    {/* Hover overlay with View and Select/Deselect buttons */}
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation()
                                                 openImageViewer([{ localPath: localSrc, url: cloudSrc, label: `AI Model ${index + 1}` }])
                                             }}
-                                            className="bg-card hover:bg-muted text-amber-500 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
+                                            className="bg-card hover:bg-muted text-gold-solid px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
                                         >
                                             <Eye className="w-3.5 h-3.5" />
                                             View
@@ -1049,12 +1126,12 @@ function AIModelsTab({
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation()
-                                                    onSelect(model)
+                                                    onSelect(model, index)
                                                 }}
-                                                className="bg-amber-400 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
+                                                className="bg-gold-solid hover:brightness-110 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
                                             >
                                                 <CheckCircle className="w-3.5 h-3.5" />
-                                                Select
+                                                {selected ? 'Deselect' : 'Select'}
                                             </button>
                                         )}
                                     </div>
@@ -1184,16 +1261,16 @@ function RealModelsTab({
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {realModels.map((model, index) => {
                             const { src: localSrc, fallbackSrc: cloudSrc } = pickLocalAndCloud(model)
-                            const selected = isModelSelected(model)
+                            const selected = isModelSelected(model, index)
 
                             return (
                                 <div
-                                    key={index}
+                                    key={`real-${index}-${model.cloud || model.local || index}`}
                                     className={`group relative border-2 rounded-lg overflow-hidden transition-all cursor-pointer ${selected
                                         ? 'border-gold-solid shadow-lg ring-2 ring-gold-solid ring-offset-1'
                                         : 'border-border hover:border-gold-solid/50'
                                         }`}
-                                    onClick={() => canEdit && onSelect(model)}
+                                    onClick={() => canEdit && onSelect(model, index)}
                                 >
                                     {/* Model image */}
                                     <SmartImage
@@ -1228,8 +1305,8 @@ function RealModelsTab({
                                         </button>
                                     )}
 
-                                    {/* Hover overlay with View button */}
-                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    {/* Hover overlay with View and Select/Deselect */}
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation()
@@ -1240,6 +1317,18 @@ function RealModelsTab({
                                             <Eye className="w-3.5 h-3.5" />
                                             View
                                         </button>
+                                        {canEdit && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    onSelect(model, index)
+                                                }}
+                                                className="bg-gold-solid hover:brightness-110 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all hover:scale-105"
+                                            >
+                                                <CheckCircle className="w-3.5 h-3.5" />
+                                                {selected ? 'Deselect' : 'Select'}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             )

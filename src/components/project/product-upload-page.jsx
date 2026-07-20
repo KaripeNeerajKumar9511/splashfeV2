@@ -61,8 +61,9 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
     })
 
     const item = collectionData?.items?.[0]
+    // Must be an explicitly selected model with a usable path — uploads alone do not count
     const hasModelSelected = Boolean(
-        item?.selected_model || (item?.uploaded_models && item.uploaded_models.length > 0)
+        item?.selected_model?.local || item?.selected_model?.cloud
     )
     const modelRequiredTypes = new Set(["model", "campaign"])
 

@@ -49,14 +49,16 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
     const { token } = useAuth()
     const { setIsGenerating } = useImageGeneration()
     
-    // Get the selected model from backend
+    // Get the selected model from backend (empty {} is not a selection)
     useEffect(() => {
         const loadSelectedModel = async () => {
             if (collectionData?.id) {
                 try {
                     const response = await apiService.getAllModels(collectionData.id, token)
-                    if (response.success && response.selected_model) {
-                        setSelectedModel(response.selected_model.local || response.selected_model.cloud)
+                    const sm = response?.selected_model
+                    const path = sm?.local || sm?.cloud || null
+                    if (response.success && path) {
+                        setSelectedModel(path)
                     } else {
                         setSelectedModel(null)
                     }
@@ -237,7 +239,7 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
     }
 
     const hasProducts = collectionData?.items?.[0]?.product_images?.length > 0
-    const hasModelSelected = selectedModel !== null
+    const hasModelSelected = Boolean(selectedModel)
 
     const totalSelectedImages = useMemo(() => {
         if (!selections || Object.keys(selections).length === 0) return null

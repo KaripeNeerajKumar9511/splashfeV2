@@ -28,6 +28,7 @@ export const PRICING_PLANS = [
     name: "Starter",
     description: "Perfect for small jewelry brands & startups.",
     price: 4999,
+    priceUsd: 59,
     currency: "INR",
     billingCycle: "month",
     credits: 100,
@@ -43,6 +44,7 @@ export const PRICING_PLANS = [
     name: "Growth",
     description: "Ideal for growing jewelry brands.",
     price: 13999,
+    priceUsd: 169,
     currency: "INR",
     billingCycle: "month",
     credits: 300,
@@ -87,8 +89,15 @@ export function getPlanById(planId) {
   return PRICING_PLANS.find((p) => p.id === planId) || null;
 }
 
-export function formatPlanPrice(plan) {
+export function formatPlanPrice(plan, currency = "INR") {
   if (plan.priceDisplay) return plan.priceDisplay;
-  const symbol = plan.currency === "INR" ? "₹" : "$";
-  return `${symbol}${plan.price.toLocaleString("en-IN")}`;
+  const code = String(currency || plan.currency || "INR").toUpperCase();
+  if (code === "USD") {
+    const usd = Number(plan.priceUsd ?? plan.price_usd ?? 0) || 0;
+    return `$${usd.toLocaleString("en-US", {
+      minimumFractionDigits: Number.isInteger(usd) ? 0 : 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
+  return `₹${Number(plan.price || 0).toLocaleString("en-IN")}`;
 }

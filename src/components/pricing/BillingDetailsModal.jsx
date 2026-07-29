@@ -3,12 +3,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, X } from "lucide-react";
 import { getPlanById, formatPlanPrice } from "@/lib/pricingPlans";
-import { getPlanFromList, formatDynamicPlanPrice } from "@/lib/pricingApi";
+import { formatDynamicPlanPrice } from "@/lib/pricingApi";
 import {
   EMPTY_BILLING_DETAILS,
   computeBillingTax,
   formatBillingAddressPayload,
 } from "@/lib/billingTax";
+import {
+  formatMoneyAmount,
+  getPlanNumericPrice,
+  normalizePricingCurrency,
+} from "@/lib/pricingCurrency";
 
 const inputClass =
   "w-full bg-[#1a1814] border border-[rgba(201,168,76,0.2)] rounded-lg px-3 py-2.5 text-sm text-[#F2EDD8] placeholder:text-[rgba(242,237,216,0.35)] focus:outline-none focus:ring-2 focus:ring-[rgba(201,168,76,0.35)]";
@@ -19,6 +24,7 @@ export default function BillingDetailsModal({
   planId,
   plan: planProp,
   taxConfig = null,
+  currency = "INR",
   organizationName = "",
   showOrganizationField = false,
   defaultEmail = "",
@@ -31,6 +37,7 @@ export default function BillingDetailsModal({
     [planProp, planId]
   );
   const [details, setDetails] = useState({ ...EMPTY_BILLING_DETAILS });
+  const activeCurrency = normalizePricingCurrency(currency);
 
   useEffect(() => {
     if (!open) return;
@@ -44,12 +51,13 @@ export default function BillingDetailsModal({
 
   if (!open || !plan) return null;
 
-  const baseAmount = plan.price || 0;
-  const tax = computeBillingTax(baseAmount, details, taxConfig);
+  const baseAmount = getPlanNumericPrice(plan, activeCurrency);
+  const tax = computeBillingTax(baseAmount, details, taxConfig, activeCurrency);
   const priceLabel = plan.priceDisplay || plan.db_id
-    ? formatDynamicPlanPrice(plan)
-    : formatPlanPrice(plan);
+    ? formatDynamicPlanPrice(plan, activeCurrency)
+    : formatPlanPrice(plan, activeCurrency);
   const payload = formatBillingAddressPayload(details);
+  const money = (value) => formatMoneyAmount(value, activeCurrency);
 
   const update = (key, value) => setDetails((p) => ({ ...p, [key]: value }));
 
@@ -90,23 +98,23 @@ export default function BillingDetailsModal({
             <div className="border-t border-[rgba(255,255,255,0.07)] mt-3 pt-3 space-y-1">
               <div className="flex justify-between text-[rgba(242,237,216,0.65)]">
                 <span>Subtotal</span>
-                <span>₹{baseAmount.toLocaleString("en-IN")}</span>
+                <span>{money(baseAmount)}</span>
               </div>
               {tax.taxable && !tax.isTelangana && (
                 <div className="flex justify-between text-[rgba(242,237,216,0.65)]">
                   <span>GST ({tax.taxRate}%)</span>
-                  <span>₹{tax.taxAmount.toFixed(2)}</span>
+                  <span>{money(tax.taxAmount)}</span>
                 </div>
               )}
               {tax.isTelangana && (
                 <>
                   <div className="flex justify-between text-[rgba(242,237,216,0.65)]">
                     <span>CGST ({tax.cgstRate}%)</span>
-                    <span>₹{tax.cgstAmount.toFixed(2)}</span>
+                    <span>{money(tax.cgstAmount)}</span>
                   </div>
                   <div className="flex justify-between text-[rgba(242,237,216,0.65)]">
                     <span>SGST ({tax.sgstRate}%)</span>
-                    <span>₹{tax.sgstAmount.toFixed(2)}</span>
+                    <span>{money(tax.sgstAmount)}</span>
                   </div>
                   <div className="flex justify-between text-[rgba(242,237,216,0.5)] text-xs">
                     <span>Total tax</span>
@@ -116,7 +124,7 @@ export default function BillingDetailsModal({
               )}
               <div className="flex justify-between font-semibold text-[#F2EDD8] pt-1">
                 <span>Total payable</span>
-                <span>₹{tax.totalAmount.toFixed(2)}</span>
+                <span>{money(tax.totalAmount)}</span>
               </div>
             </div>
           </div>
@@ -134,18 +142,24 @@ export default function BillingDetailsModal({
 
           <div>
             <label className="block text-xs font-medium text-[rgba(242,237,216,0.75)] mb-1">Billing address</label>
-            <p className="text-[10px] text-[rgba(242,237,216,0.45)] mb-2">Enter India for GST. Telangana state shows CGST + SGST.</p>
+            <p className="text-[10px] text-[rgba(242,237,216,0.45)] mb-2">
+              {activeCurrency === "INR"
+                ? "Enter India for GST. Telangana state shows CGST + SGST."
+                : "USD checkout has no GST. Address is used for billing only."}
+            </p>
           </div>
 
-          <Field label="Country *" value={details.billing_country} onChange={(v) => update("billing_country", v)} placeholder="India" />
+          <Field label="Country *" value={details.billing_country} onChange={(v) => update("billing_country", v)} placeholder={activeCurrency === "INR" ? "India" : "United States"} />
           <Field label="Address line 1 *" value={details.billing_address_line1} onChange={(v) => update("billing_address_line1", v)} />
           <Field label="Address line 2" value={details.billing_address_line2} onChange={(v) => update("billing_address_line2", v)} />
           <div className="grid grid-cols-2 gap-3">
             <Field label="City *" value={details.billing_city} onChange={(v) => update("billing_city", v)} />
             <Field label="PIN *" value={details.billing_pin} onChange={(v) => update("billing_pin", v)} />
           </div>
-          <Field label="State *" value={details.billing_state} onChange={(v) => update("billing_state", v)} placeholder="Telangana" />
-          <Field label="GST number (optional)" value={details.billing_gst_number} onChange={(v) => update("billing_gst_number", v)} />
+          <Field label="State *" value={details.billing_state} onChange={(v) => update("billing_state", v)} placeholder={activeCurrency === "INR" ? "Telangana" : "State / Province"} />
+          {activeCurrency === "INR" && (
+            <Field label="GST number (optional)" value={details.billing_gst_number} onChange={(v) => update("billing_gst_number", v)} />
+          )}
 
           <div className="flex gap-3 pt-2">
             <button

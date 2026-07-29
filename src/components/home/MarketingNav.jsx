@@ -114,7 +114,7 @@ export default function MarketingNav({ isHome = false }) {
           id="marketing-nav-menu"
           className={`nav-r ${menuOpen ? "open" : ""}`}
           aria-hidden={mobileNav && !menuOpen ? true : undefined}
-          {...(mobileNav && !menuOpen ? { inert: "" } : {})}
+          inert={mobileNav && !menuOpen ? true : undefined}
         >
           {NAV_LINKS.map((link) => (
             <a key={link.hash || link.href} href={sectionHref(link)} onClick={closeMenu}>

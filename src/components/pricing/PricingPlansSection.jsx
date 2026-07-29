@@ -16,6 +16,12 @@ import {
 } from "@/lib/billingAccess";
 import { redirectToOrgPayments } from "@/lib/portalSwitch";
 import { DASHBOARD_CONTACT_PATH, PUBLIC_CONTACT_PATH } from "@/lib/contactPaths";
+import {
+  PRICING_CURRENCIES,
+  normalizePricingCurrency,
+  resolveInitialPricingCurrency,
+  setStoredPricingCurrency,
+} from "@/lib/pricingCurrency";
 
 const ICON_PROPS = { size: 20, strokeWidth: 1.5, color: "#C9A84C" };
 
@@ -157,6 +163,23 @@ const PRICING_CSS = `
   font-family:'DM Sans',sans-serif;font-size:clamp(12px,1.4vw,13px);font-weight:300;
   color:var(--t2);max-width:460px;margin:0 auto;line-height:1.55;
 }
+.pricing-currency-toggle{
+  display:inline-flex;align-items:center;gap:2px;margin:0 auto 1.15rem;
+  padding:3px;border-radius:999px;border:.5px solid var(--gold-b);
+  background:rgba(201,168,76,0.06);
+}
+.pricing-section--embedded .pricing-currency-toggle,
+.pricing-section--cards-only .pricing-currency-toggle,
+.pricing-section--dashboard .pricing-currency-toggle{
+  display:inline-flex;margin:0 0 1rem;
+}
+.pricing-currency-btn{
+  font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:500;letter-spacing:.06em;
+  padding:.45rem .95rem;border:0;border-radius:999px;cursor:pointer;
+  background:transparent;color:var(--t2);transition:background .2s,color .2s;
+}
+.pricing-currency-btn.is-active{background:var(--gold);color:var(--d1)}
+.pricing-currency-btn:hover:not(.is-active){color:var(--t1)}
 .pricing-grid{
   display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
   max-width:980px;margin:0 auto;text-align:left;align-items:stretch;
@@ -248,7 +271,7 @@ const PRICING_CSS = `
 .pricing-btn.solid{background:var(--gold);color:var(--d1);border:.5px solid var(--gold)}
 @media(max-width:768px){
   .pricing-grid{grid-template-columns:1fr;max-width:360px;gap:16px}
-  .pricing-card.featured{transform:none;order:-1}
+  .pricing-card.featured{transform:none}
 }
 `;
 
@@ -261,11 +284,40 @@ export default function PricingPlansSection({
   dashboard = false,
   onPlanSelect,
   plans: plansProp,
+  currency: currencyProp,
+  onCurrencyChange,
+  initialCurrency,
 }) {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const [plans, setPlans] = useState(plansProp || []);
   const [loading, setLoading] = useState(!plansProp?.length);
+  const [currency, setCurrency] = useState(() =>
+    normalizePricingCurrency(currencyProp || initialCurrency || "USD")
+  );
+  const [currencyReady, setCurrencyReady] = useState(
+    Boolean(currencyProp || initialCurrency)
+  );
+
+  useEffect(() => {
+    if (currencyProp) {
+      setCurrency(normalizePricingCurrency(currencyProp));
+      setCurrencyReady(true);
+    }
+  }, [currencyProp]);
+
+  useEffect(() => {
+    if (currencyProp) return undefined;
+    let active = true;
+    resolveInitialPricingCurrency(initialCurrency).then((code) => {
+      if (!active) return;
+      setCurrency(code);
+      setCurrencyReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [currencyProp, initialCurrency]);
 
   useEffect(() => {
     if (plansProp?.length) {
@@ -286,6 +338,13 @@ export default function PricingPlansSection({
     if (!dashboard) return plans;
     return plans.filter((plan) => !isFreePlan(plan));
   }, [plans, dashboard]);
+
+  const handleCurrencyChange = (next) => {
+    const code = normalizePricingCurrency(next);
+    setCurrency(code);
+    setStoredPricingCurrency(code);
+    onCurrencyChange?.(code);
+  };
 
   const resolvePlanCtaHref = (plan) => {
     const href = plan.ctaHref || PUBLIC_CONTACT_PATH;
@@ -309,16 +368,16 @@ export default function PricingPlansSection({
     }
 
     if (onPlanSelect) {
-      onPlanSelect(plan.id);
+      onPlanSelect(plan.id, currency);
       return;
     }
 
     if (!isAuthenticated) {
-      router.push(buildSignupRedirect(plan.id));
+      router.push(buildSignupRedirect(plan.id, currency));
       return;
     }
 
-    const dest = resolveBillingDestination(user, plan.id);
+    const dest = resolveBillingDestination(user, plan.id, currency);
     if (dest.type === "org_owner") {
       redirectToOrgPayments(plan.id);
       return;
@@ -343,13 +402,29 @@ export default function PricingPlansSection({
     .filter(Boolean)
     .join(" ");
 
-  if (loading) {
+  if (loading || !currencyReady) {
     return (
       <div className="flex justify-center py-16">
         <div className="w-8 h-8 border-2 border-gold-solid border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
+
+  const currencyToggle = (
+    <div className="pricing-currency-toggle" aria-label="Pricing currency">
+      {PRICING_CURRENCIES.map((code) => (
+        <button
+          key={code}
+          type="button"
+          className={`pricing-currency-btn${currency === code ? " is-active" : ""}`}
+          aria-pressed={currency === code}
+          onClick={() => handleCurrencyChange(code)}
+        >
+          {code}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <section className={sectionClass} id={cardsOnly ? undefined : "pricing"}>
@@ -371,6 +446,8 @@ export default function PricingPlansSection({
         </div>
       )}
 
+      {currencyToggle}
+
       <div className="pricing-grid">
         {visiblePlans.map((plan) => (
           <div key={plan.id} className={`pricing-card${plan.featured ? " featured" : ""}`}>
@@ -381,8 +458,8 @@ export default function PricingPlansSection({
             <h3 className="pricing-name">{plan.name}</h3>
             <p className="pricing-desc">{plan.description}</p>
             <div className="pricing-amount">
-              <span className="pricing-amount-value">{getPlanAmountDisplay(plan)}</span>
-              {shouldShowBillingCycle(plan) && (
+              <span className="pricing-amount-value">{getPlanAmountDisplay(plan, currency)}</span>
+              {shouldShowBillingCycle(plan, currency) && (
                 <span className="pricing-amount-cycle">/{plan.billingCycle}</span>
               )}
             </div>

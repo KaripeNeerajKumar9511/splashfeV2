@@ -1,4 +1,5 @@
 import { BILLING_PAGE } from "@/lib/pricingPlans";
+import { normalizePricingCurrency } from "@/lib/pricingCurrency";
 
 export function userBelongsToOrganization(user) {
   if (!user) return false;
@@ -27,23 +28,24 @@ export function isOrganizationOwner(user) {
   return user?.organization_role === "owner";
 }
 
-export function buildBillingPath(planId = "starter") {
-  return `${BILLING_PAGE}?plan=${planId}`;
+export function buildBillingPath(planId = "starter", currency = "INR") {
+  const code = normalizePricingCurrency(currency);
+  return `${BILLING_PAGE}?plan=${planId}&currency=${code}`;
 }
 
-export function buildSignupRedirect(planId = "starter") {
-  return `/signup?redirect=${encodeURIComponent(buildBillingPath(planId))}`;
+export function buildSignupRedirect(planId = "starter", currency = "INR") {
+  return `/signup?redirect=${encodeURIComponent(buildBillingPath(planId, currency))}`;
 }
 
 /**
  * Where to send user after auth when pursuing a plan purchase.
  */
-export function resolveBillingDestination(user, planId = "starter") {
+export function resolveBillingDestination(user, planId = "starter", currency = "INR") {
   if (!userBelongsToOrganization(user)) {
-    return { type: "individual", path: buildBillingPath(planId) };
+    return { type: "individual", path: buildBillingPath(planId, currency) };
   }
   if (isOrganizationOwner(user)) {
-    return { type: "org_owner", planId };
+    return { type: "org_owner", planId, currency: normalizePricingCurrency(currency) };
   }
   return { type: "org_member", blocked: true };
 }

@@ -15,6 +15,12 @@ import {
 import { redirectToOrgPayments } from "@/lib/portalSwitch";
 import { getPlanById } from "@/lib/pricingPlans";
 import { fetchPricingData, getPlanFromList } from "@/lib/pricingApi";
+import {
+  getPlanNumericPrice,
+  normalizePricingCurrency,
+  resolveInitialPricingCurrency,
+  setStoredPricingCurrency,
+} from "@/lib/pricingCurrency";
 import toast from "react-hot-toast";
 
 function OrgMemberBlocked({ orgName, ownerEmail }) {
@@ -47,7 +53,12 @@ function BillingPageContent() {
   const { user, token } = useAuth();
 
   const initialPlan = searchParams.get("plan") || "starter";
+  const initialCurrencyParam = searchParams.get("currency");
   const [selectedPlanId, setSelectedPlanId] = useState(initialPlan);
+  const [currency, setCurrency] = useState(() =>
+    normalizePricingCurrency(initialCurrencyParam || "USD")
+  );
+  const [currencyReady, setCurrencyReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [accessType, setAccessType] = useState("individual");
   const [orgName, setOrgName] = useState("");
@@ -68,6 +79,18 @@ function BillingPageContent() {
   }, []);
 
   useEffect(() => {
+    let active = true;
+    resolveInitialPricingCurrency(initialCurrencyParam).then((code) => {
+      if (!active) return;
+      setCurrency(code);
+      setCurrencyReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [initialCurrencyParam]);
+
+  useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.onload = () => setRazorpayLoaded(true);
@@ -80,7 +103,12 @@ function BillingPageContent() {
 
   useEffect(() => {
     if (!token || !user) {
-      router.replace(buildSignupRedirect(initialPlan));
+      router.replace(
+        buildSignupRedirect(
+          initialPlan,
+          initialCurrencyParam || currency
+        )
+      );
       return;
     }
 
@@ -135,13 +163,29 @@ function BillingPageContent() {
     [pricingPlans]
   );
 
-  const handlePlanSelect = useCallback((planId) => {
+  const handlePlanSelect = useCallback((planId, selectedCurrency) => {
     const plan = resolvePlan(planId);
     if (!plan || plan.ctaHref) return;
+    const code = normalizePricingCurrency(selectedCurrency || currency);
     setSelectedPlanId(planId);
-    router.replace(`/dashboard/my-account/billing?plan=${planId}`, { scroll: false });
+    setCurrency(code);
+    setStoredPricingCurrency(code);
+    router.replace(
+      `/dashboard/my-account/billing?plan=${planId}&currency=${code}`,
+      { scroll: false }
+    );
     setModalOpen(true);
-  }, [router, resolvePlan]);
+  }, [router, resolvePlan, currency]);
+
+  const handleCurrencyChange = useCallback((code) => {
+    const next = normalizePricingCurrency(code);
+    setCurrency(next);
+    setStoredPricingCurrency(next);
+    router.replace(
+      `/dashboard/my-account/billing?plan=${selectedPlanId}&currency=${next}`,
+      { scroll: false }
+    );
+  }, [router, selectedPlanId]);
 
   const handleProceedToPay = async (billingDetails, tax) => {
     const plan = resolvePlan(selectedPlanId);
@@ -150,12 +194,21 @@ function BillingPageContent() {
       return;
     }
 
+    const payCurrency = normalizePricingCurrency(currency);
+    const amount = getPlanNumericPrice(plan, payCurrency);
+    if (!amount) {
+      toast.error("Price is not available for this currency.");
+      return;
+    }
+
     setProcessingPayment(true);
     try {
       const orderData = await apiService.createRazorpayOrder(token, {
-        amount: plan.price,
+        amount,
         credits: plan.creditsNumeric ?? plan.credits,
+        planId: plan.db_id || null,
         planSlug: plan.id,
+        currency: payCurrency,
         billingDetails: {
           ...billingDetails,
           tax_rate: tax.taxRate,
@@ -170,10 +223,11 @@ function BillingPageContent() {
         throw new Error(orderData.error || "Failed to create order");
       }
 
+      const checkoutCurrency = orderData.currency || payCurrency;
       const options = {
         key: orderData.key_id,
-        amount: (orderData.total_amount || tax.totalAmount) * 100,
-        currency: "INR",
+        amount: Math.round((orderData.total_amount || tax.totalAmount) * 100),
+        currency: checkoutCurrency,
         name: "Splash AI Studio",
         description: `Subscribe to ${plan.name} plan`,
         order_id: orderData.order_id,
@@ -227,7 +281,7 @@ function BillingPageContent() {
     }
   };
 
-  if (loading) {
+  if (loading || !currencyReady) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-gold-solid" />
@@ -259,6 +313,8 @@ function BillingPageContent() {
         showHeader={false}
         dashboard
         plans={pricingPlans}
+        currency={currency}
+        onCurrencyChange={handleCurrencyChange}
         onPlanSelect={handlePlanSelect}
       />
 
@@ -268,6 +324,7 @@ function BillingPageContent() {
         planId={selectedPlanId}
         plan={resolvePlan(selectedPlanId)}
         taxConfig={taxConfig}
+        currency={currency}
         defaultEmail={profile?.email || user?.email || ""}
         defaultName={profile?.full_name || profile?.username || ""}
         processing={processingPayment}

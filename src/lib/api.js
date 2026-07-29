@@ -1607,12 +1607,13 @@ class ApiService {
     }
 
     // Razorpay payment endpoints
-    async createRazorpayOrder(token, { amount, credits, planId = null, planSlug = null, organizationId = null, billingDetails = {} }) {
+    async createRazorpayOrder(token, { amount, credits, planId = null, planSlug = null, organizationId = null, currency = "INR", billingDetails = {} }) {
         const body = {
             amount,
             credits,
             plan_id: planId,
             plan_slug: planSlug,
+            currency,
             ...billingDetails,
         };
         if (organizationId) {

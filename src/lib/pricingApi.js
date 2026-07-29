@@ -1,6 +1,11 @@
-import { PRICING_PLANS, PRICING_FOOTER_NOTE, formatPlanPrice } from "@/lib/pricingPlans";
+import { PRICING_PLANS, PRICING_FOOTER_NOTE } from "@/lib/pricingPlans";
+import {
+  formatMoneyAmount,
+  getPlanNumericPrice,
+  normalizePricingCurrency,
+} from "@/lib/pricingCurrency";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
 let cachedPricing = null;
 let cacheTime = 0;
@@ -21,6 +26,7 @@ export function normalizePlanFromApi(plan) {
     name: plan.name,
     description: plan.description || "",
     price: plan.price ?? null,
+    priceUsd: plan.priceUsd ?? plan.price_usd ?? null,
     priceDisplay: plan.priceDisplay,
     currency: plan.currency || "INR",
     billingCycle: plan.billingCycle || "month",
@@ -48,7 +54,7 @@ export async function fetchPricingData({ force = false } = {}) {
 
   try {
     const res = await fetch(`${API_BASE}/api/plans/pricing/`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
     if (!res.ok) throw new Error("Failed to fetch pricing");
     const data = await res.json();
@@ -78,21 +84,23 @@ export function getPlanFromList(plans, planId) {
   return plans.find((p) => p.id === planId || p.slug === planId) || null;
 }
 
-export function formatDynamicPlanPrice(plan) {
+export function formatDynamicPlanPrice(plan, currency = "INR") {
   if (plan.priceDisplay) return plan.priceDisplay;
-  if (!plan.price && plan.price !== 0) return "Custom Pricing";
-  const symbol = plan.currency === "INR" ? "₹" : "$";
-  return `${symbol}${Number(plan.price).toLocaleString("en-IN")}`;
+  const code = normalizePricingCurrency(currency);
+  const amount = getPlanNumericPrice(plan, code);
+  if (!amount) return "Custom Pricing";
+  return formatMoneyAmount(amount, code);
 }
 
-export function getPlanAmountDisplay(plan) {
+export function getPlanAmountDisplay(plan, currency = "INR") {
   if (!plan) return "";
   if (plan.priceDisplay) return plan.priceDisplay;
-  if (plan.price === 0 || plan.price == null) return "";
-  if (plan.priceDisplay !== undefined || plan.db_id) {
-    return formatDynamicPlanPrice(plan);
-  }
-  return formatPlanPrice(plan);
+  if (plan.price === 0) return "";
+
+  const code = normalizePricingCurrency(currency);
+  const amount = getPlanNumericPrice(plan, code);
+  if (!amount) return "";
+  return formatMoneyAmount(amount, code);
 }
 
 export function getPlanCreditsDisplay(plan) {
@@ -110,9 +118,12 @@ export function getPlanCreditsDisplay(plan) {
   return `${creditsStr} ${label}`;
 }
 
-export function shouldShowBillingCycle(plan) {
+export function shouldShowBillingCycle(plan, currency = "INR") {
   if (!plan?.billingCycle) return false;
-  if (plan.price === 0 || plan.price == null) return false;
-  if (plan.priceDisplay && !plan.price) return false;
+  if (plan.priceDisplay && !plan.price && !plan.priceUsd) return false;
+  const amount = getPlanNumericPrice(plan, currency);
+  if (plan.price === 0) return false;
+  if (!amount && plan.price == null) return false;
+  if (normalizePricingCurrency(currency) === "USD" && !amount) return false;
   return true;
 }

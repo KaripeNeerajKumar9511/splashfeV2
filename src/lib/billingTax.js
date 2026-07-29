@@ -1,8 +1,11 @@
 /**
  * Tax rules (rates from admin tax_config when provided):
+ * - USD checkout → no GST
  * - Address/country in gst_enabled_countries → GST at tax_rate
  * - State matches home_state → CGST + SGST split
  */
+import { normalizePricingCurrency } from "@/lib/pricingCurrency";
+
 export function isIndiaBilling(details, taxConfig = null) {
   const countries = (taxConfig?.gst_enabled_countries || ["India"]).map((c) =>
     String(c).toLowerCase()
@@ -29,8 +32,22 @@ export function isTelanganaState(details, taxConfig = null) {
   return state.includes(homeState) || homeState.includes(state);
 }
 
-export function computeBillingTax(baseAmount, details, taxConfig = null) {
+export function computeBillingTax(baseAmount, details, taxConfig = null, currency = "INR") {
   const amount = Number(baseAmount) || 0;
+  if (normalizePricingCurrency(currency) === "USD") {
+    return {
+      taxable: false,
+      taxRate: 0,
+      taxAmount: 0,
+      cgstRate: 0,
+      sgstRate: 0,
+      cgstAmount: 0,
+      sgstAmount: 0,
+      totalAmount: amount,
+      isTelangana: false,
+    };
+  }
+
   if (!isIndiaBilling(details, taxConfig)) {
     return {
       taxable: false,

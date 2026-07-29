@@ -334,77 +334,77 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   }
 }
 
-/* Tablet portrait — wireframe grid, all images visible in one screen */
+/* Tablet portrait — scrollable mosaic (not locked to one viewport) */
 @media(min-width:768px) and (max-width:1024px) and (orientation:portrait){
   .showcase{
-    min-height:calc(100dvh - var(--nav-h));
-    max-height:calc(100dvh - var(--nav-h));
-    padding:1rem 1.25rem 1rem;
-    display:flex;
-    flex-direction:column;
-    overflow:hidden;
+    min-height:0;
+    max-height:none;
+    padding:2.25rem 1.5rem 2.5rem;
+    display:block;
+    overflow:visible;
     box-sizing:border-box;
   }
   .showcase .eye{
-    margin-bottom:.35rem;
+    margin-bottom:.55rem;
     font-size:10px;
   }
   .showcase .eye::before{width:20px}
   .showcase-hdr{
-    flex-shrink:0;
     flex-direction:row;
     align-items:center;
     justify-content:space-between;
     gap:.75rem;
-    margin-bottom:.65rem;
+    margin-bottom:1.25rem;
   }
   .showcase-hdr .st{
-    font-size:clamp(20px,3.2vw,26px);
+    font-size:clamp(24px,3.6vw,34px);
     margin-bottom:0;
     line-height:1.15;
   }
   .showcase-hdr .st br{display:none}
   .showcase-cta{
     margin-top:0;
-    padding:8px 14px;
+    padding:9px 16px;
     font-size:12px;
     white-space:nowrap;
+    width:auto;
   }
   .sc-grid{
-    flex:1;
-    min-height:0;
     display:grid;
-    grid-template-columns:2fr 1fr;
+    grid-template-columns:1.15fr 1fr;
     grid-template-areas:
-      "lifestyle lifestyle"
+      "product product"
       "campaign multipiece"
-      "campaign product"
+      "campaign lifestyle"
       "model model";
-    grid-template-rows:minmax(0,0.95fr) minmax(0,1.05fr) minmax(0,1.05fr) minmax(0,0.85fr);
-    gap:6px;
+    grid-template-rows:auto;
+    gap:12px;
+    min-height:0;
     width:100%;
   }
   .sc{
     width:100%;
-    height:100%;
+    height:auto;
     min-height:0;
-    border-radius:10px;
+    border-radius:12px;
   }
-  .sc-product{grid-area:lifestyle;aspect-ratio:unset}
-  .sc-campaign{grid-area:campaign;aspect-ratio:unset;align-self:stretch}
-  .sc-multipiece{grid-area:multipiece;aspect-ratio:unset}
-  .sc-lifestyle{grid-area:product;aspect-ratio:unset}
-  .sc-model{grid-area:model;aspect-ratio:unset}
+  .sc-product{grid-area:product;aspect-ratio:16/10}
+  .sc-campaign{grid-area:campaign;aspect-ratio:3/4}
+  .sc-multipiece{grid-area:multipiece;aspect-ratio:1/1}
+  .sc-lifestyle{grid-area:lifestyle;aspect-ratio:1/1}
+  .sc-model{grid-area:model;aspect-ratio:16/10}
   .sc-inner img{
-    object-fit:contain;
+    object-fit:cover;
     object-position:center;
   }
+  .sc-campaign .sc-inner img{object-position:center 18%}
+  .sc-model .sc-inner img{object-position:center 15%}
   .sc-lbl{
-    bottom:6px;
-    left:8px;
+    bottom:8px;
+    left:10px;
     font-size:9px;
-    letter-spacing:.08em;
-    padding:4px 8px;
+    letter-spacing:.1em;
+    padding:4px 9px;
     border-radius:5px;
     max-width:calc(100% - 16px);
   }

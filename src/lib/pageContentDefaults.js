@@ -204,11 +204,22 @@ export const HOME_PAGE_DEFAULTS = {
   footer: {
     logo_url: "/images/SplashLogoPNG.png",
     copyright: "© 2025 Splash AI Studio",
-    links: [
-      { label: "Instagram", href: "https://www.instagram.com/splash_ai_studios/" },
-      { label: "Privacy", href: "/privacy" },
-      { label: "Terms", href: "/terms" },
-      { label: "Contact", href: "/contact" },
+    link_rows: [
+      [
+        { label: "Instagram", href: "https://www.instagram.com/splash_ai_studios/" },
+        { label: "About", href: "/about" },
+        { label: "FAQ's", href: "/faqs" },
+      ],
+      [
+        { label: "Contact", href: "/contact" },
+        { label: "Vision & Mission", href: "/vision-mision" },
+        { label: "Pricing", href: "/pricing" },
+      ],
+      [
+        { label: "Privacy", href: "/privacy" },
+        { label: "Terms", href: "/terms" },
+        { label: "Security", href: "/security" },
+      ],
     ],
   },
 };
@@ -218,13 +229,30 @@ export const FOOTER_LOGO_PRESET = "/images/SplashLogoPNG.png";
 export const ORIGINAL_FOOTER_DEFAULTS = {
   logo_url: FOOTER_LOGO_PRESET,
   copyright: "© 2025 Splash AI Studio",
-  links: [
-    { label: "Instagram", href: "https://www.instagram.com/splash_ai_studios/" },
-    { label: "Privacy", href: "/privacy" },
-    { label: "Terms", href: "/terms" },
-    { label: "Contact", href: "/contact" },
+  link_rows: [
+    [
+      { label: "Instagram", href: "https://www.instagram.com/splash_ai_studios/" },
+      { label: "About", href: "/about" },
+      { label: "FAQ's", href: "/faqs" },
+    ],
+    [
+      { label: "Contact", href: "/contact" },
+      { label: "Vision & Mission", href: "/vision-mision" },
+      { label: "Pricing", href: "/pricing" },
+    ],
+    [
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
+      { label: "Security", href: "/security" },
+    ],
   ],
 };
+
+/** Flat list derived from link_rows (for consumers that still expect `links`). */
+export function flattenFooterLinkRows(linkRows) {
+  if (!Array.isArray(linkRows)) return [];
+  return linkRows.flat().filter((link) => link?.href && link?.label);
+}
 
 export const FAQS_PAGE_DEFAULTS = {
   header: {
@@ -303,14 +331,27 @@ function plainTitleToHtml(title) {
   return title.replace(/\n/g, "<br />");
 }
 
-function normalizeFooterLinks(footer) {
+function normalizeFooterLinkRows(footer) {
+  // Prefer admin/CMS link_rows whenever present
+  if (Array.isArray(footer?.link_rows) && footer.link_rows.length > 0) {
+    const rows = footer.link_rows
+      .map((row) =>
+        (Array.isArray(row) ? row : []).filter((link) => link?.href && link?.label)
+      )
+      .filter((row) => row.length > 0);
+    if (rows.length > 0) return rows;
+  }
+
+  // Legacy flat `links` array from CMS — chunk into rows of 3
   if (Array.isArray(footer?.links) && footer.links.length > 0) {
-    return footer.links;
+    const flat = footer.links.filter((link) => link?.href && link?.label);
+    if (flat.length >= 9) {
+      return [flat.slice(0, 3), flat.slice(3, 6), flat.slice(6, 9)];
+    }
+    // Older 4-link footers are incomplete — fall through to defaults
   }
-  if (footer?.links && typeof footer.links === "object") {
-    return ORIGINAL_FOOTER_DEFAULTS.links;
-  }
-  return ORIGINAL_FOOTER_DEFAULTS.links;
+
+  return ORIGINAL_FOOTER_DEFAULTS.link_rows;
 }
 
 function resolveFooter(footer) {
@@ -320,10 +361,13 @@ function resolveFooter(footer) {
     logo === "/images/logo-splash.png" ||
     logo === "/images/logo-Splash.png";
 
+  const link_rows = normalizeFooterLinkRows(footer);
+
   return {
     logo_url: usePresetLogo ? FOOTER_LOGO_PRESET : logo,
     copyright: footer?.copyright || ORIGINAL_FOOTER_DEFAULTS.copyright,
-    links: normalizeFooterLinks(footer),
+    link_rows,
+    links: flattenFooterLinkRows(link_rows),
   };
 }
 

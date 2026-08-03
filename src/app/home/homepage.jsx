@@ -8,6 +8,7 @@ import {
   Share2Icon,
 } from "lucide-react";
 import MarketingNav from "@/components/home/MarketingNav";
+import MarketingFooter from "@/components/home/MarketingFooter";
 import PricingPlansSection from "@/components/home/PricingPlansSection";
 import { apiService } from "@/lib/api";
 import { HOME_PAGE_DEFAULTS, resolveHomeContent } from "@/lib/pageContentDefaults";
@@ -252,14 +253,6 @@ section{padding:6rem 5%;max-width:100%;box-sizing:border-box}
 .btn-wa:hover{opacity:.8}
 .cta-note{margin-top:1.5rem;font-size:12px;color:var(--t3)}
 
-/* FOOTER */
-footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-items:center;justify-content:space-between;background:var(--d2);flex-wrap:wrap;gap:1rem}
-.fl{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--t1)}
-.fl span{color:var(--gold)}
-.flinks{display:flex;gap:1.5rem;list-style:none}
-.flinks a{font-size:12px;color:var(--t3);text-decoration:none}
-.fc{font-size:12px;color:var(--t3)}
-
 /* RESPONSIVE — tablet */
 @media(max-width:960px){
   section{padding:clamp(3.5rem,8vw,4.5rem) clamp(1rem,4vw,4%)}
@@ -272,7 +265,6 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   .tg{grid-template-columns:1fr}
   .pg{grid-template-columns:repeat(2,1fr)}
   .showcase-hdr{flex-direction:column;align-items:flex-start}
-  footer{flex-direction:column;align-items:flex-start;gap:1.25rem}
   .cta{padding:6rem clamp(1rem,4vw,5%) 5rem}
 }
 
@@ -289,7 +281,6 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   .wc,.cc{padding:1.5rem}
   .cta-acts{flex-direction:column;width:100%;max-width:360px;margin:0 auto}
   .cta-acts .btn-p,.cta-acts .btn-wa{width:100%;justify-content:center}
-  .flinks{flex-wrap:wrap;gap:1rem 1.25rem}
   .showcase{padding:clamp(2.5rem,6vw,3.5rem) clamp(.85rem,4vw,1.25rem)}
   .showcase-hdr{margin-bottom:1.5rem}
   .showcase-hdr .st{font-size:clamp(28px,7vw,40px)}
@@ -420,7 +411,6 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   .cta{padding:4.5rem 1rem 4rem}
   .cta h2{font-size:clamp(28px,8vw,36px)}
   .note br{display:none}
-  footer{padding:1.5rem 1rem;padding-bottom:max(1.5rem,env(safe-area-inset-bottom))}
 }
 
 /* Very narrow phones (e.g. 320px) */
@@ -564,88 +554,6 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   }
 }
 
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 40px 60px;
-  border-top: 1px solid rgba(201, 168, 93, 0.1);
-
-  background: #0b0805;
-}
-
-/* LOGO */
-.footer-logo {
-  flex-shrink: 0;
-}
-
-.footer-logo img {
-  width: 180px;
-  height: auto;
-  display: block;
-}
-
-/* COPYRIGHT */
-.footer-center {
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 14px;
-  text-align: center;
-  line-height: 1.5;
-}
-.footer-center em {
-  font-style: italic;
-  color: #E8D08A;
-}
-
-/* LINKS */
-.flinks {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.flinks a {
-  color: rgba(255, 255, 255, 0.65);
-  text-decoration: none;
-  transition: color 0.25s ease;
-}
-.flinks a em {
-  font-style: italic;
-  color: #E8D08A;
-}
-
-.flinks a:hover {
-  color: #d4af37;
-}
-
-@media (max-width: 768px) {
-  .footer {
-    flex-direction: column;
-    gap: 24px;
-
-    text-align: center;
-    padding: 32px 24px;
-  }
-
-  .footer-logo img {
-    width: 140px;
-  }
-
-  .flinks {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 18px;
-  }
-
-  .footer-center {
-    order: 3;
-  }
-}
       `}</style>
 
 {/* HERO */}
@@ -840,19 +748,7 @@ footer{border-top:.5px solid var(--b);padding:1.75rem 5%;display:flex;align-item
   <p className="cta-note">{cta.note}</p>
 </section>
 
-<footer className="footer">
-  <div className="footer-logo">
-    <img src={footer.logo_url} alt="Splash" />
-  </div>
-  <ul className="flinks">
-    {footer.links.map((link) => (
-      <li key={`${link.label}-${link.href}`}>
-        <a href={link.href} dangerouslySetInnerHTML={{ __html: link.label }} />
-      </li>
-    ))}
-  </ul>
-  <div className="footer-center" dangerouslySetInnerHTML={{ __html: footer.copyright }} />
-</footer>
+<MarketingFooter footer={footer} />
     </div>
   );
 }

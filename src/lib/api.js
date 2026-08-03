@@ -1656,14 +1656,16 @@ class ApiService {
         return res?.content ?? {};
     }
 
-    // Blog (public)
+    // Blog (public — Published posts only)
     async getBlogPosts() {
-        const res = await this.get('/api/homepage/blog/');
-        return res?.posts ?? [];
+        const res = await this.get('/api/homepage/blog/', { cache: 'no-store' });
+        if (Array.isArray(res?.posts)) return res.posts;
+        if (Array.isArray(res?.data?.posts)) return res.data.posts;
+        return [];
     }
     async getBlogPost(slug) {
-        const res = await this.get(`/api/homepage/blog/${slug}/`);
-        return res?.post ?? null;
+        const res = await this.get(`/api/homepage/blog/${encodeURIComponent(slug)}/`, { cache: 'no-store' });
+        return res?.post ?? res?.data?.post ?? null;
     }
 
     // Legal endpoints

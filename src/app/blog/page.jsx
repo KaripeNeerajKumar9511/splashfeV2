@@ -1,144 +1,107 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MoveRight, MoveLeft, Calendar, Clock } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import Navigation from "@/components/home/Navigation";
 import { apiService } from "@/lib/api";
+import MarketingPageShell, { MarketingHero } from "@/components/home/MarketingPageShell";
 
 export default function BlogIndexPage() {
-  const router = useRouter();
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    apiService.getBlogPosts().then(setPosts).catch(() => setPosts([]));
+    let cancelled = false;
+    setLoading(true);
+    apiService
+      .getBlogPosts()
+      .then((list) => {
+        if (!cancelled) setPosts(Array.isArray(list) ? list : []);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setPosts([]);
+          setError(e?.message || "Could not load blogs");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const defaultPosts = [
-    {
-      slug: "transforming-fashion-photography-with-ai",
-      title: "Splash AI Studio: Transforming Fashion Photography with AI",
-      excerpt:
-        "Traditional photoshoots are expensive, time-consuming, and difficult to scale. Splash AI Studio was built to solve this challenge by replacing traditional photography workflows with an automated, AI-driven creative process.",
-      date: "October 16, 2025",
-      author: "Splash Team",
-      category: "Innovation",
-      read_time: "5 min read",
-      image: "/images/blog/ai-fashion-visual.png",
-    },
-  ];
-  const list = posts.length ? posts : defaultPosts;
-
   return (
-    <>
-    <Navigation />
-    <div className="min-h-screen bg-white text-[#0c1421]">
-      {/* 1. Page Header */}
-      <section className="relative py-20 md:py-32 overflow-hidden bg-[#f8f9fc]">
-        <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] -z-10" />
-        <div className="max-w-screen-xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#f0f2f5] text-[#5533ff] text-sm font-medium mb-6">
-            Our Blog
-          </div>
+    <MarketingPageShell>
+      <MarketingHero
+        eyebrow="Our Blog"
+        title="Insights & Updates"
+        subtitle="Latest news, trends, and insights on AI, fashion photography, and digital retail."
+      />
 
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-br from-indigo-600 to-purple-500">
-            Insights & Updates
-          </h1>
-
-          <p className="text-lg md:text-xl text-[#313957] max-w-2xl mx-auto leading-relaxed">
-            Latest news, trends, and insights on AI, fashion photography, and the
-            future of digital retail.
-          </p>
-        </div>
-      </section>
-
-      {/* Back Button */}
-      {/* <button
-        onClick={() => router.push("/")}
-        className="fixed top-10 left-6 z-50
-          bg-white/80 backdrop-blur-sm border border-gray-200
-          hover:bg-gray-100 hover:text-black
-          px-4 py-2 rounded-full shadow-sm transition-all
-          flex items-center gap-2"
-      >
-        <MoveLeft size={16} /> Back
-      </button> */}
-
-      {/* Blog Grid */}
-      <section className="py-16 md:py-24">
-        <div className="max-w-screen-xl mx-auto px-6">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {list.map((post) => (
-              <Link
-                href={`/blog/${post.slug}`}
-                key={post.slug}
-                className="group"
-              >
-                <Card className="h-full overflow-hidden rounded-2xl bg-white border border-[#e6e6e6]
-                  transition-all hover:-translate-y-1 hover:shadow-lg">
-                  {/* Image */}
-                  <div className="relative h-52 overflow-hidden bg-[#f8f9fc]">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#5533ff]/10 to-[#5533ff]/5
-                      flex items-center justify-center text-[#5533ff]/20 font-extrabold tracking-widest text-4xl">
-                      SPLASH AI
-                    </div>
-
-                    <img
-                      src={post.image || post.image_url || ""}
-                      alt={post.title}
-                      className="absolute inset-0 w-full h-full object-cover opacity-0
-                        group-hover:opacity-100 transition-opacity duration-300"
-                      onError={(e) => {
-                        e.target.style.opacity = 0;
-                      }}
-                    />
-                  </div>
-
-                  {/* Content */}
-                  <CardContent className="p-8 flex flex-col h-full">
-                    <div className="flex items-center gap-4 text-sm text-[#6b7280] mb-4">
-                      <span className="flex items-center gap-1">
-                        <Calendar size={14} /> {post.date}
-                      </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Clock size={14} /> {post.read_time || post.readTime || "5 min read"}
-                      </span>
-                    </div>
-
-                    <h3 className="text-xl font-bold mb-4 leading-snug group-hover:text-[#5533ff] transition-colors line-clamp-2">
-                      {post.title}
-                    </h3>
-
-                    <p className="text-base text-[#313957] leading-relaxed mb-6 line-clamp-3">
-                      {post.excerpt}
-                    </p>
-
-                    <div className="mt-auto pt-6 border-t border-[#f0f2f5] flex items-center justify-between">
-                      <span className="text-sm font-semibold">
-                        {post.author}
-                      </span>
-
-                      <span className="text-sm font-semibold text-[#5533ff] flex items-center gap-1">
-                        Read Article
-                        <MoveRight
-                          size={14}
-                          className="transition-transform group-hover:translate-x-1"
+      <section className="bg-[#0E0D09] py-14 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-screen-xl px-4 sm:px-6">
+          {loading ? (
+            <p className="text-center font-['DM_Sans',sans-serif] text-[rgba(242,237,216,0.58)]">
+              Loading posts…
+            </p>
+          ) : error ? (
+            <p className="text-center font-['DM_Sans',sans-serif] text-[rgba(242,237,216,0.58)]">
+              {error}
+            </p>
+          ) : posts.length === 0 ? (
+            <p className="text-center font-['DM_Sans',sans-serif] text-[rgba(242,237,216,0.58)]">
+              No published posts yet. Check back soon.
+            </p>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 sm:gap-8">
+              {posts.map((post) => {
+                const cover = post.image || post.image_url;
+                return (
+                  <Link
+                    key={post.slug || post.id}
+                    href={`/blog/${post.slug}`}
+                    className="group flex flex-col overflow-hidden rounded-xl border border-[rgba(201,168,76,0.22)] bg-[#161410] transition duration-300 hover:border-[rgba(201,168,76,0.45)] hover:bg-[#1a1812]"
+                  >
+                    <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden border-b border-[rgba(201,168,76,0.14)] bg-[#0E0D09]">
+                      {cover ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={cover}
+                          alt={post.title || ""}
+                          className="max-h-full max-w-full object-contain transition duration-500 group-hover:scale-[1.02]"
                         />
-                      </span>
+                      ) : (
+                        <span className="font-['Cormorant_Garamond',serif] text-2xl text-[rgba(201,168,76,0.35)]">
+                          Splash
+                        </span>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+
+                    <div className="flex flex-1 flex-col p-5 sm:p-6">
+                      {post.is_trending ? (
+                        <p className="mb-2 font-['DM_Sans',sans-serif] text-[10px] font-medium uppercase tracking-[0.2em] text-[#C9A84C]">
+                          Trending
+                        </p>
+                      ) : null}
+                      <h2 className="mb-3 font-['Cormorant_Garamond',serif] text-xl font-normal leading-snug tracking-tight text-[#F2EDD8] transition group-hover:text-[#C9A84C] sm:text-2xl">
+                        {post.title}
+                      </h2>
+                      <p className="mb-5 line-clamp-3 flex-1 font-['DM_Sans',sans-serif] text-sm font-light leading-relaxed text-[rgba(242,237,216,0.58)]">
+                        {post.excerpt || post.short_content || ""}
+                      </p>
+                      <p className="mt-auto border-t border-[rgba(255,255,255,0.06)] pt-4 font-['DM_Sans',sans-serif] text-xs text-[rgba(242,237,216,0.42)]">
+                        {[post.author, post.date, post.read_time].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
-    </div>
-    </>
+    </MarketingPageShell>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import MarketingNav from "@/components/home/MarketingNav";
+import MarketingFooter from "@/components/home/MarketingFooter";
 import PricingPlansSection from "@/components/home/PricingPlansSection";
 
 export default function PricingPage() {
@@ -18,6 +19,7 @@ export default function PricingPage() {
 @media(max-width:768px){.splash-page--pricing{--nav-h:56px}}
       `}</style>
       <PricingPlansSection fullPage />
+      <MarketingFooter />
     </div>
   );
 }

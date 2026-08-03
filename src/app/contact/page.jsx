@@ -1,6 +1,7 @@
 "use client";
 
 import MarketingNav from "@/components/home/MarketingNav";
+import MarketingFooter from "@/components/home/MarketingFooter";
 import ContactPageContent from "@/components/contact/ContactPageContent";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -27,6 +28,7 @@ export default function ContactPage() {
         )}
         <ContactPageContent variant="marketing" />
       </div>
+      <MarketingFooter />
     </div>
   );
 }

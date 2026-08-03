@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Calendar, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Navigation from "@/components/home/Navigation";
 import { apiService } from "@/lib/api";
+import MarketingPageShell from "@/components/home/MarketingPageShell";
+import {
+  BLOG_RENDERED_CONTENT_PORTAL_CLASS,
+  BLOG_RENDERED_CONTENT_PORTAL_CSS,
+} from "@/lib/blogContentStyles";
+import { adaptBlogHtmlForPortal } from "@/lib/adaptBlogHtmlForPortal";
 
 export default function BlogPostPage() {
   const params = useParams();
@@ -16,97 +19,137 @@ export default function BlogPostPage() {
 
   useEffect(() => {
     if (!slug) return;
+    let cancelled = false;
+    setLoading(true);
     apiService
       .getBlogPost(slug)
-      .then(setPost)
-      .catch(() => setPost(null))
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (!cancelled) setPost(data);
+      })
+      .catch(() => {
+        if (!cancelled) setPost(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
+
+  const bodyHtml = useMemo(
+    () => adaptBlogHtmlForPortal(post?.body || post?.content || ""),
+    [post]
+  );
+
+  const faqItems = useMemo(() => {
+    const faqs = Array.isArray(post?.faqs) ? post.faqs : [];
+    return faqs.map((faq) => ({
+      ...faq,
+      answerHtml: adaptBlogHtmlForPortal(faq.answer || ""),
+    }));
+  }, [post]);
 
   if (loading) {
     return (
-      <>
-        <Navigation />
-        <div className="min-h-screen bg-white flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5533ff]" />
+      <MarketingPageShell>
+        <div className="flex min-h-[50vh] items-center justify-center px-6">
+          <p className="font-['DM_Sans',sans-serif] text-[rgba(242,237,216,0.58)]">Loading…</p>
         </div>
-      </>
+      </MarketingPageShell>
     );
   }
 
   if (!post) {
     return (
-      <>
-        <Navigation />
-        <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Post not found</h1>
-          <Link href="/blog" className="text-[#5533ff] hover:underline">Back to Blog</Link>
+      <MarketingPageShell>
+        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6 text-center">
+          <h1 className="font-['Cormorant_Garamond',serif] text-3xl text-[#F2EDD8]">Post not found</h1>
+          <Link
+            href="/blog"
+            className="font-['DM_Sans',sans-serif] text-sm text-[#C9A84C] underline-offset-4 hover:underline"
+          >
+            Back to Blog
+          </Link>
         </div>
-      </>
+      </MarketingPageShell>
     );
   }
 
-  const authorInitial = (post.author || "S").charAt(0).toUpperCase();
+  const cover = post.image || post.image_url;
+  const short = post.excerpt || post.short_content || "";
 
   return (
-    <>
-      <Navigation />
-      <div className="min-h-screen bg-white text-[#0c1421]">
-        <section className="bg-[#f8f9fc] border-b border-[#e6e6e6] py-12 md:py-16">
-          <div className="max-w-screen-xl mx-auto px-6">
-            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
+    <MarketingPageShell>
+      <style>{BLOG_RENDERED_CONTENT_PORTAL_CSS}</style>
+
+      {/* Wide sheet aligned to marketing page margins (screen-xl) */}
+      <div className="bg-[#0E0D09] px-4 py-10 sm:px-6 sm:py-14 md:py-16">
+        <div className="mx-auto max-w-screen-xl space-y-6">
+          <div>
+            <Link
+              href="/blog"
+              className="mb-3 inline-flex items-center gap-1.5 font-['DM_Sans',sans-serif] text-sm text-[rgba(242,237,216,0.5)] transition hover:text-[#C9A84C]"
+            >
+              ← Back to blogs
+            </Link>
+            <h1 className="font-['Cormorant_Garamond',serif] text-3xl font-normal tracking-tight text-[#F2EDD8] sm:text-4xl md:text-5xl">
               {post.title}
             </h1>
-            <div className="flex flex-wrap items-center gap-6 text-sm text-[#313957]">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#5533ff] text-white flex items-center justify-center font-bold text-xs">
-                  {authorInitial}
-                </div>
-                <span className="font-semibold">{post.author || "Splash Team"}</span>
+            <p className="mt-2 font-['DM_Sans',sans-serif] text-sm text-[rgba(242,237,216,0.48)]">
+              {[post.author || "Splash Team", post.date, post.read_time].filter(Boolean).join(" · ")}
+            </p>
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-[rgba(201,168,76,0.22)] bg-[#161410]">
+            {cover ? (
+              <div className="flex items-center justify-center border-b border-[rgba(201,168,76,0.14)] bg-[#0E0D09] px-2 py-2 sm:px-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={cover}
+                  alt=""
+                  className="h-auto w-full max-w-full object-contain"
+                  style={{ maxHeight: 480 }}
+                />
               </div>
-              <div className="flex items-center gap-2">
-                <Calendar size={16} />
-                <span>{post.date || ""}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock size={16} />
-                <span>{post.read_time || "5 min read"}</span>
-              </div>
+            ) : null}
+
+            <div className="p-5 sm:p-8 md:px-10 md:py-9 lg:px-12">
+              {short ? (
+                <p className="mb-6 font-['DM_Sans',sans-serif] text-base font-light leading-relaxed text-[rgba(242,237,216,0.58)] sm:text-lg">
+                  {short}
+                </p>
+              ) : null}
+
+              <div
+                className={BLOG_RENDERED_CONTENT_PORTAL_CLASS}
+                dangerouslySetInnerHTML={{ __html: bodyHtml }}
+              />
+
+              {faqItems.length > 0 ? (
+                <section className="mt-8 border-t border-[rgba(255,255,255,0.08)] pt-6">
+                  <h2 className="mb-4 font-['Cormorant_Garamond',serif] text-xl font-normal text-[#F2EDD8]">
+                    FAQs
+                  </h2>
+                  <div className="space-y-4">
+                    {faqItems.map((faq, i) => (
+                      <div key={faq.id || i}>
+                        <h3 className="font-['Cormorant_Garamond',serif] text-lg font-normal text-[#F2EDD8]">
+                          {faq.question}
+                        </h3>
+                        <div
+                          className={`mt-1 ${BLOG_RENDERED_CONTENT_PORTAL_CLASS}`}
+                          dangerouslySetInnerHTML={{ __html: faq.answerHtml }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
             </div>
           </div>
-        </section>
-
-        <article className="max-w-screen-xl mx-auto px-6 py-12 md:py-16">
-          <div className="prose prose-lg prose-slate max-w-none">
-            {post.body ? (
-              <div dangerouslySetInnerHTML={{ __html: post.body }} />
-            ) : (
-              <p className="text-xl text-[#313957]">{post.excerpt}</p>
-            )}
-          </div>
-        </article>
-
-        <div className="max-w-screen-xl mx-auto px-6 mb-16">
-          <section className="bg-[#f8f9fc] rounded-2xl p-8 text-center border border-[#e6e6e6]">
-            <h3 className="text-2xl font-bold mb-4">Ready to transform your visual content?</h3>
-            <p className="text-[#313957] mb-6">Start creating professional AI-generated fashion imagery today.</p>
-            <Link href="/signup">
-              <Button className="bg-[#5533ff] hover:bg-[#4422dd] text-white font-bold rounded-full px-8 py-6 text-lg">
-                Get Started for Free
-              </Button>
-            </Link>
-          </section>
-        </div>
-
-        <div className="max-w-screen-xl mx-auto px-6 pb-12">
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-2 text-[#5533ff] font-semibold hover:underline"
-          >
-            <ArrowLeft size={16} /> Back to Blog
-          </Link>
         </div>
       </div>
-    </>
+    </MarketingPageShell>
   );
 }

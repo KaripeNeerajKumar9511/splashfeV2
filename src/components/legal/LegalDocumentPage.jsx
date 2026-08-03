@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import MarketingNav from "@/components/home/MarketingNav";
+import MarketingFooter from "@/components/home/MarketingFooter";
 import { apiService } from "@/lib/api";
 
 const FONT_IMPORT =
@@ -129,6 +130,7 @@ export default function LegalDocumentPage({
       <style>{FONT_IMPORT}</style>
       <MarketingNav />
       {body}
+      <MarketingFooter />
     </div>
   );
 }

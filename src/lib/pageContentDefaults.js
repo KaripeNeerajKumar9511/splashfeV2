@@ -209,6 +209,7 @@ export const HOME_PAGE_DEFAULTS = {
         { label: "Instagram", href: "https://www.instagram.com/splash_ai_studios/" },
         { label: "About", href: "/about" },
         { label: "FAQ's", href: "/faqs" },
+        { label: "Blogs", href: "/blog" },
       ],
       [
         { label: "Contact", href: "/contact" },
@@ -234,6 +235,7 @@ export const ORIGINAL_FOOTER_DEFAULTS = {
       { label: "Instagram", href: "https://www.instagram.com/splash_ai_studios/" },
       { label: "About", href: "/about" },
       { label: "FAQ's", href: "/faqs" },
+      { label: "Blogs", href: "/blog" },
     ],
     [
       { label: "Contact", href: "/contact" },
@@ -331,6 +333,28 @@ function plainTitleToHtml(title) {
   return title.replace(/\n/g, "<br />");
 }
 
+function ensureBlogFooterLink(rows) {
+  const hasBlog = rows.some((row) =>
+    (Array.isArray(row) ? row : []).some((link) => {
+      const href = String(link?.href || "").trim().toLowerCase();
+      const label = String(link?.label || "")
+        .replace(/<[^>]+>/g, "")
+        .trim()
+        .toLowerCase();
+      return href === "/blog" || href === "/blog/" || label === "blog" || label === "blogs";
+    })
+  );
+  if (hasBlog) return rows;
+
+  const next = rows.map((row) => [...row]);
+  if (next[0]) {
+    next[0] = [...next[0], { label: "Blogs", href: "/blog" }];
+  } else {
+    next.push([{ label: "Blogs", href: "/blog" }]);
+  }
+  return next;
+}
+
 function normalizeFooterLinkRows(footer) {
   // Prefer admin/CMS link_rows whenever present
   if (Array.isArray(footer?.link_rows) && footer.link_rows.length > 0) {
@@ -339,14 +363,14 @@ function normalizeFooterLinkRows(footer) {
         (Array.isArray(row) ? row : []).filter((link) => link?.href && link?.label)
       )
       .filter((row) => row.length > 0);
-    if (rows.length > 0) return rows;
+    if (rows.length > 0) return ensureBlogFooterLink(rows);
   }
 
   // Legacy flat `links` array from CMS — chunk into rows of 3
   if (Array.isArray(footer?.links) && footer.links.length > 0) {
     const flat = footer.links.filter((link) => link?.href && link?.label);
     if (flat.length >= 9) {
-      return [flat.slice(0, 3), flat.slice(3, 6), flat.slice(6, 9)];
+      return ensureBlogFooterLink([flat.slice(0, 3), flat.slice(3, 6), flat.slice(6, 9)]);
     }
     // Older 4-link footers are incomplete — fall through to defaults
   }

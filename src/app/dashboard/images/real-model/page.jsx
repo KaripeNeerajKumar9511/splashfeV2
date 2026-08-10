@@ -2,8 +2,11 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, Sparkles, Upload, Users, Ruler, Loader2, CheckCircle, AlertCircle, RefreshCw, X, Download } from "lucide-react"
-import { apiService } from "@/lib/api"
+import { ChevronLeft, Sparkles, Upload, Users, Ruler, Loader2, CheckCircle, RefreshCw, X, Download } from "lucide-react"
+import { apiService, setOopsRetry } from "@/lib/api"
+import { isAiServerDownError } from "@/lib/aiGenerationGuard"
+import { isOopsNotifiedError, notifyOopsError } from "@/lib/oopsError"
+import { FieldIndication } from "@/components/FieldIndication"
 import Image from "next/image"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
@@ -119,6 +122,7 @@ export default function RealModelForm() {
         setRegenerateModal(prev => ({ ...prev, loading: true, error: null }))
 
         try {
+            setOopsRetry(() => submitRegenerate())
             const response = await apiService.regenerateImage(
                 result.mongo_id,
                 regenerateModal.prompt,
@@ -137,15 +141,17 @@ export default function RealModelForm() {
 
                 toast.success(t("images.imageRegeneratedSuccess"))
             } else {
-                throw new Error(response.error || 'Regeneration failed')
+                notifyOopsError({ onRetry: () => submitRegenerate() })
+                setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
             }
         } catch (error) {
             console.error("Error regenerating image:", error)
-            setRegenerateModal(prev => ({
-                ...prev,
-                loading: false,
-                error: error.response?.data?.error || error.message || t("images.failedToRegenerate")
-            }))
+            if (isAiServerDownError(error) || isOopsNotifiedError(error)) {
+                setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
+                return
+            }
+            notifyOopsError({ error, onRetry: () => submitRegenerate() })
+            setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
         }
     }
 
@@ -190,16 +196,18 @@ export default function RealModelForm() {
             formDataToSend.append("ornament_measurements", JSON.stringify(ornamentMeasurements))
             formDataToSend.append("dimension", formData.dimension)
 
+            setOopsRetry(() => handleSubmit(e))
             const response = await apiService.generateRealModelWithOrnament(formDataToSend, token)
 
             if (response.status === "success") {
                 setResult(response)
             } else {
-                setError(response.message || t("images.failedToGenerate"))
+                notifyOopsError({ onRetry: () => handleSubmit(e) })
             }
         } catch (err) {
             console.error("Error generating image:", err)
-            setError(err.message || t("images.errorGeneratingImage"))
+            if (isAiServerDownError(err) || isOopsNotifiedError(err)) return
+            notifyOopsError({ error: err, onRetry: () => handleSubmit(e) })
         } finally {
             setIsLoading(false)
         }
@@ -377,13 +385,7 @@ export default function RealModelForm() {
                                 primaryColor="#f97316"
                             />
 
-                            {/* Error Message */}
-                            {error && (
-                                <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                    <AlertCircle className="w-5 h-5 text-red-500" />
-                                    <p className="text-red-400 text-sm">{t("common.somethingWentWrong")}</p>
-                                </div>
-                            )}
+                            <FieldIndication>{error}</FieldIndication>
 
                             {/* Action Buttons */}
                             <div className="flex items-center justify-between pt-8 border-t border-border">
@@ -576,13 +578,7 @@ export default function RealModelForm() {
                                 </p>
                             </div>
 
-                            {/* Error Message */}
-                            {regenerateModal.error && (
-                                <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                    <p className="text-red-400 text-sm">{t("common.somethingWentWrong")}</p>
-                                </div>
-                            )}
+                            <FieldIndication>{regenerateModal.error}</FieldIndication>
 
                             {/* Action Buttons */}
                             <div className="flex gap-3 pt-4 border-t border-border">

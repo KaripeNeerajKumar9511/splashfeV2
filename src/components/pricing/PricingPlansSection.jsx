@@ -287,6 +287,7 @@ export default function PricingPlansSection({
   currency: currencyProp,
   onCurrencyChange,
   initialCurrency,
+  allowInr: allowInrProp,
 }) {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
@@ -295,29 +296,47 @@ export default function PricingPlansSection({
   const [currency, setCurrency] = useState(() =>
     normalizePricingCurrency(currencyProp || initialCurrency || "USD")
   );
-  const [currencyReady, setCurrencyReady] = useState(
-    Boolean(currencyProp || initialCurrency)
+  const [allowInr, setAllowInr] = useState(
+    typeof allowInrProp === "boolean" ? allowInrProp : false
   );
+  const [currencyReady, setCurrencyReady] = useState(false);
 
   useEffect(() => {
-    if (currencyProp) {
-      setCurrency(normalizePricingCurrency(currencyProp));
-      setCurrencyReady(true);
-    }
-  }, [currencyProp]);
-
-  useEffect(() => {
-    if (currencyProp) return undefined;
     let active = true;
-    resolveInitialPricingCurrency(initialCurrency).then((code) => {
+
+    const resolveCurrency = async () => {
+      let nextAllowInr =
+        typeof allowInrProp === "boolean" ? allowInrProp : false;
+      let nextCurrency = normalizePricingCurrency(
+        currencyProp || initialCurrency || "USD"
+      );
+
+      if (typeof allowInrProp !== "boolean") {
+        const result = await resolveInitialPricingCurrency(initialCurrency);
+        if (!active) return;
+        nextAllowInr = Boolean(result.isIndia);
+        if (!currencyProp) {
+          nextCurrency = normalizePricingCurrency(result.currency);
+        }
+      }
+
+      if (!nextAllowInr) {
+        nextCurrency = "USD";
+      } else if (currencyProp) {
+        nextCurrency = normalizePricingCurrency(currencyProp);
+      }
+
       if (!active) return;
-      setCurrency(code);
+      setAllowInr(nextAllowInr);
+      setCurrency(nextCurrency);
       setCurrencyReady(true);
-    });
+    };
+
+    resolveCurrency();
     return () => {
       active = false;
     };
-  }, [currencyProp, initialCurrency]);
+  }, [currencyProp, initialCurrency, allowInrProp]);
 
   useEffect(() => {
     if (plansProp?.length) {
@@ -339,8 +358,11 @@ export default function PricingPlansSection({
     return plans.filter((plan) => !isFreePlan(plan));
   }, [plans, dashboard]);
 
+  const availableCurrencies = allowInr ? PRICING_CURRENCIES : ["USD"];
+
   const handleCurrencyChange = (next) => {
     const code = normalizePricingCurrency(next);
+    if (!allowInr && code === "INR") return;
     setCurrency(code);
     setStoredPricingCurrency(code);
     onCurrencyChange?.(code);
@@ -410,9 +432,9 @@ export default function PricingPlansSection({
     );
   }
 
-  const currencyToggle = (
+  const currencyToggle = allowInr ? (
     <div className="pricing-currency-toggle" aria-label="Pricing currency">
-      {PRICING_CURRENCIES.map((code) => (
+      {availableCurrencies.map((code) => (
         <button
           key={code}
           type="button"
@@ -424,7 +446,7 @@ export default function PricingPlansSection({
         </button>
       ))}
     </div>
-  );
+  ) : null;
 
   return (
     <section className={sectionClass} id={cardsOnly ? undefined : "pricing"}>

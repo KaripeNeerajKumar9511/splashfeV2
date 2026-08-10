@@ -2,8 +2,11 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, Sparkles, Upload, Cpu, Ruler, Zap, Loader2, CheckCircle, AlertCircle, RefreshCw, X, Download } from "lucide-react"
-import { apiService } from "@/lib/api"
+import { ChevronLeft, Sparkles, Upload, Cpu, Ruler, Zap, Loader2, CheckCircle, RefreshCw, X, Download } from "lucide-react"
+import { apiService, setOopsRetry } from "@/lib/api"
+import { isAiServerDownError } from "@/lib/aiGenerationGuard"
+import { isOopsNotifiedError, notifyOopsError } from "@/lib/oopsError"
+import { FieldIndication } from "@/components/FieldIndication"
 import Image from "next/image"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
@@ -127,6 +130,7 @@ export default function AIModelForm() {
         setRegenerateModal(prev => ({ ...prev, loading: true, error: null }))
 
         try {
+            setOopsRetry(() => submitRegenerate())
             const response = await apiService.regenerateImage(
                 result.mongo_id,
                 regenerateModal.prompt, token
@@ -144,15 +148,17 @@ export default function AIModelForm() {
 
                 toast.success(t("images.imageRegeneratedSuccess"))
             } else {
-                throw new Error(response.error || 'Regeneration failed')
+                notifyOopsError({ onRetry: () => submitRegenerate() })
+                setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
             }
         } catch (error) {
             console.error("Error regenerating image:", error)
-            setRegenerateModal(prev => ({
-                ...prev,
-                loading: false,
-                error: error.response?.data?.error || error.message || t("images.failedToRegenerate")
-            }))
+            if (isAiServerDownError(error) || isOopsNotifiedError(error)) {
+                setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
+                return
+            }
+            notifyOopsError({ error, onRetry: () => submitRegenerate() })
+            setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
         }
     }
 
@@ -191,16 +197,18 @@ export default function AIModelForm() {
             formDataToSend.append("ornament_measurements", JSON.stringify(ornamentMeasurements))
             formDataToSend.append("dimension", formData.dimension)
 
+            setOopsRetry(() => handleSubmit(e))
             const response = await apiService.generateModelWithOrnament(formDataToSend, token)
 
             if (response.status === "success") {
                 setResult(response)
             } else {
-                setError(response.message || t("images.failedToGenerate"))
+                notifyOopsError({ onRetry: () => handleSubmit(e) })
             }
         } catch (err) {
             console.error("Error generating image:", err)
-            setError(err.message || t("images.errorGeneratingImage"))
+            if (isAiServerDownError(err) || isOopsNotifiedError(err)) return
+            notifyOopsError({ error: err, onRetry: () => handleSubmit(e) })
         } finally {
             setIsLoading(false)
         }
@@ -238,18 +246,12 @@ export default function AIModelForm() {
                                 <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                                     <div className="w-2 h-2 bg-gold-gradient rounded-full"></div>
                                     {t("images.ornamentProductImage")}<span className="text-red-500 ml-1">*</span>
-                                    {uploadErrors.ornamentImage && (
-  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-    <AlertCircle className="w-4 h-4" />
-    {uploadErrors.ornamentImage}
-  </p>
-)}
-
                                 </label>
+                                {uploadErrors.ornamentImage && <FieldIndication>{uploadErrors.ornamentImage}</FieldIndication>}
                                 <div
   className={`border-2 border-dashed rounded-xl p-6 transition-colors group cursor-pointer ${
     uploadErrors.ornamentImage
-      ? "border-red-500 bg-red-500/10"
+      ? "border-[rgba(201,168,76,0.5)] bg-[rgba(201,168,76,0.08)]"
       : "border-border bg-secondary/30 hover:bg-accent"
   }`}
   onClick={() => document.getElementById("ornament-input")?.click()}
@@ -283,18 +285,12 @@ export default function AIModelForm() {
                                 <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                                     <div className="w-2 h-2 bg-gold-gradient rounded-full"></div>
                                     Pose Style Reference (Optional)
-                                    {uploadErrors.poseImage && (
-  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-    <AlertCircle className="w-4 h-4" />
-    {uploadErrors.poseImage}
-  </p>
-)}
-
                                 </label>
+                                {uploadErrors.poseImage && <FieldIndication>{uploadErrors.poseImage}</FieldIndication>}
                                 <div
   className={`border-2 border-dashed rounded-xl p-6 transition-colors group cursor-pointer ${
     uploadErrors.poseImage
-      ? "border-red-500 bg-red-500/10"
+      ? "border-[rgba(201,168,76,0.5)] bg-[rgba(201,168,76,0.08)]"
       : "border-border bg-secondary/30 hover:bg-accent"
   }`}
   onClick={() => document.getElementById("pose-input")?.click()}
@@ -368,13 +364,7 @@ export default function AIModelForm() {
                                 onValidityChange={setIsDimensionValid}
                             />
 
-                            {/* Error Message */}
-                            {error && (
-                                <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                    <AlertCircle className="w-5 h-5 text-red-500" />
-                                    <p className="text-red-400 text-sm">{t("common.somethingWentWrong")}</p>
-                                </div>
-                            )}
+                            <FieldIndication>{error}</FieldIndication>
 
                             {/* Action Buttons */}
                             <div className="flex items-center justify-between pt-8 border-t border-border">
@@ -565,13 +555,7 @@ export default function AIModelForm() {
                                 </p>
                             </div>
 
-                            {/* Error Message */}
-                            {regenerateModal.error && (
-                                <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                    <p className="text-red-400 text-sm">{t("common.somethingWentWrong")}</p>
-                                </div>
-                            )}
+                            <FieldIndication>{regenerateModal.error}</FieldIndication>
 
                             {/* Action Buttons */}
                             <div className="flex gap-3 pt-4 border-t border-border">

@@ -4,6 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { CreditsProvider } from "@/context/CreditsContext";
+import { AiServerDownProvider } from "@/components/AiServerDownModal";
+import { OopsErrorProvider } from "@/components/OopsErrorModal";
 import { Toaster } from "react-hot-toast";
 
 const GA_MEASUREMENT_ID = "G-TEFQY2M0RW";
@@ -18,8 +20,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Splash AI Studio - Transform Your Creative Vision",
-  description: "AI-powered creative studio for stunning visuals and project management",
+  title: "AI Jewelry Photography Generator | Create Luxury Jewelry Photos in Seconds | GoSplash AI",
+  description: "Transform jewelry photos into premium studio-quality images with GoSplash AI. Generate luxury product photography, AI model photoshoots, lifestyle images, white background photos, marketing creatives, and social media visuals in seconds without expensive photography.",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
   icons: {
     icon: "/images/favicon.png",
   },
@@ -62,7 +72,11 @@ export default function RootLayout({ children }) {
         <LanguageProvider>
           <AuthProvider>
             <CreditsProvider>
-              {children}
+              <AiServerDownProvider>
+                <OopsErrorProvider>
+                  {children}
+                </OopsErrorProvider>
+              </AiServerDownProvider>
               <Toaster
                 position="top-right"
                 toastOptions={{

@@ -2,17 +2,22 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, Zap, Upload, Palette, Sparkles, Loader2, CheckCircle, AlertCircle, RefreshCw, X, Download, Eye } from "lucide-react"
+import { ChevronLeft, Zap, Upload, Palette, Sparkles, Loader2, CheckCircle, RefreshCw, X, Download, Eye } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { apiService } from "@/lib/api"
+import { apiService, setOopsRetry } from "@/lib/api"
+import { isAiServerDownError } from "@/lib/aiGenerationGuard"
+import { isOopsNotifiedError, notifyOopsError, isAppCreditsError } from "@/lib/oopsError"
+import { FieldIndication } from "@/components/FieldIndication"
+import { CreditsIndication } from "@/components/CreditsIndication"
 import Image from "next/image"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
 import { useCredits } from "@/context/CreditsContext"
 import toast from "react-hot-toast"
 import { DimensionsSelector } from "@/components/images/DimensionsSelector"
+import { SolidColorPicker } from "@/components/ui/solid-color-picker"
 import { openImageViewer } from "@/lib/openImageViewer"
 import { MdPhotoSizeSelectLarge } from "react-icons/md"
 const MAX_IMAGE_MB = 10;
@@ -38,6 +43,7 @@ const PlainBackgroundForm = () => {
     const [isDimensionValid, setIsDimensionValid] = useState(true)
     const [result, setResult] = useState(null)
     const [error, setError] = useState(null)
+    const [creditsHint, setCreditsHint] = useState(null)
     const { token } = useAuth()
     const { refetchCredits } = useCredits()
     const [regenerateModal, setRegenerateModal] = useState({
@@ -158,9 +164,15 @@ const PlainBackgroundForm = () => {
 
         try {
             if (!result?.mongo_id) {
-                throw new Error('Cannot regenerate: MongoDB ID is missing. Please generate a new image first.')
+                setRegenerateModal(prev => ({
+                    ...prev,
+                    loading: false,
+                    error: 'Cannot regenerate: MongoDB ID is missing. Please generate a new image first.',
+                }))
+                return
             }
 
+            setOopsRetry(() => submitRegenerate())
             const response = await apiService.regenerateImage(
                 result.mongo_id,
                 regenerateModal.prompt,
@@ -178,15 +190,17 @@ const PlainBackgroundForm = () => {
                 refetchCredits?.()
                 toast.success('Image regenerated successfully!')
             } else {
-                throw new Error(response.error || 'Regeneration failed')
+                notifyOopsError({ onRetry: () => submitRegenerate() })
+                setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
             }
         } catch (error) {
             console.error("Error regenerating image:", error)
-            setRegenerateModal(prev => ({
-                ...prev,
-                loading: false,
-                error: error.response?.data?.error || error.message || 'Failed to regenerate image'
-            }))
+            if (isAiServerDownError(error) || isOopsNotifiedError(error)) {
+                setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
+                return
+            }
+            notifyOopsError({ error, onRetry: () => submitRegenerate() })
+            setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
         }
     }
 
@@ -204,6 +218,7 @@ const PlainBackgroundForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError(null)
+        setCreditsHint(null)
         setResult(null)
 
         if (!formData.image) {
@@ -220,26 +235,26 @@ const PlainBackgroundForm = () => {
             formDataToSend.append("prompt", formData.prompt)
             formDataToSend.append("background_color", formData.backgroundColor)
             formDataToSend.append("dimension", formData.dimension)
-            console.log("FormData to send:");
-            for (let [key, value] of formDataToSend.entries()) {
-                console.log(key, value);
-            }
 
+            setOopsRetry(() => handleSubmit(e))
             const response = await apiService.uploadOrnamentWithBackground(formDataToSend, token)
 
-            if (response.success) {
+            if (response.success || response.generated_image_url || response.status === "success") {
                 setResult(response)
                 refetchCredits?.()
+            } else if (isAppCreditsError(response)) {
+                setCreditsHint("You don’t have enough credits to generate this image. Recharge to continue.")
             } else {
-                setError(response.error || t("images.failedToGenerate"))
+                notifyOopsError({ onRetry: () => handleSubmit(e) })
             }
         } catch (err) {
             console.error("Error generating image:", err)
-            setError(
-                err.response?.data?.error ||
-                err.message ||
-                t("images.errorGeneratingImage")
-            )
+            if (isAiServerDownError(err) || isOopsNotifiedError(err)) return
+            if (isAppCreditsError(err)) {
+                setCreditsHint("You don’t have enough credits to generate this image. Recharge to continue.")
+                return
+            }
+            notifyOopsError({ error: err, onRetry: () => handleSubmit(e) })
         } finally {
             setIsLoading(false)
         }
@@ -271,18 +286,12 @@ const PlainBackgroundForm = () => {
                                 <label className="block text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                                     <Upload size={20} className="text-gold-solid" />
                                     {t("images.productImage")}<span className="text-red-500 ml-1">*</span>
-                                    {uploadError && (
-  <p className="mt-3 text-sm text-red-600 flex items-center gap-2">
-    <AlertCircle className="w-4 h-4" />
-    {uploadError}
-  </p>
-)}
-
                                 </label>
+                                {uploadError && <FieldIndication>{uploadError}</FieldIndication>}
                                 <div
   className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 cursor-pointer ${
     uploadError
-      ? "border-red-500 bg-red-500/10"
+      ? "border-[rgba(201,168,76,0.5)] bg-[rgba(201,168,76,0.08)]"
       : isDragging
       ? "border-gold-muted bg-gold-solid/5"
       : "border-border hover:border-gold-muted hover:bg-gold-solid/5"
@@ -324,6 +333,29 @@ const PlainBackgroundForm = () => {
                                 </div>
                             </div>
 
+                            {/* Background Color */}
+                            <div>
+                                <label className="block text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                                    <Palette size={16} className="text-gold-solid" />
+                                    Background Color
+                                </label>
+                                <div className="flex items-center gap-2">
+                                    <SolidColorPicker
+                                        value={formData.backgroundColor}
+                                        onChange={(color) =>
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                backgroundColor: color || "#ffffff",
+                                            }))
+                                        }
+                                        defaultColor="#ffffff"
+                                    />
+                                    <span className="text-xs font-mono text-muted-foreground">
+                                        {formData.backgroundColor || "#ffffff"}
+                                    </span>
+                                </div>
+                            </div>
+
                             {/* Prompt */}
                             <div>
                                 <label className="block text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -346,49 +378,8 @@ const PlainBackgroundForm = () => {
                                 onValidityChange={setIsDimensionValid}
                             />
 
-                            {/* Background Color */}
-                            {/* <div>
-                                <label className="block text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-full bg-gold-gradient"></div>
-                                    Background Color
-                                </label>
-                                <div className="flex items-center gap-4 p-4 bg-accent rounded-2xl border border-border">
-                                    <div className="relative">
-                                        <input
-                                            type="color"
-                                            value={formData.backgroundColor}
-                                            onChange={(e) =>
-                                                setFormData((prev) => ({
-                                                    ...prev,
-                                                    backgroundColor: e.target.value,
-                                                }))
-                                            }
-                                            className="w-16 h-16 rounded-2xl cursor-pointer border-2 border-white shadow-lg"
-                                        />
-                                    </div>
-                                    <div className="flex-1">
-                                        <Input
-                                            type="text"
-                                            value={formData.backgroundColor}
-                                            onChange={(e) =>
-                                                setFormData((prev) => ({
-                                                    ...prev,
-                                                    backgroundColor: e.target.value,
-                                                }))
-                                            }
-                                            className="w-full px-4 py-3 border border-border rounded-xl bg-input text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                                        />
-                                    </div>
-                                </div>
-                            </div> */}
-
-                            {/* Error Message */}
-                            {error && (
-                                <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                    <AlertCircle className="w-5 h-5 text-red-500" />
-                                    <p className="text-red-400 text-sm">{error}</p>
-                                </div>
-                            )}
+                            <FieldIndication>{error}</FieldIndication>
+                            <CreditsIndication>{creditsHint}</CreditsIndication>
 
                             {/* Buttons */}
                             <div className="flex items-center justify-between pt-8 border-t border-border">
@@ -576,13 +567,7 @@ const PlainBackgroundForm = () => {
                                 </p>
                             </div>
 
-                            {/* Error Message */}
-                            {regenerateModal.error && (
-                                <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                    <p className="text-red-400 text-sm"> Oops! Something went wrong. Please try again.</p>
-                                </div>
-                            )}
+                            <FieldIndication>{regenerateModal.error}</FieldIndication>
 
                             {/* Action Buttons */}
                             <div className="flex gap-3 pt-4 border-t border-border">

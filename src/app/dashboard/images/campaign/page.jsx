@@ -2,10 +2,13 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, Sparkles, Upload, Award, Zap, Loader2, CheckCircle, AlertCircle, X, Download, RefreshCw, Cpu, Users, Eye, Coins } from "lucide-react"
+import { ChevronLeft, Sparkles, Upload, Award, Zap, Loader2, CheckCircle, X, Download, RefreshCw, Cpu, Users, Eye, Coins } from "lucide-react"
 import { MdPhotoSizeSelectLarge } from "react-icons/md"
 import { Button } from "@/components/ui/button"
-import { apiService } from "@/lib/api"
+import { apiService, setOopsRetry } from "@/lib/api"
+import { isAiServerDownError } from "@/lib/aiGenerationGuard"
+import { isOopsNotifiedError, notifyOopsError } from "@/lib/oopsError"
+import { FieldIndication } from "@/components/FieldIndication"
 import Image from "next/image"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
@@ -365,6 +368,7 @@ const submitRegenerate = async () => {
             return
         }
 
+        setOopsRetry(() => submitRegenerate())
         const response = await apiService.regenerateImage(
             target.mongo_id,
             regenerateModal.prompt,
@@ -387,15 +391,17 @@ const submitRegenerate = async () => {
                 setRegenerateModal({ isOpen: false, prompt: '', loading: false, error: null, image: null, modelTier: MODEL_TIER_DEFAULTS.campaign })
                 toast.success(t("images.imageRegeneratedSuccess"))
             } else {
-                throw new Error(response.error || 'Regeneration failed')
+                notifyOopsError({ onRetry: () => submitRegenerate() })
+                setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
             }
         } catch (error) {
             console.error("Error regenerating image:", error)
-            setRegenerateModal(prev => ({
-                ...prev,
-                loading: false,
-                error: error.response?.data?.error || error.message || t("images.failedToRegenerate")
-            }))
+            if (isAiServerDownError(error) || isOopsNotifiedError(error)) {
+                setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
+                return
+            }
+            notifyOopsError({ error, onRetry: () => submitRegenerate() })
+            setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
         }
     }
 
@@ -479,21 +485,17 @@ const submitRegenerate = async () => {
             formDataToSend.append("num_images", String(numImages))
             formDataToSend.append("model_tier", modelTier)
 
+            setOopsRetry(() => handleSubmit(e))
             const response = await apiService.generateCampaignShot(formDataToSend, token)
 
             if (response && (response.images?.length || response.generated_image_url || response.status === "success")) {
                 setResult(response)
             } else {
-                setError(response?.message || t("images.failedToGenerateCampaignShot"))
+                notifyOopsError({ onRetry: () => handleSubmit(e) })
             }
         } catch (err) {
-            const backendMessage =
-                err.response?.data?.error ||
-                err.response?.data?.message ||
-                err.message ||
-                "Something went wrong";
-        
-            setError(backendMessage);
+            if (isAiServerDownError(err) || isOopsNotifiedError(err)) return
+            notifyOopsError({ error: err, onRetry: () => handleSubmit(e) })
         }
         finally {
             setIsLoading(false)
@@ -553,18 +555,12 @@ const submitRegenerate = async () => {
                                     <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                                         <div className="w-2 h-2 bg-gold-solid rounded-full"></div>
                                         {t("images.modelImage")}<span className="text-red-500 ml-1">*</span>
-                                        {uploadErrors.modelImage && (
-  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-    <AlertCircle className="w-4 h-4" />
-    {uploadErrors.modelImage}
-  </p>
-)}
-
                                     </label>
+                                    {uploadErrors.modelImage && <FieldIndication>{uploadErrors.modelImage}</FieldIndication>}
                                     <div
   className={`border-2 border-dashed rounded-xl p-6 cursor-pointer ${
     uploadErrors.modelImage
-      ? "border-red-500 bg-red-500/10"
+      ? "border-[rgba(201,168,76,0.5)] bg-[rgba(201,168,76,0.08)]"
       : "border-border bg-secondary/30 hover:bg-accent"
   }`}
   onClick={() => document.getElementById("model-image")?.click()}
@@ -601,18 +597,12 @@ const submitRegenerate = async () => {
                                     {t("images.ornamentImages")}<span className="text-red-500 ml-1">*</span>
                                     <span className="text-xs text-muted-foreground font-normal">upload the product image which is captured with the help of scale for better measurements.</span>
                                     <button type="button" onClick={(e) => { e.preventDefault(); setShowReferenceModal(true); }} className="text-xs text-gold-solid hover:underline font-medium">(View reference)</button>
-                                    {uploadErrors.ornamentImages && (
-  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-    <AlertCircle className="w-4 h-4" />
-    {uploadErrors.ornamentImages}
-  </p>
-)}
-
                                 </label>
+                                {uploadErrors.ornamentImages && <FieldIndication>{uploadErrors.ornamentImages}</FieldIndication>}
                                 <div
   className={`border-2 border-dashed rounded-xl p-6 cursor-pointer ${
     uploadErrors.ornamentImages
-      ? "border-red-500 bg-red-500/10"
+      ? "border-[rgba(201,168,76,0.5)] bg-[rgba(201,168,76,0.08)]"
       : "border-border bg-secondary/30 hover:bg-accent"
   }`}
   onClick={() => document.getElementById("ornament-images")?.click()}
@@ -748,18 +738,12 @@ const submitRegenerate = async () => {
                                 <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                                     <div className="w-2 h-2 bg-gold-solid rounded-full"></div>
                                     {t("images.themeStyleImages")} ({t("common.optional")})
-                                    {uploadErrors.themeImages && (
-  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-    <AlertCircle className="w-4 h-4" />
-    {uploadErrors.themeImages}
-  </p>
-)}
-
                                 </label>
+                                {uploadErrors.themeImages && <FieldIndication>{uploadErrors.themeImages}</FieldIndication>}
                                 <div
   className={`border-2 border-dashed rounded-xl p-6 cursor-pointer ${
     uploadErrors.themeImages
-      ? "border-red-500 bg-red-500/10"
+      ? "border-[rgba(201,168,76,0.5)] bg-[rgba(201,168,76,0.08)]"
       : "border-border bg-secondary/30 hover:bg-accent"
   }`}
   onClick={() => document.getElementById("theme-images")?.click()}
@@ -845,13 +829,7 @@ const submitRegenerate = async () => {
                                 onValidityChange={setIsDimensionValid}
                             />
 
-                            {/* Error Message */}
-                            {error && (
-                                <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                    <AlertCircle className="w-5 h-5 text-red-500" />
-                                    <p className="text-red-400 text-sm">{error}</p>
-                                </div>
-                            )}
+                            <FieldIndication>{error}</FieldIndication>
 
                             {/* Action Buttons */}
                             <div className="flex items-center justify-between pt-8 border-t border-border">
@@ -1061,13 +1039,7 @@ text-foreground text-sm">
                                 />
                             </div>
 
-                            {/* Error Message */}
-                            {regenerateModal.error && (
-                                <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                    <p className="text-red-400 text-sm">{regenerateModal.error}</p>
-                                </div>
-                            )}
+                            <FieldIndication>{regenerateModal.error}</FieldIndication>
 
                             {/* Action Buttons */}
                             <div className="flex gap-3 pt-4 border-t border-border">

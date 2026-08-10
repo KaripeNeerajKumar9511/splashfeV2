@@ -3,6 +3,14 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 import axios from 'axios';
 import { generateEnhancedPrompt, generateEnhancedCampaignPrompt } from './ornamentRules';
 import { normalizeRegenerationResponse } from './regeneration';
+import {
+    ensureAiGenerationEnabled,
+    throwIfAiGenerationDisabledResponse,
+    wrapAxiosAiGenerationError,
+} from './aiGenerationGuard';
+import { notifyOopsError, clearOopsSession, setOopsRetry, isAppCreditsError } from './oopsError';
+
+export { setOopsRetry };
 
 const SPLASH_LOGIN_PATH = '/login';
 
@@ -40,6 +48,55 @@ function checkResponseAuth(response) {
         throw new Error('Authentication failed. Please login again.');
     }
     return response;
+}
+
+function shouldSkipOopsForEndpoint(endpoint = '') {
+    const path = String(endpoint || '').toLowerCase();
+    return (
+        path.includes('/login') ||
+        path.includes('/register') ||
+        path.includes('/signup') ||
+        path.includes('/otp') ||
+        path.includes('/verify') ||
+        path.includes('/password') ||
+        path.includes('/forgot') ||
+        path.includes('/ai-generation-status') ||
+        path.includes('/credits') ||
+        path.includes('/user/profile') ||
+        path.includes('/me/') ||
+        path.includes('/homepage/') ||
+        path.includes('/legal/') ||
+        path.includes('/notifications')
+    );
+}
+
+/** Oops only for user actions (POST/PUT/PATCH/DELETE) — never for page-load GETs. */
+function shouldNotifyOopsForRequest(endpoint = '', method = 'GET') {
+    const m = String(method || 'GET').toUpperCase();
+    if (m === 'GET' || m === 'HEAD' || m === 'OPTIONS') return false;
+    if (shouldSkipOopsForEndpoint(endpoint)) return false;
+    return true;
+}
+
+function notifyOopsFromApiError(error, endpoint, method = 'POST') {
+    if (!error || error.aiGenerationDisabled || error.status === 401) return;
+    if (isAppCreditsError(error)) {
+        if (error && typeof error === 'object') {
+            error.isAppCreditsError = true;
+            error.skipOops = true;
+        }
+        return;
+    }
+    if (!shouldNotifyOopsForRequest(endpoint, method)) {
+        if (error && typeof error === 'object') error.skipOops = true;
+        return;
+    }
+    notifyOopsError({ error });
+}
+
+function responseQueuedAsyncJob(data) {
+    if (!data || typeof data !== 'object') return false;
+    return Boolean(data.task_id || data.task_ids || data.job_id);
 }
 
 class ApiService {
@@ -94,31 +151,60 @@ class ApiService {
                 let errorMessage = `HTTP error! status: ${response.status}`;
                 try {
                     const errorData = await response.json();
+                    throwIfAiGenerationDisabledResponse(errorData, response.status);
                     if (errorData?.error) errorMessage = errorData.error;
                     else if (errorData?.message) errorMessage = errorData.message;
-                } catch { }
+                } catch (parseError) {
+                    if (parseError?.aiGenerationDisabled) throw parseError;
+                }
 
                 const error = new Error(errorMessage);
                 error.status = response.status;
                 if (isTokenRelatedError(error)) {
                     handleTokenError();
                 }
+                if (isAppCreditsError(error)) {
+                    error.isAppCreditsError = true;
+                    error.skipOops = true;
+                    throw error;
+                }
+                notifyOopsFromApiError(error, endpoint, config.method || 'GET');
                 throw error;
             }
 
             // Some endpoints return empty body
             const text = await response.text();
+            let parsed;
             try {
-                return text ? JSON.parse(text) : {};
+                parsed = text ? JSON.parse(text) : {};
             } catch {
-                return text;
+                parsed = text;
             }
+            const method = String(config.method || 'GET').toUpperCase();
+            // Don't reset retry state when we only queued a background job
+            if (method !== 'GET' && !responseQueuedAsyncJob(parsed)) {
+                clearOopsSession();
+            }
+            return parsed;
         } catch (error) {
+            if (error?.aiGenerationDisabled) throw error;
+            if (error?.oopsNotified || error?.skipOops) throw error;
             if (isTokenRelatedError(error)) {
                 handleTokenError();
             }
             if (!isNetworkError(error)) {
                 console.error("API request failed:", error);
+            }
+            const method = String(config.method || 'GET').toUpperCase();
+            // Mark load/GET failures so UI catches never open Oops on refresh
+            if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {
+                if (error && typeof error === 'object') error.skipOops = true;
+            } else if (
+                isNetworkError(error) &&
+                !error.oopsNotified &&
+                shouldNotifyOopsForRequest(endpoint, method)
+            ) {
+                notifyOopsFromApiError(error, endpoint, method);
             }
             throw error;
         }
@@ -399,6 +485,11 @@ class ApiService {
     }
 
     async updateCollectionDescription(projectId, description, uploadedImage, targetAudience = null, campaignSeason = null) {
+        // AI suggestions run when a description is provided — block when kill switch is on
+        if (String(description || '').trim()) {
+            await ensureAiGenerationEnabled();
+        }
+
         // If there's an uploaded image, use FormData
         if (uploadedImage) {
             const formData = new FormData();
@@ -411,13 +502,21 @@ class ApiService {
                 formData.append('campaign_season', campaignSeason);
             }
 
-            return fetch(`${this.baseURL}/probackendapp/api/projects/${projectId}/setup/description/`, {
+            const response = await fetch(`${this.baseURL}/probackendapp/api/projects/${projectId}/setup/description/`, {
                 method: 'POST',
                 body: formData,
-            }).then(response => {
-                checkResponseAuth(response);
-                return response.json();
             });
+            checkResponseAuth(response);
+            const data = await response.json();
+            throwIfAiGenerationDisabledResponse(data, response.status);
+            if (!response.ok) {
+                const error = new Error(data?.error || data?.message || `HTTP error! status: ${response.status}`);
+                error.status = response.status;
+                notifyOopsFromApiError(error, 'setup/description', 'POST');
+                throw error;
+            }
+            clearOopsSession();
+            return data;
         }
 
         // Otherwise, use JSON
@@ -536,14 +635,24 @@ class ApiService {
             if (!response.ok) {
                 return response.text().then(text => {
                     console.error('Upload failed:', text);
-                    throw new Error(`Upload failed: ${response.status} ${text}`);
+                    let parsed = null;
+                    try { parsed = JSON.parse(text); } catch { /* ignore */ }
+                    throwIfAiGenerationDisabledResponse(parsed, response.status);
+                    const error = new Error(`Upload failed: ${response.status} ${text}`);
+                    error.status = response.status;
+                    notifyOopsFromApiError(error, 'upload-workflow-image', 'POST');
+                    throw error;
                 });
             }
+            clearOopsSession();
             return response.json();
         });
     }
 
     async updateCollectionSelections(projectId, collectionId, selections, uploadedImages = {}) {
+        // Moodboard save generates prompts via Gemini — block when kill switch is on
+        await ensureAiGenerationEnabled();
+
         // If there are uploaded images, use FormData
         if (Object.keys(uploadedImages).some(category => uploadedImages[category].length > 0)) {
             const formData = new FormData();
@@ -558,13 +667,21 @@ class ApiService {
                 });
             });
 
-            return fetch(`${this.baseURL}/probackendapp/api/projects/${projectId}/collections/${collectionId}/select/`, {
+            const response = await fetch(`${this.baseURL}/probackendapp/api/projects/${projectId}/collections/${collectionId}/select/`, {
                 method: 'POST',
                 body: formData,
-            }).then(response => {
-                checkResponseAuth(response);
-                return response.json();
             });
+            checkResponseAuth(response);
+            const data = await response.json();
+            throwIfAiGenerationDisabledResponse(data, response.status);
+            if (!response.ok) {
+                const error = new Error(data?.error || data?.message || `HTTP error! status: ${response.status}`);
+                error.status = response.status;
+                notifyOopsFromApiError(error, 'collections/select', 'POST');
+                throw error;
+            }
+            clearOopsSession();
+            return data;
         }
 
         // Otherwise, use JSON
@@ -590,6 +707,7 @@ class ApiService {
 
     // AI Image Generation endpoints
     async generateAIImages(collectionId, token, onProgress = null) {
+        await ensureAiGenerationEnabled();
         // Start the Celery task
         const startResponse = await this.request(`/probackendapp/api/collections/${collectionId}/generate-images/`, {
             method: 'POST',
@@ -617,9 +735,19 @@ class ApiService {
 
                     if (statusResponse.status === 'SUCCESS') {
                         clearInterval(pollInterval);
-                        // Return the result from the task
-                        // statusResponse.result contains {success, images, saved_images, total_generated}
                         const result = statusResponse.result || {};
+                        if (result.success === false || result.status === 'error' || result.status === 'failed') {
+                            const errorMsg =
+                                result.user_friendly_message ||
+                                result.error ||
+                                result.message ||
+                                'Task failed';
+                            const error = new Error(errorMsg);
+                            error.isGenerationTaskError = true;
+                            notifyOopsError({ error });
+                            reject(error);
+                            return;
+                        }
                         resolve({
                             images: result.images || [],
                             saved_images: result.saved_images || [],
@@ -630,7 +758,10 @@ class ApiService {
                         clearInterval(pollInterval);
                         const errorMsg = statusResponse.error ||
                             (typeof statusResponse.result === 'string' ? statusResponse.result : 'Task failed');
-                        reject(new Error(errorMsg));
+                        const error = new Error(errorMsg);
+                        error.isGenerationTaskError = true;
+                        notifyOopsError({ error });
+                        reject(error);
                     }
                     // If status is PENDING or STARTED, continue polling
                 } catch (error) {
@@ -710,6 +841,7 @@ class ApiService {
     }
 
     async generateProductModelImages(collectionId, imageTypeSelections = null, token) {
+        await ensureAiGenerationEnabled();
         const body = imageTypeSelections ? { image_type_selections: imageTypeSelections } : {};
         return this.request(`/probackendapp/api/collections/${collectionId}/generate-all-product-model-images/`, {
             method: 'POST',
@@ -770,7 +902,10 @@ class ApiService {
                     } else if (jobStatus.status === 'failed') {
                         clearInterval(pollInterval);
                         const errorMsg = jobStatus.error || 'Image generation job failed';
-                        reject(new Error(errorMsg));
+                        const error = new Error(errorMsg);
+                        error.isGenerationTaskError = true;
+                        notifyOopsError({ error });
+                        reject(error);
                     }
                     // If status is pending/running, continue polling
                 } catch (error) {
@@ -802,6 +937,7 @@ class ApiService {
     }
 
     async regenerateProductModelImage(collectionId, productImagePath, generatedImagePath, prompt, useDifferentModel = false, newModel = null, token, modelTier = "regular") {
+        await ensureAiGenerationEnabled();
         return this.request(`/probackendapp/api/collections/${collectionId}/regenerate/`, {
             method: 'POST',
             body: JSON.stringify({
@@ -1057,53 +1193,77 @@ class ApiService {
         const timeoutMs = options.timeoutMs || 10 * 60 * 1000; // 10 minutes
         const start = Date.now();
 
-        // Simple polling loop
-        // NOTE: This keeps the UI "loading" until the image is actually ready
-        // but avoids blocking the Django request thread.
-        // The frontend components don't need to change their success logic.
-        // They will only receive the final result once the task finishes.
+        const failTask = (message) => {
+            const error = new Error(message || 'Image generation failed');
+            error.isGenerationTaskError = true;
+            if (isAppCreditsError(error)) {
+                error.isAppCreditsError = true;
+                error.skipOops = true;
+                throw error;
+            }
+            notifyOopsError({ error });
+            throw error;
+        };
+
         // eslint-disable-next-line no-constant-condition
         while (true) {
             const status = await this.getImageTaskStatus(taskId, token);
 
             if (!status || !status.status) {
-                throw new Error('Invalid task status response from server');
+                failTask('Invalid task status response from server');
             }
 
             if (status.status === 'SUCCESS') {
-                // Celery task result: single image dict or batch { images: [...] }
+                // Celery marks the job SUCCESS even when the task returns { success: false }
                 if (!status.result) {
-                    throw new Error('Task completed but no result was returned');
+                    failTask('Task completed but no result was returned');
                 }
                 const result = status.result;
-                // Normalize batch response to same shape as single for consumers that expect .images
+                const logicalFail =
+                    result.success === false ||
+                    result.status === 'error' ||
+                    result.status === 'failed';
+                if (logicalFail) {
+                    failTask(
+                        result.user_friendly_message ||
+                        result.error ||
+                        result.message ||
+                        'Image generation failed'
+                    );
+                }
+                // Full generation succeeded — reset Oops try-again session
+                clearOopsSession();
                 if (result.images && Array.isArray(result.images)) {
                     return result;
                 }
                 return result;
             }
 
-            if (status.status === 'FAILURE') {
-                const errMsg = status.error || status.message || 'Image generation failed';
-                throw new Error(errMsg);
+            if (status.status === 'FAILURE' || status.status === 'REVOKED') {
+                failTask(status.error || status.message || 'Image generation failed');
             }
 
             if (Date.now() - start > timeoutMs) {
-                throw new Error('Image generation timed out. Please try again.');
+                failTask('Image generation timed out. Please try again.');
             }
 
-            // Wait before next poll
             await new Promise((resolve) => setTimeout(resolve, intervalMs));
         }
     }
 
     // Image Generation endpoints (imgbackendapp)
     async uploadOrnamentWithBackground(formData, token) {
-        const response = await axios.post(`${this.baseURL}/image/`, formData, {
-            headers: {
-                'Authorization': `Bearer ${token || ''}`,
-            }
-        });
+        await ensureAiGenerationEnabled();
+        let response;
+        try {
+            response = await axios.post(`${this.baseURL}/image/`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token || ''}`,
+                }
+            });
+        } catch (error) {
+            wrapAxiosAiGenerationError(error);
+        }
         const data = response.data;
 
         // If Celery queued a background task, wait for completion
@@ -1125,23 +1285,35 @@ class ApiService {
      */
     async analyzeReferenceImage(imageFile, context, token) {
         if (!imageFile) return { success: false, analysis_text: '', dress: '' };
+        await ensureAiGenerationEnabled();
         const formData = new FormData();
         formData.append('image', imageFile);
         formData.append('context', context || 'themed');
-        const response = await axios.post(`${this.baseURL}/image/analyze-reference/`, formData, {
-            headers: {
-                'Authorization': `Bearer ${token || ''}`,
-            },
-        });
+        let response;
+        try {
+            response = await axios.post(`${this.baseURL}/image/analyze-reference/`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token || ''}`,
+                },
+            });
+        } catch (error) {
+            wrapAxiosAiGenerationError(error);
+        }
         return response.data;
     }
 
     async changeBackground(formData, token) {
-        const response = await axios.post(`${this.baseURL}/image/change_background/`, formData, {
-            headers: {
-                'Authorization': `Bearer ${token || ''}`,
-            }
-        });
+        await ensureAiGenerationEnabled();
+        let response;
+        try {
+            response = await axios.post(`${this.baseURL}/image/change_background/`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token || ''}`,
+                }
+            });
+        } catch (error) {
+            wrapAxiosAiGenerationError(error);
+        }
         const data = response.data;
 
         if (data && data.task_ids && data.task_ids.length > 0) {
@@ -1155,6 +1327,7 @@ class ApiService {
     }
 
     async generateModelWithOrnament(formData, token) {
+        await ensureAiGenerationEnabled();
         // Extract ornament type and measurements from formData
         const ornamentType = formData.get('ornament_type');
         const ornamentMeasurements = formData.get('ornament_measurements');
@@ -1175,11 +1348,16 @@ class ApiService {
         // Update the prompt in formData
         formData.set('prompt', enhancedPrompt);
 
-        const response = await axios.post(`${this.baseURL}/image/generate-model/`, formData, {
-            headers: {
-                'Authorization': `Bearer ${token || ''}`,
-            }
-        });
+        let response;
+        try {
+            response = await axios.post(`${this.baseURL}/image/generate-model/`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token || ''}`,
+                }
+            });
+        } catch (error) {
+            wrapAxiosAiGenerationError(error);
+        }
         const data = response.data;
 
         if (data && data.task_ids && data.task_ids.length > 0) {
@@ -1193,6 +1371,7 @@ class ApiService {
     }
 
     async generateRealModelWithOrnament(formData, token) {
+        await ensureAiGenerationEnabled();
         // Extract ornament type and measurements from formData
         const ornamentType = formData.get('ornament_type');
         const ornamentMeasurements = formData.get('ornament_measurements');
@@ -1213,11 +1392,16 @@ class ApiService {
         // Update the prompt in formData
         formData.set('prompt', enhancedPrompt);
 
-        const response = await axios.post(`${this.baseURL}/image/generate-real-model/`, formData, {
-            headers: {
-                'Authorization': `Bearer ${token || ''}`,
-            }
-        });
+        let response;
+        try {
+            response = await axios.post(`${this.baseURL}/image/generate-real-model/`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token || ''}`,
+                }
+            });
+        } catch (error) {
+            wrapAxiosAiGenerationError(error);
+        }
         const data = response.data;
 
         if (data && data.task_ids && data.task_ids.length > 0) {
@@ -1231,6 +1415,7 @@ class ApiService {
     }
 
     async generateCampaignShot(formData, token) {
+        await ensureAiGenerationEnabled();
         // Extract ornament types, measurements and base prompt from formData
         const ornamentTypes = formData.getAll('ornament_types');
         const basePrompt = formData.get('prompt') || 'Generate campaign shot with multiple ornaments';
@@ -1262,11 +1447,16 @@ class ApiService {
         // Update the prompt in formData
         formData.set('prompt', enhancedPrompt);
 
-        const response = await axios.post(`${this.baseURL}/image/generate-campaign-shot/`, formData, {
-            headers: {
-                'Authorization': `Bearer ${token || ''}`,
-            }
-        });
+        let response;
+        try {
+            response = await axios.post(`${this.baseURL}/image/generate-campaign-shot/`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token || ''}`,
+                }
+            });
+        } catch (error) {
+            wrapAxiosAiGenerationError(error);
+        }
         const data = response.data;
 
         if (data && data.task_ids && data.task_ids.length > 0) {
@@ -1281,6 +1471,7 @@ class ApiService {
     }
 
     async regenerateImage(imageId, prompt, token, modelTier = "regular") {
+        await ensureAiGenerationEnabled();
         // Validate MongoDB ObjectId format (24 hex characters)
         if (!imageId || typeof imageId !== 'string') {
             throw new Error('Invalid image ID: image_id is required and must be a string');
@@ -1297,15 +1488,20 @@ class ApiService {
         formData.append('prompt', prompt);
         formData.append('model_tier', modelTier || 'regular');
 
-        const response = await axios.post(
-            `${this.baseURL}/image/regenerate/`,
-            formData,
-            {
-                headers: {
-                    'Authorization': `Bearer ${token || ''}`,
+        let response;
+        try {
+            response = await axios.post(
+                `${this.baseURL}/image/regenerate/`,
+                formData,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token || ''}`,
+                    }
                 }
-            }
-        );
+            );
+        } catch (error) {
+            wrapAxiosAiGenerationError(error);
+        }
         const data = response.data;
 
         if (data && data.task_id) {
@@ -1706,14 +1902,46 @@ axios.interceptors.request.use(
     }
 );
 
-// On 401 or token errors from axios, logout and redirect to login
+// On success of a finished action, reset Oops session.
+// Do NOT reset when a request only queues a Celery/job (task_id) — retry must survive until poll finishes.
 axios.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        const method = String(response?.config?.method || 'get').toLowerCase();
+        if (method !== 'get' && !responseQueuedAsyncJob(response?.data)) {
+            clearOopsSession();
+        }
+        return response;
+    },
     (error) => {
         const status = error?.response?.status;
-        const message = error?.response?.data?.error || error?.response?.data?.message || error?.message || '';
+        const data = error?.response?.data;
+        const message = data?.error || data?.message || error?.message || '';
+        const method = error?.config?.method || 'get';
+        const url = error?.config?.url || '';
+
         if (status === 401 || isTokenRelatedError({ message })) {
             handleTokenError();
+            return Promise.reject(error);
+        }
+        if (status === 503 && data?.ai_generation_disabled) {
+            return Promise.reject(error);
+        }
+
+        const apiError = new Error(message || 'Request failed');
+        apiError.status = status;
+        if (isAppCreditsError(apiError) || isAppCreditsError({ message })) {
+            apiError.isAppCreditsError = true;
+            apiError.skipOops = true;
+            error.isAppCreditsError = true;
+            error.skipOops = true;
+            error.message = message || error.message;
+            return Promise.reject(error);
+        }
+
+        // Never open Oops for GET/load/refresh requests
+        if (!error.oopsNotified && shouldNotifyOopsForRequest(url, method)) {
+            notifyOopsFromApiError(apiError, url, method);
+            error.oopsNotified = Boolean(apiError.oopsNotified);
         }
         return Promise.reject(error);
     }

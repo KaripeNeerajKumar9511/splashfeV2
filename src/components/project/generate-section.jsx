@@ -1,29 +1,12 @@
 import { useState, useEffect, useMemo } from "react"
-import { Sparkles, AlertCircle } from "lucide-react"
+import { Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { apiService } from "@/lib/api"
+import { apiService, setOopsRetry } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { useImageGeneration } from "@/context/ImageGenerationContext"
-
-function getUserFriendlyError(error) {
-    if (!error) return "Something went wrong. Please try again."
-    if (error.response) {
-        const status = error.response.status
-        const msg = error.response.data?.error || error.response.data?.message
-        if (msg && typeof msg === "string" && msg.length < 300) return msg
-        switch (status) {
-            case 400: return "Something seems incorrect. Please check your selection and try again."
-            case 401: return "Your session has expired. Please log in again."
-            case 403: return "You don't have permission to perform this action."
-            case 404: return "The requested item was not found."
-            case 429: return "Too many requests. Please wait a moment and try again."
-            case 500: return "Something went wrong on our side. Please try again in a few moments."
-            default: return "An unexpected error occurred. Please try again."
-        }
-    }
-    if (error.request) return "Network issue. Please check your connection and try again."
-    return error.message || "Something went wrong. Please try again."
-}
+import { isAiServerDownError } from "@/lib/aiGenerationGuard"
+import { isOopsNotifiedError, notifyOopsError } from "@/lib/oopsError"
+import { FieldIndication } from "@/components/FieldIndication"
 
 function selectionNeedsModel(imageTypeSelections) {
     if (!imageTypeSelections) return false
@@ -41,15 +24,14 @@ function selectionHasProductOnlyTypes(imageTypeSelections) {
 
 export function GenerateSection({ project, collectionData, onGenerate, canEdit, isOwner = false, productUploadPageRef = null }) {
     const [generating, setGenerating] = useState(false)
-    const [error, setError] = useState(null)
+    const [indication, setIndication] = useState(null)
     const [success, setSuccess] = useState(null)
     const [selectedModel, setSelectedModel] = useState(null)
-    const [generationProgress, setGenerationProgress] = useState(null) // { current: 1, total: 3 }
+    const [generationProgress, setGenerationProgress] = useState(null)
     const [selections, setSelections] = useState(null)
     const { token } = useAuth()
     const { setIsGenerating } = useImageGeneration()
     
-    // Get the selected model from backend (empty {} is not a selection)
     useEffect(() => {
         const loadSelectedModel = async () => {
             if (collectionData?.id) {
@@ -71,7 +53,6 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
         loadSelectedModel()
     }, [collectionData, token])
 
-    // Load selections (including aspect ratios) from saved product data and/or live ProductUploadPage
     useEffect(() => {
         const buildFromCollection = () => {
             const products = collectionData?.items?.[0]?.product_images || []
@@ -84,6 +65,7 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
                     bgReplace: Boolean(sel.bgReplace),
                     model: Boolean(sel.model),
                     campaign: Boolean(sel.campaign),
+                    plainBgColor: sel.plainBgColor || "#ffffff",
                     modelTiers: sel.modelTiers || {},
                     aspectRatios: sel.aspectRatios || {
                         plainBg: "1:1",
@@ -133,6 +115,7 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
                     bgReplace: Boolean(sel.bgReplace),
                     model: Boolean(sel.model),
                     campaign: Boolean(sel.campaign),
+                    plainBgColor: sel.plainBgColor || "#ffffff",
                     modelTiers: sel.modelTiers || {},
                     aspectRatios: sel.aspectRatios || {
                         plainBg: "1:1",
@@ -148,13 +131,13 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
 
     const handleGenerate = async () => {
         if (!collectionData?.id) {
-            setError('No collection found')
+            setIndication('No collection found yet. Open this project again and continue.')
             return
         }
 
         const productImages = collectionData?.items?.[0]?.product_images
         if (!productImages || productImages.length === 0) {
-            setError('Please upload product images first')
+            setIndication('Upload product images first, then try generating.')
             return
         }
 
@@ -163,18 +146,18 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
         const hasProductOnly = selectionHasProductOnlyTypes(imageTypeSelections)
 
         if (needsModel && !selectedModel) {
-            setError('Model Image and Campaign Image require a model. Please go to the Models tab and select a model.')
+            setIndication('Model and Campaign images need a model. Select one in the Models tab.')
             return
         }
 
         if (!selectedModel && !hasProductOnly) {
-            setError('Select Plain BG or BG Replace to generate without a model, or go to the Models tab to select a model.')
+            setIndication('Select Plain BG or BG Replace, or pick a model in the Models tab.')
             return
         }
 
         setGenerating(true)
         setIsGenerating(true)
-        setError(null)
+        setIndication(null)
         setSuccess(null)
 
         try {
@@ -183,14 +166,13 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
                     sel && typeof sel === 'object' && (sel.plainBg || sel.bgReplace || sel.model || sel.campaign)
                 )
                 if (!hasAnySelection) {
-                    setError('Please select at least one image type to generate in Product Upload')
+                    setIndication('Select at least one image type in Product Upload to continue.')
                     setGenerating(false)
                     setIsGenerating(false)
                     return
                 }
             }
 
-            // Without a model, only send product-only types
             let selectionsToSend = imageTypeSelections
             if (!selectedModel && imageTypeSelections) {
                 selectionsToSend = {}
@@ -203,18 +185,18 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
                 })
             }
 
+            setOopsRetry(() => handleGenerate())
+
             const response = await apiService.generateProductModelImagesWithPolling(
                 collectionData.id,
                 selectionsToSend,
                 token,
                 (jobStatus) => {
-                    // jobStatus from /api/jobs/{job_id}/images/
                     if (jobStatus) {
                         setGenerationProgress({
                             current: jobStatus.completed_images || 0,
                             total: jobStatus.total_images || 0,
                         })
-                        console.log('Generation progress:', jobStatus.status, jobStatus.completed_images, '/', jobStatus.total_images)
                     }
                 }
             )
@@ -222,16 +204,16 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
             if (response.success) {
                 setSuccess(`Generated ${response.total_generated || 0} images successfully!`)
                 if (onGenerate) {
-                    // Notify parent so it can refresh collection data from backend
                     await onGenerate({ imagesGenerated: true, jobId: response.job_id })
                 }
                 setTimeout(() => setSuccess(null), 5000)
             } else {
-                setError(response.error || 'Failed to generate images')
+                notifyOopsError({ onRetry: () => handleGenerate() })
             }
         } catch (err) {
             console.error('Error generating images:', err)
-            setError(getUserFriendlyError(err) || err?.message || 'Failed to generate images')
+            if (isAiServerDownError(err) || isOopsNotifiedError(err)) return
+            notifyOopsError({ error: err, onRetry: () => handleGenerate() })
         } finally {
             setGenerating(false)
             setIsGenerating(false)
@@ -283,7 +265,7 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
                             {totalSelectedImages !== null && totalSelectedImages > 0 ? (
                                 <>✓ Ready to generate {totalSelectedImages} image{totalSelectedImages !== 1 ? 's' : ''} ({totalSelectedImages} credits required)</>
                             ) : (
-                                <>⚠️ Select image types in Product Upload to generate</>
+                                <>Select image types in Product Upload to generate</>
                             )}
                         </p>
                     )}
@@ -311,12 +293,7 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
                 </Button>
             </div>
 
-            {error && (
-                <div className="mt-4 bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-2">
-                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                    <p className="text-red-400 text-sm">{error}</p>
-                </div>
-            )}
+            <FieldIndication>{indication}</FieldIndication>
 
             {success && (
                 <div className="mt-4 bg-green-500/10 border border-green-500/30 rounded-lg p-4">
@@ -333,8 +310,8 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
                                 Generating images... This may take several minutes depending on the number of products.
                             </p>
                             {generationProgress && (
-                                <p className="text-muted-foreground text-xs mt-1">
-                                    Processing product {generationProgress.current} of {generationProgress.total}...
+                                <p className="text-gold-solid/80 text-xs mt-1">
+                                    Progress: {generationProgress.current} / {generationProgress.total}
                                 </p>
                             )}
                         </div>
@@ -342,12 +319,10 @@ export function GenerateSection({ project, collectionData, onGenerate, canEdit, 
                 </div>
             )}
 
-            {!hasProducts && !error && (
-                <div className="mt-4 bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
-                    <p className="text-amber-300 text-sm">
-                        ⚠️ Please upload product images in Product Upload
-                    </p>
-                </div>
+            {!hasProducts && !indication && (
+                <FieldIndication>
+                    Upload product images in the Product Upload step before generating.
+                </FieldIndication>
             )}
         </div>
     )

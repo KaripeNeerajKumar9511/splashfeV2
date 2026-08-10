@@ -2,9 +2,12 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, Sparkles, Upload, Cpu, Users, Ruler, Zap, Loader2, CheckCircle, AlertCircle, RefreshCw, X, Download, Eye, Coins } from "lucide-react"
+import { ChevronLeft, Sparkles, Upload, Cpu, Users, Ruler, Zap, Loader2, CheckCircle, RefreshCw, X, Download, Eye, Coins } from "lucide-react"
 import { MdPhotoSizeSelectLarge } from "react-icons/md"
-import { apiService } from "@/lib/api"
+import { apiService, setOopsRetry } from "@/lib/api"
+import { isAiServerDownError } from "@/lib/aiGenerationGuard"
+import { isOopsNotifiedError, notifyOopsError } from "@/lib/oopsError"
+import { FieldIndication } from "@/components/FieldIndication"
 import Image from "next/image"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
@@ -73,44 +76,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
         }
     }, [showCostNote])
     const [showReferenceModal, setShowReferenceModal] = useState(false)
-    const getUserFriendlyError = (error) => {
-        if (error.response) {
-            const status = error.response.status;
-    
-            switch (status) {
-                case 400:
-                    return "Some information seems incorrect. Please check your inputs and try again.";
-    
-                case 401:
-                    return "Your session has expired. Please log in again.";
-    
-                case 403:
-                    return "You don’t have permission to perform this action.";
-    
-                case 404:
-                    return "Requested resource was not found.";
-    
-                case 413:
-                    return "The uploaded file is too large. Please upload a smaller image.";
-    
-                case 422:
-                    return "Please make sure all required fields are filled correctly.";
-    
-                case 500:
-                    return "Something went wrong on our side. Please try again in a few moments.";
-    
-                default:
-                    return "An unexpected error occurred. Please try again.";
-            }
-        }
-    
-        if (error.request) {
-            return "Network issue detected. Please check your internet connection.";
-        }
-    
-        return "Something went wrong. Please try again.";
-    };
-    
+
     // AI Model State
     const [aiFormData, setAiFormData] = useState({
         ornamentImage: null,
@@ -324,6 +290,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                 setAiRegenerateModal(prev => ({ ...prev, loading: false, error: 'Cannot regenerate: missing image ID.' }))
                 return
             }
+            setOopsRetry(() => submitAiRegenerate())
             const response = await apiService.regenerateImage(
                 target.mongo_id,
                 aiRegenerateModal.prompt,
@@ -353,15 +320,17 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                 })
                 toast.success(t("images.imageRegeneratedSuccess"))
             } else {
-                throw new Error(response.error || 'Regeneration failed')
+                notifyOopsError({ onRetry: () => submitAiRegenerate() })
+                setAiRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
             }
         } catch (error) {
             console.error("Error regenerating image:", error)
-            setAiRegenerateModal(prev => ({
-                ...prev,
-                loading: false,
-                error: error.response?.data?.error || error.message || getUserFriendlyError(error) || t("images.failedToRegenerate")
-            }))
+            if (isAiServerDownError(error) || isOopsNotifiedError(error)) {
+                setAiRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
+                return
+            }
+            notifyOopsError({ error, onRetry: () => submitAiRegenerate() })
+            setAiRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
         }
     }
 
@@ -412,17 +381,19 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
             formDataToSend.append("num_images", String(numImages))
             formDataToSend.append("model_tier", modelTier)
 
+            setOopsRetry(() => handleAiSubmit(e))
             const response = await apiService.generateModelWithOrnament(formDataToSend, token)
             console.log("response for ai model generation:", response)
             if (response && (response.images?.length || response.generated_image_url || response.status === "success")) {
                 setAiResult(response)
             } else {
-                setAiError("We couldn’t generate the model. Please check your images and try again.");
+                notifyOopsError({ onRetry: () => handleAiSubmit(e) })
             }
             
         } catch (err) {
             console.error("AI Generation Error:", err);
-            setAiError(getUserFriendlyError(err));
+            if (isAiServerDownError(err) || isOopsNotifiedError(err)) return
+            notifyOopsError({ error: err, onRetry: () => handleAiSubmit(e) })
         }
         finally {
             setAiIsLoading(false)
@@ -529,6 +500,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                 setRealRegenerateModal(prev => ({ ...prev, loading: false, error: 'Cannot regenerate: missing image ID.' }))
                 return
             }
+            setOopsRetry(() => submitRealRegenerate())
             const response = await apiService.regenerateImage(
                 target.mongo_id,
                 realRegenerateModal.prompt,
@@ -558,15 +530,17 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                 })
                 toast.success(t("images.imageRegeneratedSuccess"))
             } else {
-                throw new Error(response.error || 'Regeneration failed')
+                notifyOopsError({ onRetry: () => submitRealRegenerate() })
+                setRealRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
             }
         } catch (error) {
             console.error("Error regenerating image:", error)
-            setRealRegenerateModal(prev => ({
-                ...prev,
-                loading: false,
-                error: error.response?.data?.error || error.message || getUserFriendlyError(error) || t("images.failedToRegenerate")
-            }))
+            if (isAiServerDownError(error) || isOopsNotifiedError(error)) {
+                setRealRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
+                return
+            }
+            notifyOopsError({ error, onRetry: () => submitRealRegenerate() })
+            setRealRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
         }
     }
 
@@ -623,17 +597,19 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
             formDataToSend.append("num_images", String(numImages))
             formDataToSend.append("model_tier", modelTier)
 
+            setOopsRetry(() => handleRealSubmit(e))
             const response = await apiService.generateRealModelWithOrnament(formDataToSend, token)
             console.log("response for real model generation:", response)
 
             if (response && (response.images?.length || response.generated_image_url || response.status === "success")) {
                 setRealResult(response)
             } else {
-                setRealError(response?.message || t("images.failedToGenerate"))
+                notifyOopsError({ onRetry: () => handleRealSubmit(e) })
             }
         } catch (err) {
             console.error("Real Model Generation Error:", err);
-            setRealError(getUserFriendlyError(err));
+            if (isAiServerDownError(err) || isOopsNotifiedError(err)) return
+            notifyOopsError({ error: err, onRetry: () => handleRealSubmit(e) })
         }
         finally {
             setRealIsLoading(false)
@@ -695,18 +671,12 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                                         {t("images.ornamentProductImage")}<span className="text-red-500 ml-1">*</span> <br />
                                         <span className="text-xs text-muted-foreground font-normal">upload the product image which is captured with the help of scale for better measurements.</span>
                                         <button type="button" onClick={(e) => { e.preventDefault(); setShowReferenceModal(true); }} className="text-xs text-gold-solid hover:underline font-medium">(View reference)</button>
-                                        {aiUploadErrors.ornamentImage && (
-  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-    <AlertCircle className="w-4 h-4" />
-    {aiUploadErrors.ornamentImage}
-  </p>
-)}
-
                                     </label>
+                                    {aiUploadErrors.ornamentImage && <FieldIndication>{aiUploadErrors.ornamentImage}</FieldIndication>}
                                     <div
   className={`border-2 border-dashed rounded-xl p-6 cursor-pointer ${
     aiUploadErrors.ornamentImage
-      ? "border-red-500 bg-red-500/10"
+      ? "border-[rgba(201,168,76,0.5)] bg-[rgba(201,168,76,0.08)]"
       : "border-border bg-secondary/30 hover:bg-accent"
   }`}
   onClick={() => document.getElementById("ai-ornament-input")?.click()}
@@ -756,18 +726,12 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                                     <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                                         <div className="w-2 h-2 bg-gold-solid rounded-full"></div>
                                         {t("images.poseStyleReference")} ({t("common.optional")})
-                                        {aiUploadErrors.poseImage && (
-  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-    <AlertCircle className="w-4 h-4" />
-    {aiUploadErrors.poseImage}
-  </p>
-)}
-
                                     </label>
+                                    {aiUploadErrors.poseImage && <FieldIndication>{aiUploadErrors.poseImage}</FieldIndication>}
                                     <div
   className={`border-2 border-dashed rounded-xl p-6 cursor-pointer ${
     aiUploadErrors.poseImage
-      ? "border-red-500 bg-red-500/10"
+      ? "border-[rgba(201,168,76,0.5)] bg-[rgba(201,168,76,0.08)]"
       : "border-border bg-secondary/30 hover:bg-accent"
   }`}
   onClick={() => document.getElementById("ai-pose-input")?.click()}
@@ -848,15 +812,7 @@ const [aiUploadErrors, setAiUploadErrors] = useState({
                                     onValidityChange={setAiDimensionValid}
                                 />
 
-                                {/* Error Message */}
-                                {aiError && (
-                                    <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                        <AlertCircle className="w-5 h-5 text-red-500" />
-                                        <p className="text-red-400 text-sm">
-    {aiError}
-</p>
-                                    </div>
-                                )}
+                                <FieldIndication>{aiError}</FieldIndication>
 
                                 {/* Action Buttons */}
                                 <div className="pt-6 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -907,18 +863,12 @@ text-foreground text-sm leading-snug">
                                     <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                                         <div className="w-2 h-2 bg-gold-solid rounded-full"></div>
                                         Model Image<span className="text-red-500 ml-1">*</span>
-                                        {realUploadErrors.modelImage && (
-  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-    <AlertCircle className="w-4 h-4" />
-    {realUploadErrors.modelImage}
-  </p>
-)}
-
                                     </label>
+                                    {realUploadErrors.modelImage && <FieldIndication>{realUploadErrors.modelImage}</FieldIndication>}
                                     <div
   className={`border-2 border-dashed rounded-xl p-6 cursor-pointer ${
     realUploadErrors.modelImage
-      ? "border-red-500 bg-red-500/10"
+      ? "border-[rgba(201,168,76,0.5)] bg-[rgba(201,168,76,0.08)]"
       : "border-border bg-secondary/30 hover:bg-accent"
   }`}
   onClick={() => document.getElementById("real-model-input")?.click()}
@@ -961,18 +911,12 @@ text-foreground text-sm leading-snug">
                                         {t("images.ornamentProductImage")}<span className="text-red-500 ml-1">*</span> <br />
                                         <span className="text-xs text-muted-foreground font-normal">upload the product image which is captured with the help of scale for better measurements.</span>
                                         <button type="button" onClick={(e) => { e.preventDefault(); setShowReferenceModal(true); }} className="text-xs text-gold-solid hover:underline font-medium">(View reference)</button>
-                                        {realUploadErrors.ornamentImage && (
-  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-    <AlertCircle className="w-4 h-4" />
-    {realUploadErrors.ornamentImage}
-  </p>
-)}
-
                                     </label>
+                                    {realUploadErrors.ornamentImage && <FieldIndication>{realUploadErrors.ornamentImage}</FieldIndication>}
                                     <div
   className={`border-2 border-dashed rounded-xl p-6 cursor-pointer ${
     realUploadErrors.ornamentImage
-      ? "border-red-500 bg-red-500/10"
+      ? "border-[rgba(201,168,76,0.5)] bg-[rgba(201,168,76,0.08)]"
       : "border-border bg-secondary/30 hover:bg-accent"
   }`}
   onClick={() => document.getElementById("real-ornament-input")?.click()}
@@ -1013,18 +957,12 @@ text-foreground text-sm leading-snug">
                                     <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                                         <div className="w-2 h-2 bg-gold-solid rounded-full"></div>
                                         {t("images.poseStyleReference")} ({t("common.optional")})
-                                        {realUploadErrors.poseImage && (
-  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-    <AlertCircle className="w-4 h-4" />
-    {realUploadErrors.poseImage}
-  </p>
-)}
-
                                     </label>
+                                    {realUploadErrors.poseImage && <FieldIndication>{realUploadErrors.poseImage}</FieldIndication>}
                                     <div
   className={`border-2 border-dashed rounded-xl p-6 cursor-pointer ${
     realUploadErrors.poseImage
-      ? "border-red-500 bg-red-500/10"
+      ? "border-[rgba(201,168,76,0.5)] bg-[rgba(201,168,76,0.08)]"
       : "border-border bg-secondary/30 hover:bg-accent"
   }`}
   onClick={() => document.getElementById("real-pose-input")?.click()}
@@ -1128,15 +1066,7 @@ text-foreground text-sm leading-snug">
                                     onValidityChange={setRealDimensionValid}
                                 />
 
-                                {/* Error Message */}
-                                {realError && (
-                                    <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                        <AlertCircle className="w-5 h-5 text-red-500" />
-                                        <p className="text-red-400 text-sm">
-    {realError}
-</p>
-                                    </div>
-                                )}
+                                <FieldIndication>{realError}</FieldIndication>
 
                                 {/* Action Buttons */}
                                 <div className="pt-6 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -1357,12 +1287,7 @@ text-foreground text-sm leading-snug">
                                 />
                             </div>
 
-                            {aiRegenerateModal.error && (
-                                <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                    <p className="text-red-400 text-sm">{aiRegenerateModal.error}</p>
-                                </div>
-                            )}
+                            <FieldIndication>{aiRegenerateModal.error}</FieldIndication>
 
                             <div className="flex gap-3 pt-4 border-t border-border">
                                 <button
@@ -1477,12 +1402,7 @@ text-foreground text-sm leading-snug">
                                 />
                             </div>
 
-                            {realRegenerateModal.error && (
-                                <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                    <p className="text-red-400 text-sm">{realRegenerateModal.error}</p>
-                                </div>
-                            )}
+                            <FieldIndication>{realRegenerateModal.error}</FieldIndication>
 
                             <div className="flex gap-3 pt-4 border-t border-border">
                                 <button

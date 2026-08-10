@@ -58,6 +58,7 @@ function BillingPageContent() {
   const [currency, setCurrency] = useState(() =>
     normalizePricingCurrency(initialCurrencyParam || "USD")
   );
+  const [allowInr, setAllowInr] = useState(false);
   const [currencyReady, setCurrencyReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [accessType, setAccessType] = useState("individual");
@@ -80,9 +81,10 @@ function BillingPageContent() {
 
   useEffect(() => {
     let active = true;
-    resolveInitialPricingCurrency(initialCurrencyParam).then((code) => {
+    resolveInitialPricingCurrency(initialCurrencyParam).then((result) => {
       if (!active) return;
-      setCurrency(code);
+      setAllowInr(Boolean(result.isIndia));
+      setCurrency(normalizePricingCurrency(result.currency));
       setCurrencyReady(true);
     });
     return () => {
@@ -166,7 +168,8 @@ function BillingPageContent() {
   const handlePlanSelect = useCallback((planId, selectedCurrency) => {
     const plan = resolvePlan(planId);
     if (!plan || plan.ctaHref) return;
-    const code = normalizePricingCurrency(selectedCurrency || currency);
+    let code = normalizePricingCurrency(selectedCurrency || currency);
+    if (!allowInr) code = "USD";
     setSelectedPlanId(planId);
     setCurrency(code);
     setStoredPricingCurrency(code);
@@ -175,17 +178,18 @@ function BillingPageContent() {
       { scroll: false }
     );
     setModalOpen(true);
-  }, [router, resolvePlan, currency]);
+  }, [router, resolvePlan, currency, allowInr]);
 
   const handleCurrencyChange = useCallback((code) => {
-    const next = normalizePricingCurrency(code);
+    let next = normalizePricingCurrency(code);
+    if (!allowInr) next = "USD";
     setCurrency(next);
     setStoredPricingCurrency(next);
     router.replace(
       `/dashboard/my-account/billing?plan=${selectedPlanId}&currency=${next}`,
       { scroll: false }
     );
-  }, [router, selectedPlanId]);
+  }, [router, selectedPlanId, allowInr]);
 
   const handleProceedToPay = async (billingDetails, tax) => {
     const plan = resolvePlan(selectedPlanId);
@@ -194,7 +198,9 @@ function BillingPageContent() {
       return;
     }
 
-    const payCurrency = normalizePricingCurrency(currency);
+    const payCurrency = allowInr
+      ? normalizePricingCurrency(currency)
+      : "USD";
     const amount = getPlanNumericPrice(plan, payCurrency);
     if (!amount) {
       toast.error("Price is not available for this currency.");
@@ -314,6 +320,7 @@ function BillingPageContent() {
         dashboard
         plans={pricingPlans}
         currency={currency}
+        allowInr={allowInr}
         onCurrencyChange={handleCurrencyChange}
         onPlanSelect={handlePlanSelect}
       />

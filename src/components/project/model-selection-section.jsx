@@ -3,8 +3,11 @@
 import { useState, useEffect, useRef } from "react"
 import { Users, Sparkles, CheckCircle, Upload, Image as ImageIcon, X, Eye, MessageCircle, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { apiService } from "@/lib/api"
+import { apiService, setOopsRetry } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
+import { isAiServerDownError } from "@/lib/aiGenerationGuard"
+import { isOopsNotifiedError, notifyOopsError } from "@/lib/oopsError"
+import { FieldIndication } from "@/components/FieldIndication"
 import { formatRelativeCommentTime } from "@/lib/comment-time"
 import SmartImage from "@/utils/SmartImage"
 import { openImageViewer } from "@/lib/openImageViewer"
@@ -388,6 +391,7 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
         setSuccess(null)
 
         try {
+            setOopsRetry(() => handleGenerateAIModels())
             const response = await apiService.generateAIImages(collectionData.id,token)
 
             if (response.images && response.images.length > 0) {
@@ -395,11 +399,12 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
                 setGeneratedModels(response.images)
                 setSuccess(`Generated ${response.images.length} new AI models! Select which ones to keep along with your existing models.`)
             } else {
-                setError('No images were generated')
+                notifyOopsError({ onRetry: () => handleGenerateAIModels() })
             }
         } catch (err) {
             console.error('Error generating models:', err)
-            setError(err.message || 'Failed to generate models')
+            if (isAiServerDownError(err) || isOopsNotifiedError(err)) return
+            notifyOopsError({ error: err, onRetry: () => handleGenerateAIModels() })
         } finally {
             setGenerating(false)
         }
@@ -566,11 +571,7 @@ export function ModelSelectionSection({ project, collectionData, onSave, canEdit
             </div>
 
         <div className="mb-12">
-            {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 animate-fade-in">
-                    <p className="text-red-600">{error}</p>
-                </div>
-            )}
+            <FieldIndication className="mb-4">{error}</FieldIndication>
 
             {success && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 animate-fade-in">
@@ -1179,12 +1180,7 @@ function RealModelsTab({
     return (
         <div className="space-y-6">
             {/* Upload Model Photo Section */}
-            {uploadError && (
-  <div className="flex items-center gap-2 text-sm text-red-600 mt-2">
-    <X className="w-4 h-4" />
-    {uploadError}
-  </div>
-)}
+            <FieldIndication>{uploadError}</FieldIndication>
 
             <div className="space-y-4">
                 <div>

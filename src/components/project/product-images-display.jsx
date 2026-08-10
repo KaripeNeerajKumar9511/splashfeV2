@@ -4,8 +4,11 @@
 import { useState, useEffect } from "react"
 import { Download, ExternalLink, RefreshCw, X, Sparkles, Image as ImageIcon, MessageCircle, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { apiService } from "@/lib/api"
+import { apiService, setOopsRetry } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
+import { isAiServerDownError } from "@/lib/aiGenerationGuard"
+import { isOopsNotifiedError, notifyOopsError } from "@/lib/oopsError"
+import { FieldIndication } from "@/components/FieldIndication"
 import { formatRelativeCommentTime } from "@/lib/comment-time"
 import { ModelTierSelector } from "@/components/images/ModelTierSelector"
 import { resolveRegenerationTier } from "@/lib/creditPricing"
@@ -289,6 +292,7 @@ export function ProductImagesDisplay({
         setError(null)
 
         try {
+            setOopsRetry(() => handleRegenerate(product, generatedImage))
             const response = await apiService.regenerateProductModelImage(
                 collectionData.id,
                 product.uploaded_image_path,
@@ -309,11 +313,12 @@ export function ProductImagesDisplay({
                     onRegenerateSuccess()
                 }
             } else {
-                setError(response.error || "Failed to regenerate image")
+                notifyOopsError({ onRetry: () => handleRegenerate(product, generatedImage) })
             }
         } catch (err) {
             console.error('Error regenerating image:', err)
-            setError(err.message || "Failed to regenerate image")
+            if (isAiServerDownError(err) || isOopsNotifiedError(err)) return
+            notifyOopsError({ error: err, onRetry: () => handleRegenerate(product, generatedImage) })
         } finally {
             setRegenerating(null)
         }
@@ -417,20 +422,7 @@ export function ProductImagesDisplay({
                 </div>
             </div>
 
-            {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-                    <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                            <div className="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center">
-                                <X className="w-3 h-3 text-red-600" />
-                            </div>
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-red-700 font-medium">{error}</p>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <FieldIndication className="mb-6">{error}</FieldIndication>
 
             {/* Products Grid */}
             <div className="space-y-8">
@@ -1074,18 +1066,7 @@ export function ProductImagesDisplay({
                             </p>
                         </div>
 
-                        {error && (
-                            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-                                <div className="flex items-center">
-                                    <div className="flex-shrink-0">
-                                        <X className="w-5 h-5 text-red-600" />
-                                    </div>
-                                    <div className="ml-3">
-                                        <p className="text-red-700 text-sm font-medium">{error}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        <FieldIndication className="mb-6">{error}</FieldIndication>
 
                         {/* Example Prompts - Only show when not using different model */}
                         {!useDifferentModel && (

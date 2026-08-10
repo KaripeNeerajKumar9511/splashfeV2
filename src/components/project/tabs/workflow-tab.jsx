@@ -20,8 +20,11 @@ import { ModelSelectionSection } from "@/components/project/model-selection-sect
 import { ProductUploadPage } from "@/components/project/product-upload-page"
 import { ImageGrid } from "../Image-grid"
 import { GenerateSection } from "../generate-section"
-import { apiService } from "@/lib/api"
+import { apiService, setOopsRetry } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
+import { isAiServerDownError } from "@/lib/aiGenerationGuard"
+import { isOopsNotifiedError, notifyOopsError } from "@/lib/oopsError"
+import { FieldIndication } from "@/components/FieldIndication"
 import { canEditProject, isProjectOwner } from "@/lib/permissions"
 import { useImageGeneration } from "@/context/ImageGenerationContext"
 import { dataCache, cacheKeys } from "@/lib/data-cache"
@@ -174,6 +177,7 @@ export function WorkflowTab({ project }) {
         setSuccessMessage(null)
 
         try {
+            setOopsRetry(() => handleRequestSuggestions(description, targetAudience, campaignSeason))
             // Call the API to update collection (description is optional, will generate suggestions only if description is provided)
             const response = await apiService.updateCollectionDescription(
                 project.id,
@@ -205,11 +209,16 @@ export function WorkflowTab({ project }) {
                 // Clear success message after 3 seconds
                 setTimeout(() => setSuccessMessage(null), 3000)
             } else {
-                throw new Error(response.error || 'Failed to save project settings')
+                notifyOopsError({ onRetry: () => handleRequestSuggestions(description, targetAudience, campaignSeason) })
+                setSuggestionsRequested(false)
             }
         } catch (err) {
             console.error('Error saving project settings:', err)
-            setError(err.message)
+            if (isAiServerDownError(err) || isOopsNotifiedError(err)) {
+                setSuggestionsRequested(false)
+                return
+            }
+            notifyOopsError({ error: err, onRetry: () => handleRequestSuggestions(description, targetAudience, campaignSeason) })
             setSuggestionsRequested(false)
         } finally {
             setLoading(false)
@@ -323,9 +332,9 @@ export function WorkflowTab({ project }) {
                     setSavedSteps(newSavedSteps)
                 } catch (err) {
                     // Don't set error for 401 (unauthorized) - user might be logging out
+                    // Page-load fetch failures must not open Oops or show raw API errors
                     if (err.message && !err.message.includes('401')) {
                         console.error('Error fetching collection:', err)
-                        setError(err.message)
                     }
                 } finally {
                     setLoading(false)
@@ -342,6 +351,7 @@ export function WorkflowTab({ project }) {
             setLoading(true)
             setError(null)
             setSuccessMessage(null)
+            setOopsRetry(() => handleStepSave(stepData))
 
             switch (activeStep) {
                 case 1:
@@ -399,6 +409,8 @@ export function WorkflowTab({ project }) {
 
                             // Clear success message after 3 seconds
                             setTimeout(() => setSuccessMessage(null), 3000)
+                        } else {
+                            notifyOopsError({ onRetry: () => handleStepSave(stepData) })
                         }
                     }
                     break
@@ -422,11 +434,15 @@ export function WorkflowTab({ project }) {
                                 setSuccessMessage('Model selected successfully!')
                                 setTimeout(() => setSuccessMessage(null), 3000)
                             } else {
-                                throw new Error(response.error || 'Failed to save model')
+                                const failErr = new Error('Failed to save model')
+                                notifyOopsError({ error: failErr, onRetry: () => handleStepSave(stepData) })
+                                throw failErr
                             }
                         } catch (err) {
                             console.error('Error saving model:', err)
-                            setError(err.message || 'Failed to save model')
+                            if (!isAiServerDownError(err) && !isOopsNotifiedError(err)) {
+                                notifyOopsError({ error: err, onRetry: () => handleStepSave(stepData) })
+                            }
                             throw err // Re-throw to prevent navigation
                         } finally {
                             setLoading(false)
@@ -489,7 +505,8 @@ export function WorkflowTab({ project }) {
             setError(null)
         } catch (err) {
             console.error('Error saving step:', err)
-            setError(err.message || 'Failed to save')
+            if (isAiServerDownError(err) || isOopsNotifiedError(err)) return
+            notifyOopsError({ error: err, onRetry: () => handleStepSave(stepData) })
         } finally {
             setLoading(false)
         }
@@ -518,11 +535,7 @@ export function WorkflowTab({ project }) {
                     </div>
                 )}
 
-                {error && (
-                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
-                        <p className="text-red-400">Error: {error}</p>
-                    </div>
-                )}
+                <FieldIndication className="mb-4">{error}</FieldIndication>
 
                 {successMessage && (
                     <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-4">
@@ -705,9 +718,10 @@ export function WorkflowTab({ project }) {
                         return
                     }
                     if (productUploadPageRef?.current?.saveSelections) {
+                        setOopsRetry(() => handleSaveAndContinue())
                         const saveResult = await productUploadPageRef.current.saveSelections()
                         if (!saveResult.success) {
-                            setError(saveResult.error || 'Failed to save generation selections')
+                            notifyOopsError({ onRetry: () => handleSaveAndContinue() })
                             return
                         }
                     }
@@ -724,7 +738,8 @@ export function WorkflowTab({ project }) {
                     }
                 } catch (err) {
                     console.error('Error checking step 4:', err)
-                    setError('Failed to save generation selections')
+                    if (isAiServerDownError(err) || isOopsNotifiedError(err)) return
+                    notifyOopsError({ error: err, onRetry: () => handleSaveAndContinue() })
                     return
                 }
             }

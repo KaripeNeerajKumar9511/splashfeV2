@@ -2,9 +2,12 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, Star, Sparkles, Upload, Image as ImageIcon, Settings, Loader2, CheckCircle, AlertCircle, RefreshCw, X, Download, Eye, Coins } from "lucide-react"
+import { ChevronLeft, Star, Sparkles, Upload, Image as ImageIcon, Settings, Loader2, CheckCircle, RefreshCw, X, Download, Eye, Coins } from "lucide-react"
 import { MdPhotoSizeSelectLarge } from "react-icons/md"
-import { apiService } from "@/lib/api"
+import { apiService, setOopsRetry } from "@/lib/api"
+import { isAiServerDownError } from "@/lib/aiGenerationGuard"
+import { isOopsNotifiedError, notifyOopsError } from "@/lib/oopsError"
+import { FieldIndication } from "@/components/FieldIndication"
 import Image from "next/image"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
@@ -192,6 +195,7 @@ const BackgroundReplaceForm = () => {
                 return
             }
 
+            setOopsRetry(() => submitRegenerate())
             const response = await apiService.regenerateImage(
                 imageId,
                 regenerateModal.prompt,
@@ -220,15 +224,17 @@ const BackgroundReplaceForm = () => {
                 setRegenerateModal({ isOpen: false, prompt: '', loading: false, error: null, image: null, modelTier: MODEL_TIER_DEFAULTS.themed })
                 toast.success(t("images.imageRegeneratedSuccess"))
             } else {
-                throw new Error(response.error || 'Regeneration failed')
+                notifyOopsError({ onRetry: () => submitRegenerate() })
+                setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
             }
         } catch (error) {
             console.error("Error regenerating image:", error)
-            setRegenerateModal(prev => ({
-                ...prev,
-                loading: false,
-                error: error?.response?.data?.error || error?.message || t("images.failedToRegenerate")
-            }))
+            if (isAiServerDownError(error) || isOopsNotifiedError(error)) {
+                setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
+                return
+            }
+            notifyOopsError({ error, onRetry: () => submitRegenerate() })
+            setRegenerateModal(prev => ({ ...prev, loading: false, error: null }))
         }
     }
 
@@ -378,17 +384,19 @@ const BackgroundReplaceForm = () => {
             formDataToSend.append("num_images", String(productImages.length === 1 ? numImages : 1))
             formDataToSend.append("model_tier", modelTier)
 
+            setOopsRetry(() => handleSubmit(e))
             const response = await apiService.changeBackground(formDataToSend, token)
             console.log("response for change background", response)
 
             if (response && (response.success !== false)) {
                 setResult(response)
             } else {
-                setError(response.error || t("images.failedToGenerate"))
+                notifyOopsError({ onRetry: () => handleSubmit(e) })
             }
         } catch (err) {
             console.error("Error generating image:", err)
-            setError(err.message || t("images.errorGeneratingImage"))
+            if (isAiServerDownError(err) || isOopsNotifiedError(err)) return
+            notifyOopsError({ error: err, onRetry: () => handleSubmit(e) })
         } finally {
             setIsLoading(false)
         }
@@ -428,16 +436,11 @@ const BackgroundReplaceForm = () => {
                                     {t("images.productImage")}<span className="text-red-500 ml-1">*</span>
                                     <span className="text-sm font-normal text-muted-foreground">(1–{MAX_PRODUCT_IMAGES} images; multiple = one combined result)</span>
                                 </label>
-                                {uploadErrors.productImages && (
-                                    <p className="mb-2 text-sm text-red-600 flex items-center gap-1">
-                                        <AlertCircle className="w-4 h-4" />
-                                        {uploadErrors.productImages}
-                                    </p>
-                                )}
+                                {uploadErrors.productImages && <FieldIndication>{uploadErrors.productImages}</FieldIndication>}
                                 <div
                                     className={`border-2 border-dashed rounded-2xl p-6 transition-all duration-300 cursor-pointer ${
                                         uploadErrors?.productImages
-                                            ? "border-red-500 bg-red-500/10"
+                                            ? "border-[rgba(201,168,76,0.5)] bg-[rgba(201,168,76,0.08)]"
                                             : isDragging
                                             ? "border-gold-solid bg-accent"
                                             : "border-gold-dashed hover:border-gold-solid hover:bg-accent"
@@ -499,18 +502,12 @@ const BackgroundReplaceForm = () => {
                                 <label className="block text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                                     <ImageIcon className="w-5 h-5 text-gold-solid" />
                                     Reference Background Image
-                                    {uploadErrors.referenceImage && (
-  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-    <AlertCircle className="w-4 h-4" />
-    {uploadErrors.referenceImage}
-  </p>
-)}
                                 </label>
-                                
+                                {uploadErrors.referenceImage && <FieldIndication>{uploadErrors.referenceImage}</FieldIndication>}
                                 <div
   className={`border-2 border-dashed rounded-2xl p-6 transition-all duration-300 cursor-pointer ${
     uploadErrors?.referenceImage
-      ? "border-red-500 bg-red-500/10"
+      ? "border-[rgba(201,168,76,0.5)] bg-[rgba(201,168,76,0.08)]"
       : "border-gold-dashed hover:border-gold-solid hover:bg-accent"
   }`}
   onClick={() => document.getElementById("reference-image").click()}
@@ -631,13 +628,7 @@ const BackgroundReplaceForm = () => {
                                 primaryColor={GOLD}
                             />
 
-                            {/* Error Message */}
-                            {error && (
-                                <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
-                                    <AlertCircle className="w-5 h-5 text-red-500" />
-                                    <p className="text-red-700 text-sm">{t("common.somethingWentWrong")}</p>
-                                </div>
-                            )}
+                            <FieldIndication>{error}</FieldIndication>
 
                             {/* Action Buttons */}
                             <div className="flex items-center justify-between pt-8 border-t border-border">
@@ -809,12 +800,7 @@ const BackgroundReplaceForm = () => {
                                 />
                             </div>
 
-                            {regenerateModal.error && (
-                                <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                                    <p className="text-red-400 text-sm">{regenerateModal.error}</p>
-                                </div>
-                            )}
+                            <FieldIndication>{regenerateModal.error}</FieldIndication>
 
                             <div className="flex gap-3 pt-4 border-t border-border">
                                 <button

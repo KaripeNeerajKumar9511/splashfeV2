@@ -1,11 +1,12 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { apiService } from "@/lib/api";
 import toast from "react-hot-toast";
 import { resolveBillingDestination } from "@/lib/billingAccess";
 import { redirectToOrgPayments } from "@/lib/portalSwitch";
+import { requiresAuthBootstrap } from "@/lib/publicRoutes";
 
 const AuthContext = createContext(null);
 
@@ -14,6 +15,8 @@ export function AuthProvider({ children }) {
     const [token, setToken] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
+    const pathname = usePathname();
+    const waitForAuth = requiresAuthBootstrap(pathname);
 
     // Load saved token & user from localStorage (client-side only)
     useEffect(() => {
@@ -215,8 +218,8 @@ export function AuthProvider({ children }) {
         isLoading,
     };
 
-    // Wait until loading finishes before rendering children
-    if (isLoading) {
+    // Dashboard routes wait for localStorage auth; public pages (e.g. blog) render immediately
+    if (isLoading && waitForAuth) {
         return <div className="text-center py-10">Loading...</div>;
     }
 

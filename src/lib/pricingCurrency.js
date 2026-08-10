@@ -28,32 +28,57 @@ export function setStoredPricingCurrency(currency) {
   }
 }
 
-export async function fetchDefaultPricingCurrency() {
+export async function fetchPricingGeo() {
   try {
     const res = await fetch(`${API_BASE}/api/plans/pricing/geo/`, {
       cache: "no-store",
     });
     if (!res.ok) throw new Error("geo failed");
     const data = await res.json();
-    return normalizePricingCurrency(data?.currency || "USD");
+    const isIndia = Boolean(data?.is_india);
+    return {
+      currency: normalizePricingCurrency(data?.currency || (isIndia ? "INR" : "USD")),
+      isIndia,
+      countryCode: data?.country_code || null,
+      fallback: Boolean(data?.fallback),
+    };
   } catch {
-    return "USD";
+    return {
+      currency: "USD",
+      isIndia: false,
+      countryCode: null,
+      fallback: true,
+    };
   }
 }
 
+export async function fetchDefaultPricingCurrency() {
+  const geo = await fetchPricingGeo();
+  return geo.currency;
+}
+
 /**
- * Resolve initial currency: URL ?currency= > manual preference > geo API (fallback USD).
- * Geo results are not persisted — only explicit user toggles / URL params are.
+ * Resolve initial currency for India vs non-India.
+ * Non-India visitors are locked to USD (INR never shown / never applied).
+ * India visitors: URL ?currency= > stored preference > geo default (INR).
  */
 export async function resolveInitialPricingCurrency(searchParamsCurrency) {
+  const geo = await fetchPricingGeo();
+  if (!geo.isIndia) {
+    setStoredPricingCurrency("USD");
+    return { currency: "USD", isIndia: false };
+  }
+
   if (searchParamsCurrency) {
     const fromUrl = normalizePricingCurrency(searchParamsCurrency);
     setStoredPricingCurrency(fromUrl);
-    return fromUrl;
+    return { currency: fromUrl, isIndia: true };
   }
+
   const stored = getStoredPricingCurrency();
-  if (stored) return stored;
-  return fetchDefaultPricingCurrency();
+  if (stored) return { currency: stored, isIndia: true };
+
+  return { currency: geo.currency || "INR", isIndia: true };
 }
 
 export function getPlanNumericPrice(plan, currency = "INR") {

@@ -287,6 +287,7 @@ export function defaultProductRowSelection() {
         bgReplace: false,
         model: false,
         campaign: false,
+        plainBgColor: "#ffffff",
         modelTiers: {
             plainBg: "regular",
             bgReplace: "regular",
@@ -313,10 +314,12 @@ export function mergeProductRowSelection(saved = {}) {
         ...(saved.aspectRatios || {}),
     }
     const allowed = new Set(ASPECT_RATIO_OPTIONS.map((option) => option.value))
+    const plainBgColor = String(saved.plainBgColor || defaults.plainBgColor || "#ffffff").trim() || "#ffffff"
 
     return {
         ...defaults,
         ...saved,
+        plainBgColor,
         modelTiers: Object.fromEntries(
             Object.keys(mergedModelTiers).map((key) => [key, "regular"])
         ),

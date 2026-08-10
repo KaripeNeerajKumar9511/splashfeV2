@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiService } from "@/lib/api";
+import { buildMediaUrl } from "@/utils/imagehelper";
 import MarketingPageShell, { MarketingHero } from "@/components/home/MarketingPageShell";
+
+function mediaSrc(src) {
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  return buildMediaUrl(src);
+}
 
 export default function BlogIndexPage() {
   const [posts, setPosts] = useState([]);
@@ -40,8 +47,8 @@ export default function BlogIndexPage() {
         subtitle="Latest news, trends, and insights on AI, fashion photography, and digital retail."
       />
 
-      <section className="bg-[#0E0D09] py-14 sm:py-20 md:py-24">
-        <div className="mx-auto max-w-screen-xl px-4 sm:px-6">
+      <section className="bg-[#0E0D09] py-10 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-screen-xl px-3 sm:px-6">
           {loading ? (
             <p className="text-center font-['DM_Sans',sans-serif] text-[rgba(242,237,216,0.58)]">
               Loading posts…
@@ -55,9 +62,9 @@ export default function BlogIndexPage() {
               No published posts yet. Check back soon.
             </p>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 sm:gap-8">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
               {posts.map((post) => {
-                const cover = post.image || post.image_url;
+                const cover = mediaSrc(post.image || post.image_url);
                 return (
                   <Link
                     key={post.slug || post.id}

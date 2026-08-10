@@ -16,6 +16,7 @@ import {
 import { estimateProductUploadCredits } from "@/lib/creditPricing"
 import SmartImage from "@/utils/SmartImage"
 import { openImageViewer } from "@/lib/openImageViewer"
+import { SolidColorPicker } from "@/components/ui/solid-color-picker"
 const MAX_IMAGE_MB = 10;
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -55,6 +56,8 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
         model: false,
         campaign: false
     })
+    // Shared Plain BG background color (default white)
+    const [plainBgColor, setPlainBgColor] = useState("#ffffff")
     // Credit settings state
     const [creditSettings, setCreditSettings] = useState({
         credits_per_image_generation: 2 // Default fallback
@@ -208,11 +211,16 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
             setUploadedProducts(existing)
             // Initialize selections from backend or default to false
             const initialSelections = {}
+            let loadedPlainBgColor = "#ffffff"
             existing.forEach((product, index) => {
                 initialSelections[index] = product.generation_selections
                     ? mergeProductRowSelection(product.generation_selections)
                     : defaultProductRowSelection()
+                if (index === 0 && product.generation_selections?.plainBgColor) {
+                    loadedPlainBgColor = String(product.generation_selections.plainBgColor).trim() || "#ffffff"
+                }
             })
+            setPlainBgColor(loadedPlainBgColor)
             setSelections(initialSelections)
         }
     }, [collectionData])
@@ -647,6 +655,30 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
     }
 
     // Function to save selections to backend (called manually when user clicks "Save and Continue")
+    const updatePlainBgColor = (color) => {
+        const nextColor = color || "#ffffff"
+        setPlainBgColor(nextColor)
+        setSelections((prev) => {
+            const next = { ...prev }
+            Object.keys(next).forEach((key) => {
+                next[key] = { ...mergeProductRowSelection(next[key] || {}), plainBgColor: nextColor }
+            })
+            return next
+        })
+        onDirtyChange?.()
+    }
+
+    const selectionsWithPlainBgColor = (sourceSelections = selections) => {
+        const withColor = {}
+        Object.entries(sourceSelections || {}).forEach(([key, sel]) => {
+            withColor[key] = {
+                ...mergeProductRowSelection(sel || {}),
+                plainBgColor: plainBgColor || "#ffffff",
+            }
+        })
+        return withColor
+    }
+
     const saveSelections = async () => {
         if (!collectionData?.id || !token || Object.keys(selections).length === 0) {
             return { success: true } // Nothing to save
@@ -655,7 +687,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
         try {
             await apiService.updateProductGenerationSelections(
                 collectionData.id,
-                selections,
+                selectionsWithPlainBgColor(),
                 token
             )
             // Refresh collection data to get updated selections
@@ -672,7 +704,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
 
     // Expose selections and save function to parent component via ref
     useImperativeHandle(ref, () => ({
-        getSelections: () => selections,
+        getSelections: () => selectionsWithPlainBgColor(),
         saveSelections: saveSelections,
         hasPendingUploads: () => selectedFiles.length > 0,
     }))
@@ -898,8 +930,8 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                         <th className="px-4 py-4 text-left text-sm font-semibold text-foreground min-w-[200px]">
                                             Uploaded Product
                                         </th>
-                                        <th className="px-4 py-4 text-center text-sm font-semibold text-foreground min-w-[150px]">
-                                            <div className="flex items-center justify-center gap-2">
+                                        <th className="relative z-20 px-4 py-4 text-center text-sm font-semibold text-foreground min-w-[150px]">
+                                            <div className="flex items-center justify-center gap-1.5">
                                                 <button
                                                     onClick={() => {
                                                         const newValue = !columnSelections.plainBg
@@ -910,6 +942,7 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                                 newSelections[index] = defaultProductRowSelection()
                                                             }
                                                             newSelections[index].plainBg = newValue
+                                                            newSelections[index].plainBgColor = plainBgColor || "#ffffff"
                                                         })
                                                         setSelections(newSelections)
                                                         onDirtyChange?.()
@@ -924,6 +957,14 @@ export const ProductUploadPage = React.forwardRef(({ project, collectionData, on
                                                     )}
                                                 </button>
                                                 <span>Plain BG Image</span>
+                                                <SolidColorPicker
+                                                    value={plainBgColor || "#ffffff"}
+                                                    onChange={updatePlainBgColor}
+                                                    disabled={!canEdit}
+                                                    defaultColor="#ffffff"
+                                                    align="right"
+                                                    showHexInput
+                                                />
                                             </div>
                                         </th>
                                         <th className="px-4 py-4 text-center text-sm font-semibold text-foreground min-w-[150px]">

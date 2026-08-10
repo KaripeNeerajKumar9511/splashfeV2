@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { apiService } from "@/lib/api";
 import toast from "react-hot-toast";
-import { Lock, Eye, EyeOff, CheckCircle, ArrowLeft } from "lucide-react";
+import { Lock, Eye, EyeOff, CheckCircle, ArrowLeft, Loader2 } from "lucide-react";
 
 import AuthPageShell from "@/components/auth/AuthPageShell";
 import PortalDeviceGuard from "@/components/portal/PortalDeviceGuard";
@@ -15,7 +15,7 @@ import PortalDeviceGuard from "@/components/portal/PortalDeviceGuard";
 const inputClassName =
     "w-full min-h-11 pl-10 pr-10 py-3 text-base sm:text-sm bg-input border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -208,5 +208,23 @@ export default function ResetPasswordPage() {
                 </div>
             </AuthPageShell>
         </PortalDeviceGuard>
+    );
+}
+
+export default function ResetPasswordPage() {
+    return (
+        <Suspense
+            fallback={
+                <PortalDeviceGuard>
+                    <AuthPageShell>
+                        <div className="flex w-full items-center justify-center py-16">
+                            <Loader2 className="h-8 w-8 animate-spin text-gold-solid" />
+                        </div>
+                    </AuthPageShell>
+                </PortalDeviceGuard>
+            }
+        >
+            <ResetPasswordContent />
+        </Suspense>
     );
 }

@@ -15,6 +15,25 @@ function deepMerge(base, override) {
   return merged;
 }
 
+export const SHOWCASE_SPEED_OPTIONS = [
+  0.5, 0.7, 0.85, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5,
+];
+
+export function snapShowcaseSpeed(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return 1;
+  let best = SHOWCASE_SPEED_OPTIONS[SHOWCASE_SPEED_OPTIONS.length - 1];
+  let bestDiff = Math.abs(best - n);
+  for (const option of SHOWCASE_SPEED_OPTIONS) {
+    const diff = Math.abs(option - n);
+    if (diff < bestDiff) {
+      best = option;
+      bestDiff = diff;
+    }
+  }
+  return best;
+}
+
 export const HOME_PAGE_DEFAULTS = {
   hero: {
     pill_text: "Built exclusively for jewelry brands",
@@ -43,6 +62,7 @@ export const HOME_PAGE_DEFAULTS = {
     subheading: "Campaign-ready visuals created entirely with Splash AI Studio.",
     cta_text: "View all →",
     cta_href: "/gallery",
+    marquee_seconds: 1,
   },
   how: {
     eye_label: "How it works",
@@ -439,7 +459,11 @@ export function resolveHomeContent(raw) {
   }
   hero.cta_primary_href = resolveDemoHref(hero.cta_primary_href);
 
-  const showcase = { ...merged.showcase, cta_href: merged.showcase?.cta_href || "/gallery" };
+  const showcase = {
+    ...merged.showcase,
+    cta_href: merged.showcase?.cta_href || "/gallery",
+    marquee_seconds: snapShowcaseSpeed(merged.showcase?.marquee_seconds),
+  };
   if (!raw?.showcase?.title_html) {
     if (raw?.showcase?.heading) {
       showcase.title_html = plainTitleToHtml(

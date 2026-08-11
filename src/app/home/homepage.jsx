@@ -11,7 +11,12 @@ import MarketingNav from "@/components/home/MarketingNav";
 import MarketingFooter from "@/components/home/MarketingFooter";
 import PricingPlansSection from "@/components/home/PricingPlansSection";
 import { apiService } from "@/lib/api";
-import { HOME_PAGE_DEFAULTS, resolveHomeContent } from "@/lib/pageContentDefaults";
+import {
+  HOME_PAGE_DEFAULTS,
+  resolveHomeContent,
+  snapShowcaseSpeed,
+} from "@/lib/pageContentDefaults";
+import { buildMediaUrl } from "@/utils/imagehelper";
 
 const WHO_ICON_MAP = {
   Gem: GemIcon,
@@ -19,6 +24,105 @@ const WHO_ICON_MAP = {
   Palette: PaletteIcon,
   Share2: Share2Icon,
 };
+
+const SHOWCASE_RATIO_ORDER = [
+  "1:1",
+  "4:5",
+  "5:4",
+  "3:4",
+  "4:3",
+  "2:3",
+  "3:2",
+  "9:16",
+  "16:9",
+  "21:9",
+];
+
+function resolveShowcaseSrc(src) {
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src) || src.startsWith("/images/") || src.startsWith("/galery/")) {
+    return src;
+  }
+  return buildMediaUrl(src);
+}
+
+function getCircularOffset(index, active, total) {
+  if (total <= 0) return 0;
+  let diff = index - active;
+  const half = Math.floor(total / 2);
+  if (diff > half) diff -= total;
+  if (diff < -half) diff += total;
+  return diff;
+}
+
+function ShowcaseCoverflow({ images, secondsPerCard = 1 }) {
+  const items = useMemo(
+    () => (Array.isArray(images) ? images.filter((img) => img?.src || img?.image_url) : []),
+    [images]
+  );
+  const [active, setActive] = useState(0);
+  const dwellMs = snapShowcaseSpeed(secondsPerCard) * 1000;
+
+  useEffect(() => {
+    setActive(0);
+  }, [items.length]);
+
+  useEffect(() => {
+    if (items.length <= 1) return undefined;
+    const id = window.setInterval(() => {
+      setActive((prev) => (prev + 1) % items.length);
+    }, dwellMs);
+    return () => window.clearInterval(id);
+  }, [items.length, dwellMs]);
+
+  if (items.length === 0) {
+    return (
+      <div className="sc-cover-empty">
+        Showcase images will appear here once uploaded in admin.
+      </div>
+    );
+  }
+
+  const transitionMs = Math.min(520, Math.max(220, dwellMs * 0.55));
+
+  return (
+    <div className="sc-cover" style={{ "--sc-transition": `${transitionMs}ms` }}>
+      <div className="sc-cover-stage" aria-live="polite">
+        {items.map((img, index) => {
+          const offset = getCircularOffset(index, active, items.length);
+          const abs = Math.abs(offset);
+          if (abs > 4) return null;
+
+          const ratio = img.aspect_ratio || "1:1";
+          const src = resolveShowcaseSrc(img.src || img.image_url);
+          const scale = offset === 0 ? 1 : Math.max(0.78, 1 - abs * 0.08);
+          const xVw = offset * 11;
+          // Keep cards fully opaque — 3D/opacity made images + ratio badges look blurred.
+          const opacity = abs > 3 ? 0 : 1;
+
+          return (
+            <article
+              key={img.id || `${src}-${index}`}
+              className={`sc-cover-card${offset === 0 ? " is-active" : ""}`}
+              style={{
+                aspectRatio: ratio.replace(":", " / "),
+                zIndex: 40 - abs,
+                opacity,
+                transform: `translate(-50%, -50%) translateX(${xVw}vw) scale(${scale})`,
+              }}
+            >
+              <div className="sc-cover-frame">
+                <span className="sc-badge">{ratio}</span>
+                <img src={src} alt={img.alt || img.label || "Showcase image"} loading="lazy" draggable={false} />
+              </div>
+            </article>
+          );
+        })}
+      </div>
+      <div className="sc-cover-floor" aria-hidden="true" />
+    </div>
+  );
+}
 
 const OUTPUT_ICONS = [
   <svg key="0" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"><circle cx="9" cy="9" r="5" /><circle cx="9" cy="9" r="2" /></svg>,
@@ -46,13 +150,7 @@ function TickerContent({ items }) {
   );
 }
 
-const FALLBACK_SHOWCASE = [
-  { id: "fallback-1", src: "/images/lifestyle.webp", label: "Lifestyle", homepage_layout: "lifestyle", alt: "Gold and emerald necklace product shot" },
-  { id: "fallback-2", src: "/images/campaign.webp", label: "Campaign visual", homepage_layout: "campaign", alt: "Campaign visual with model wearing gold necklace" },
-  { id: "fallback-3", src: "/images/product.webp", label: "Product shot", homepage_layout: "product", alt: "Lifestyle setup at a festive jewelry event" },
-  { id: "fallback-4", src: "/images/model.webp", label: "Model shot", homepage_layout: "model", alt: "Model shot with gold chain necklace" },
-  { id: "fallback-5", src: "/images/multipice.png", label: "Multi piece", homepage_layout: "multipiece", alt: "Multi-piece gold earrings collection" },
-];
+const FALLBACK_SHOWCASE = [];
 
 export default function SplashLanding() {
   const [showcaseImages, setShowcaseImages] = useState(FALLBACK_SHOWCASE);
@@ -71,10 +169,17 @@ export default function SplashLanding() {
       .then((res) => res.json())
       .then((data) => {
         if (data.success && Array.isArray(data.images) && data.images.length > 0) {
-          setShowcaseImages(data.images);
+          const ordered = [...data.images].sort((a, b) => {
+            const ai = SHOWCASE_RATIO_ORDER.indexOf(a.aspect_ratio);
+            const bi = SHOWCASE_RATIO_ORDER.indexOf(b.aspect_ratio);
+            return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+          });
+          setShowcaseImages(ordered);
+        } else {
+          setShowcaseImages([]);
         }
       })
-      .catch(() => {});
+      .catch(() => setShowcaseImages([]));
   }, []);
 
   const content = useMemo(() => resolveHomeContent(pageContent), [pageContent]);
@@ -128,19 +233,21 @@ h1 em{font-style:italic;color:var(--gold-l)}
 @media(prefers-reduced-motion:reduce){.ticker-track{animation:none;flex-wrap:wrap;width:100%}.ticker-group{padding:.85rem 1rem}}
 
 /* SHOWCASE */
-.showcase{background:var(--d2);padding:5rem 5%;max-width:100%;box-sizing:border-box;overflow:hidden}
-.showcase-hdr{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem}
-.showcase-cta{margin-top:.5rem;align-self:flex-start}
-.sc-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr);grid-template-rows:minmax(250px,1.05fr) minmax(250px,1fr);gap:12px;min-height:540px}
-.sc{border-radius:14px;overflow:hidden;border:.5px solid var(--gold-b);position:relative;background:var(--d3);min-height:0}
-.sc-product{grid-column:1;grid-row:1/3}
-.sc-campaign{grid-column:2;grid-row:1}
-.sc-lifestyle{grid-column:3;grid-row:1}
-.sc-model{grid-column:2;grid-row:2}
-.sc-multipiece{grid-column:3;grid-row:2}
-.sc-lbl{position:absolute;bottom:12px;left:14px;z-index:2;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-l);background:rgba(14,13,9,.82);padding:5px 10px;border-radius:6px;pointer-events:none;backdrop-filter:blur(4px)}
-.sc-inner{position:absolute;inset:0;background:var(--d1)}
-.sc-inner img{width:100%;height:100%;max-width:none;object-fit:contain;object-position:center;display:block}
+.showcase{background:var(--d2);padding:4.5rem 0 3.5rem;max-width:100%;box-sizing:border-box;overflow:hidden}
+.showcase-inner{padding:0 5%}
+.showcase-hdr{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:.85rem}
+.showcase-hdr .st{margin-bottom:0}
+.showcase-cta{margin-top:.35rem;align-self:flex-start;flex:none;min-height:0;padding:10px 18px;border:.5px solid var(--gold);color:var(--gold);border-radius:8px;font-size:13px;font-weight:400;letter-spacing:.01em;background:transparent}
+.showcase-cta:hover{color:var(--gold-l);border-color:var(--gold-l)}
+.sc-cover{position:relative;width:100%;padding:0 2%;margin-top:0}
+.sc-cover-stage{position:relative;height:clamp(240px,34vw,380px);overflow:visible}
+.sc-cover-card{position:absolute;left:50%;top:44%;height:clamp(170px,28vw,300px);width:auto;max-width:min(72vw,560px);transition:transform var(--sc-transition,420ms) cubic-bezier(.22,.61,.36,1),opacity var(--sc-transition,420ms) ease;will-change:transform;pointer-events:none;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.sc-cover-card.is-active{pointer-events:auto;z-index:50 !important}
+.sc-cover-frame{position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;border:.5px solid rgba(201,168,76,.55);background:var(--d3);box-shadow:0 18px 42px rgba(0,0,0,.42);-webkit-box-reflect:below 12px linear-gradient(transparent 55%,rgba(0,0,0,.35))}
+.sc-cover-frame img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;user-select:none;-webkit-user-drag:none}
+.sc-badge{position:absolute;top:10px;left:10px;z-index:2;font-size:11px;font-weight:500;letter-spacing:.03em;color:#fff;background:rgba(0,0,0,.78);padding:4px 8px;border-radius:6px;pointer-events:none;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+.sc-cover-floor{pointer-events:none;height:70px;margin-top:-8px;background:radial-gradient(ellipse at center,rgba(201,168,76,.06),transparent 68%)}
+.sc-cover-empty{margin:0 5%;padding:2.5rem 1.25rem;border:.5px dashed var(--gold-b);border-radius:14px;color:var(--t3);text-align:center;font-size:14px}
 
 /* SECTION COMMONS */
 section{padding:6rem 5%;max-width:100%;box-sizing:border-box}
@@ -256,7 +363,10 @@ section{padding:6rem 5%;max-width:100%;box-sizing:border-box}
 /* RESPONSIVE — tablet */
 @media(max-width:960px){
   section{padding:clamp(3.5rem,8vw,4.5rem) clamp(1rem,4vw,4%)}
-  .showcase{padding:clamp(3.5rem,8vw,4.5rem) clamp(1rem,4vw,4%)}
+  .showcase{padding:clamp(3.5rem,8vw,4.5rem) 0}
+  .showcase-inner{padding:0 clamp(1rem,4vw,4%)}
+  .sc-cover-stage{height:clamp(240px,42vw,360px)}
+  .sc-cover-card{height:clamp(150px,30vw,250px)}
   .how-lay{grid-template-columns:1fr;gap:2.5rem}
   .how-vis{display:none}
   .og{grid-template-columns:repeat(2,1fr)}
@@ -281,60 +391,26 @@ section{padding:6rem 5%;max-width:100%;box-sizing:border-box}
   .wc,.cc{padding:1.5rem}
   .cta-acts{flex-direction:column;width:100%;max-width:360px;margin:0 auto}
   .cta-acts .btn-p,.cta-acts .btn-wa{width:100%;justify-content:center}
-  .showcase{padding:clamp(2.5rem,6vw,3.5rem) clamp(.85rem,4vw,1.25rem)}
-  .showcase-hdr{margin-bottom:1.5rem}
+  .showcase{padding:clamp(2.5rem,6vw,3.5rem) 0}
+  .showcase-inner{padding:0 clamp(.85rem,4vw,1.25rem)}
+  .showcase-hdr{margin-bottom:.75rem}
   .showcase-hdr .st{font-size:clamp(28px,7vw,40px)}
-  .showcase-cta{width:100%;justify-content:center;text-align:center}
+  .showcase-cta{width:auto;justify-content:center;text-align:center}
+  .sc-cover-stage{height:clamp(200px,54vw,280px)}
+  .sc-cover-card{height:clamp(130px,40vw,200px);top:46%}
 }
 
-/* Mobile showcase stack (phones only — tablets use portrait layout below) */
-@media(max-width:767px){
-  .sc-grid{
-    grid-template-columns:1fr;
-    grid-template-rows:none;
-    gap:12px;
-    min-height:0;
-    width:100%;
-  }
-  .sc-product,.sc-campaign,.sc-lifestyle,.sc-model,.sc-multipiece{
-    grid-column:1;
-    grid-row:auto;
-    width:100%;
-    min-height:0;
-    aspect-ratio:4/3;
-  }
-  .sc-product{aspect-ratio:3/4}
-  .sc-campaign{aspect-ratio:3/4}
-  .sc-model,.sc-multipiece{aspect-ratio:3/4}
-  .sc-inner img{object-fit:cover;object-position:center}
-  .sc-product .sc-inner img,.sc-lifestyle .sc-inner img{object-position:center top}
-  .sc-campaign .sc-inner img{object-position:center 20%}
-  .sc-model .sc-inner img{object-position:center 15%}
-  .sc-multipiece .sc-inner img{object-position:center}
-  .sc-lbl{
-    bottom:10px;
-    left:10px;
-    font-size:11px;
-    letter-spacing:.1em;
-    padding:7px 12px;
-    border-radius:8px;
-    max-width:calc(100% - 20px);
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-}
-
-/* Tablet portrait — scrollable mosaic (not locked to one viewport) */
+/* Tablet portrait */
 @media(min-width:768px) and (max-width:1024px) and (orientation:portrait){
   .showcase{
     min-height:0;
     max-height:none;
-    padding:2.25rem 1.5rem 2.5rem;
+    padding:2.25rem 0 2.5rem;
     display:block;
-    overflow:visible;
+    overflow:hidden;
     box-sizing:border-box;
   }
+  .showcase-inner{padding:0 1.5rem}
   .showcase .eye{
     margin-bottom:.55rem;
     font-size:10px;
@@ -345,7 +421,7 @@ section{padding:6rem 5%;max-width:100%;box-sizing:border-box}
     align-items:center;
     justify-content:space-between;
     gap:.75rem;
-    margin-bottom:1.25rem;
+    margin-bottom:.65rem;
   }
   .showcase-hdr .st{
     font-size:clamp(24px,3.6vw,34px);
@@ -360,53 +436,18 @@ section{padding:6rem 5%;max-width:100%;box-sizing:border-box}
     white-space:nowrap;
     width:auto;
   }
-  .sc-grid{
-    display:grid;
-    grid-template-columns:1.15fr 1fr;
-    grid-template-areas:
-      "product product"
-      "campaign multipiece"
-      "campaign lifestyle"
-      "model model";
-    grid-template-rows:auto;
-    gap:12px;
-    min-height:0;
-    width:100%;
-  }
-  .sc{
-    width:100%;
-    height:auto;
-    min-height:0;
-    border-radius:12px;
-  }
-  .sc-product{grid-area:product;aspect-ratio:16/10}
-  .sc-campaign{grid-area:campaign;aspect-ratio:3/4}
-  .sc-multipiece{grid-area:multipiece;aspect-ratio:1/1}
-  .sc-lifestyle{grid-area:lifestyle;aspect-ratio:1/1}
-  .sc-model{grid-area:model;aspect-ratio:16/10}
-  .sc-inner img{
-    object-fit:cover;
-    object-position:center;
-  }
-  .sc-campaign .sc-inner img{object-position:center 18%}
-  .sc-model .sc-inner img{object-position:center 15%}
-  .sc-lbl{
-    bottom:8px;
-    left:10px;
-    font-size:9px;
-    letter-spacing:.1em;
-    padding:4px 9px;
-    border-radius:5px;
-    max-width:calc(100% - 16px);
-  }
+  .sc-cover-card{height:clamp(140px,28vw,210px)}
+  .sc-cover-stage{height:clamp(220px,36vw,300px)}
 }
 
 /* Small phones portrait */
 @media(max-width:480px){
   section{padding:3rem 1rem}
-  .showcase{padding:2.75rem .85rem}
+  .showcase{padding:2.75rem 0}
+  .showcase-inner{padding:0 .85rem}
   .og{grid-template-columns:1fr}
-  .sc-grid{gap:10px}
+  .sc-cover-card{height:clamp(120px,46vw,170px)}
+  .sc-cover-stage{height:clamp(190px,56vw,250px)}
   .pg{grid-template-columns:1fr}
   .cta{padding:4.5rem 1rem 4rem}
   .cta h2{font-size:clamp(28px,8vw,36px)}
@@ -594,21 +635,14 @@ section{padding:6rem 5%;max-width:100%;box-sizing:border-box}
 
 {/* SHOWCASE */}
 <div className="showcase" id="showcase">
-  <div className="eye">{showcase.eye_label}</div>
-  <div className="showcase-hdr">
-    <div className="st" dangerouslySetInnerHTML={{ __html: showcase.title_html }} />
-    <a href={showcase.cta_href} className="btn-o showcase-cta">{showcase.cta_text}</a>
+  <div className="showcase-inner">
+    <div className="eye">{showcase.eye_label}</div>
+    <div className="showcase-hdr">
+      <div className="st" dangerouslySetInnerHTML={{ __html: showcase.title_html }} />
+      <a href={showcase.cta_href || "/gallery"} className="btn-o showcase-cta">{showcase.cta_text}</a>
+    </div>
   </div>
-  <div className="sc-grid">
-    {showcaseImages.map((img) => (
-      <div key={img.id || img.src} className={`sc sc-${img.homepage_layout || "product"}`}>
-        <div className="sc-inner">
-          <img src={img.src || img.image_url} alt={img.alt || img.label || "Showcase image"} loading="lazy" />
-        </div>
-        <div className="sc-lbl">{img.label}</div>
-      </div>
-    ))}
-  </div>
+  <ShowcaseCoverflow images={showcaseImages} secondsPerCard={showcase.marquee_seconds} />
 </div>
 
 {/* HOW IT WORKS */}

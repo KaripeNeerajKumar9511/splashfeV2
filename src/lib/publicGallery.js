@@ -26,14 +26,21 @@ const CATEGORY_LABELS = {
 export function normalizePublicGalleryImage(img) {
   if (!img) return null;
   const category = img.category || img.image_type || "other";
+  const rawSrc = img.src || img.image_url;
+  let src = rawSrc;
+  if (rawSrc && String(rawSrc).startsWith("/media/")) {
+    src = `${API_BASE_URL.replace(/\/$/, "")}${rawSrc}`;
+  }
   return {
-    id: img.id || img.src || img.image_url,
-    src: img.src || img.image_url,
+    id: img.id || rawSrc,
+    src,
     category: category === "background_change" ? "background" : category,
     label: img.label || CATEGORY_LABELS[category] || CATEGORY_LABELS.other,
     alt: img.alt || img.alt_text || img.label || "Jewelry visual",
     homepage_layout: img.homepage_layout,
     image_type: img.image_type || category,
+    aspect_ratio: img.aspect_ratio || "",
+    visibility: img.visibility || "",
   };
 }
 

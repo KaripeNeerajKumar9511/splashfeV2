@@ -45,7 +45,9 @@ const BackgroundReplaceForm = () => {
     const [formData, setFormData] = useState({
         productImages: [],
         referenceImage: null,
-        backgroundColor: "#ffffff",
+        // Do not default white here — white is only for plain BG images.
+        // With no reference, backend auto-picks suitable themed BG + props.
+        backgroundColor: "",
         prompt: "",
         dimension: "1:1",
     })
@@ -378,8 +380,15 @@ const BackgroundReplaceForm = () => {
                 formDataToSend.append("background_image", formData.referenceImage)
             }
             if (referenceAnalysis) formDataToSend.append("reference_analysis", referenceAnalysis)
-            formDataToSend.append("background_color", formData.backgroundColor)
-            formDataToSend.append("prompt", formData.prompt || t("images.changeTheBackground"))
+            // Only send an explicit color if set; never force white on themed generation
+            if (formData.backgroundColor?.trim()) {
+                formDataToSend.append("background_color", formData.backgroundColor.trim())
+            }
+            if (formData.prompt?.trim()) {
+                formDataToSend.append("prompt", formData.prompt.trim())
+            } else {
+                formDataToSend.append("prompt", "")
+            }
             formDataToSend.append("dimension", formData.dimension)
             formDataToSend.append("num_images", String(productImages.length === 1 ? numImages : 1))
             formDataToSend.append("model_tier", modelTier)
@@ -704,7 +713,7 @@ const BackgroundReplaceForm = () => {
                                                 </div>
                                             ))}
                                         </div>
-                                        <button type="button" onClick={() => { setResult(null); setFormData({ productImages: [], referenceImage: null, backgroundColor: "#ffffff", prompt: "", dimension: "1:1" }); setProductPreviews([]); setReferencePreview(null); setReferenceAnalysis(""); }} className="w-full px-4 py-3 border border-border text-foreground rounded-xl font-semibold hover:bg-accent transition-all">{t("images.newImage")}</button>
+                                        <button type="button" onClick={() => { setResult(null); setFormData({ productImages: [], referenceImage: null, backgroundColor: "", prompt: "", dimension: "1:1" }); setProductPreviews([]); setReferencePreview(null); setReferenceAnalysis(""); }} className="w-full px-4 py-3 border border-border text-foreground rounded-xl font-semibold hover:bg-accent transition-all">{t("images.newImage")}</button>
                                     </>
                                 ) : (
                                     <>
@@ -720,7 +729,7 @@ const BackgroundReplaceForm = () => {
                                                 <button onClick={() => downloadImage(result, "themed-image.png")} className="px-4 py-3 bg-gold-gradient text-primary-foreground rounded-xl font-semibold transition-all flex items-center justify-center gap-2"><Download size={16} />{t("images.download")}</button>
                                                 <button onClick={handleRegenerate} className="px-4 py-3 border border-gold-muted text-gold-solid rounded-xl font-semibold hover:bg-accent transition-all flex items-center justify-center gap-2"><RefreshCw size={18} />{t("images.regenerate")}</button>
                                             </div>
-                                            <button onClick={() => { setResult(null); setFormData({ productImages: [], referenceImage: null, backgroundColor: "#ffffff", prompt: "", dimension: "1:1" }); setProductPreviews([]); setReferencePreview(null); setReferenceAnalysis(""); }} className="w-full px-4 py-3 border border-border text-foreground rounded-xl font-semibold hover:bg-accent transition-all">{t("images.newImage")}</button>
+                                            <button onClick={() => { setResult(null); setFormData({ productImages: [], referenceImage: null, backgroundColor: "", prompt: "", dimension: "1:1" }); setProductPreviews([]); setReferencePreview(null); setReferenceAnalysis(""); }} className="w-full px-4 py-3 border border-border text-foreground rounded-xl font-semibold hover:bg-accent transition-all">{t("images.newImage")}</button>
                                         </div>
                                     </>
                                 )}

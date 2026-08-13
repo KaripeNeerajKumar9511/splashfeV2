@@ -25,19 +25,6 @@ const WHO_ICON_MAP = {
   Share2: Share2Icon,
 };
 
-const SHOWCASE_RATIO_ORDER = [
-  "1:1",
-  "4:5",
-  "5:4",
-  "3:4",
-  "4:3",
-  "2:3",
-  "3:2",
-  "9:16",
-  "16:9",
-  "21:9",
-];
-
 function resolveShowcaseSrc(src) {
   if (!src) return "";
   if (/^https?:\/\//i.test(src) || src.startsWith("/images/") || src.startsWith("/galery/")) {
@@ -61,19 +48,29 @@ function ShowcaseCoverflow({ images, secondsPerCard = 1 }) {
     [images]
   );
   const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
   const dwellMs = snapShowcaseSpeed(secondsPerCard) * 1000;
+
+  // Initial center + immediate neighbors (next / previous): index 0, 1, and last.
+  const priorityIndexes = useMemo(() => {
+    const n = items.length;
+    if (n <= 0) return new Set();
+    if (n === 1) return new Set([0]);
+    if (n === 2) return new Set([0, 1]);
+    return new Set([0, 1, n - 1]);
+  }, [items.length]);
 
   useEffect(() => {
     setActive(0);
   }, [items.length]);
 
   useEffect(() => {
-    if (items.length <= 1) return undefined;
+    if (items.length <= 1 || paused) return undefined;
     const id = window.setInterval(() => {
       setActive((prev) => (prev + 1) % items.length);
     }, dwellMs);
     return () => window.clearInterval(id);
-  }, [items.length, dwellMs]);
+  }, [items.length, dwellMs, paused]);
 
   if (items.length === 0) {
     return (
@@ -86,7 +83,12 @@ function ShowcaseCoverflow({ images, secondsPerCard = 1 }) {
   const transitionMs = Math.min(520, Math.max(220, dwellMs * 0.55));
 
   return (
-    <div className="sc-cover" style={{ "--sc-transition": `${transitionMs}ms` }}>
+    <div
+      className="sc-cover"
+      style={{ "--sc-transition": `${transitionMs}ms` }}
+      onPointerEnter={() => setPaused(true)}
+      onPointerLeave={() => setPaused(false)}
+    >
       <div className="sc-cover-stage" aria-live="polite">
         {items.map((img, index) => {
           const offset = getCircularOffset(index, active, items.length);
@@ -99,6 +101,7 @@ function ShowcaseCoverflow({ images, secondsPerCard = 1 }) {
           const xVw = offset * 11;
           // Keep cards fully opaque — 3D/opacity made images + ratio badges look blurred.
           const opacity = abs > 3 ? 0 : 1;
+          const isPriority = priorityIndexes.has(index);
 
           return (
             <article
@@ -113,7 +116,13 @@ function ShowcaseCoverflow({ images, secondsPerCard = 1 }) {
             >
               <div className="sc-cover-frame">
                 <span className="sc-badge">{ratio}</span>
-                <img src={src} alt={img.alt || img.label || "Showcase image"} loading="lazy" draggable={false} />
+                <img
+                  src={src}
+                  alt={img.alt || img.label || "Showcase image"}
+                  loading={isPriority ? "eager" : "lazy"}
+                  fetchPriority={isPriority ? "high" : "auto"}
+                  draggable={false}
+                />
               </div>
             </article>
           );
@@ -150,10 +159,11 @@ function TickerContent({ items }) {
   );
 }
 
-const FALLBACK_SHOWCASE = [];
-
-export default function SplashLanding() {
-  const [showcaseImages, setShowcaseImages] = useState(FALLBACK_SHOWCASE);
+export default function SplashLanding({ initialShowcaseImages = [] }) {
+  const showcaseImages = useMemo(
+    () => (Array.isArray(initialShowcaseImages) ? initialShowcaseImages : []),
+    [initialShowcaseImages]
+  );
   const [pageContent, setPageContent] = useState(HOME_PAGE_DEFAULTS);
 
   useEffect(() => {
@@ -161,25 +171,6 @@ export default function SplashLanding() {
       .getPageContent("home")
       .then((data) => setPageContent(data || {}))
       .catch(() => setPageContent({}));
-  }, []);
-
-  useEffect(() => {
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-    fetch(`${apiBase}/api/homepage/public-gallery/showcase/`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.images) && data.images.length > 0) {
-          const ordered = [...data.images].sort((a, b) => {
-            const ai = SHOWCASE_RATIO_ORDER.indexOf(a.aspect_ratio);
-            const bi = SHOWCASE_RATIO_ORDER.indexOf(b.aspect_ratio);
-            return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-          });
-          setShowcaseImages(ordered);
-        } else {
-          setShowcaseImages([]);
-        }
-      })
-      .catch(() => setShowcaseImages([]));
   }, []);
 
   const content = useMemo(() => resolveHomeContent(pageContent), [pageContent]);

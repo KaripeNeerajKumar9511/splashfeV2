@@ -79,15 +79,35 @@ export async function fetchPublicGalleryImages() {
   return getPublicGalleryImagesFromFilesystem();
 }
 
+const SHOWCASE_RATIO_ORDER = [
+  "1:1",
+  "4:5",
+  "5:4",
+  "3:4",
+  "4:3",
+  "2:3",
+  "3:2",
+  "9:16",
+  "16:9",
+  "21:9",
+];
+
 export async function fetchHomepageShowcaseImages() {
   try {
     const response = await fetch(`${API_BASE_URL}/api/homepage/public-gallery/showcase/`, {
-      next: { revalidate: 60 },
+      cache: "force-cache",
     });
     if (response.ok) {
       const data = await response.json();
       if (data.success && Array.isArray(data.images) && data.images.length > 0) {
-        return data.images.map(normalizePublicGalleryImage).filter(Boolean);
+        return data.images
+          .map(normalizePublicGalleryImage)
+          .filter(Boolean)
+          .sort((a, b) => {
+            const ai = SHOWCASE_RATIO_ORDER.indexOf(a.aspect_ratio);
+            const bi = SHOWCASE_RATIO_ORDER.indexOf(b.aspect_ratio);
+            return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+          });
       }
     }
   } catch (error) {

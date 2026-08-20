@@ -41,7 +41,6 @@ export default function DashboardContactPage() {
 
   return (
     <div className="space-y-2 pb-8">
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');`}</style>
       <div className="border-b border-sidebar-border pb-5 mb-2">
         <p className="text-xs uppercase tracking-wider text-gold-solid font-medium">Help & Learning</p>
         <h1 className="text-2xl font-semibold text-foreground mt-1" style={{ fontFamily: "'Cormorant Garamond', serif" }}>

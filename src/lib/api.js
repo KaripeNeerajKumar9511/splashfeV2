@@ -1864,6 +1864,29 @@ class ApiService {
         return res?.post ?? res?.data?.post ?? null;
     }
 
+    async getLandingNav() {
+        const res = await this.get('/api/homepage/landing-pages/nav/', { cache: 'no-store' });
+        return {
+            features: res?.features || [],
+            products: res?.products || [],
+            industries: res?.industries || [],
+        };
+    }
+
+    async getLandingPages(type) {
+        const res = await this.get(`/api/homepage/landing-pages/${encodeURIComponent(type)}/`, { cache: 'no-store' });
+        return res?.pages || [];
+    }
+
+    async getLandingPage(type, slug, preview) {
+        const qs = preview ? `?preview=${encodeURIComponent(preview)}` : '';
+        const res = await this.get(
+            `/api/homepage/landing-pages/${encodeURIComponent(type)}/${encodeURIComponent(slug)}/${qs}`,
+            { cache: 'no-store' }
+        );
+        return res?.page ?? null;
+    }
+
     // Legal endpoints
     async getLegalContent(type) {
         return this.get(`/api/legal/${type}/`);

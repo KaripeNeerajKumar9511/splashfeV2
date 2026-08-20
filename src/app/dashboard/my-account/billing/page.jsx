@@ -301,7 +301,6 @@ function BillingPageContent() {
 
   return (
     <div className="space-y-6">
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap');`}</style>
 
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 border-b border-sidebar-border pb-5">
         <div>

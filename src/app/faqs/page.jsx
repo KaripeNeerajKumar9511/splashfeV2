@@ -6,6 +6,9 @@ import { apiService } from "@/lib/api";
 import { FAQS_PAGE_DEFAULTS, resolveFaqsContent } from "@/lib/pageContentDefaults";
 import MarketingPageShell, { MarketingHero } from "@/components/home/MarketingPageShell";
 import MarketingFaqList from "@/components/home/MarketingFaqList";
+import JsonLd from "@/lib/schema/JsonLd";
+import { generateSchema } from "@/lib/schema/generateSchema";
+import { getPublicSiteOrigin } from "@/lib/schema/siteConfig";
 
 export default function FAQsPage() {
   const [pageContent, setPageContent] = useState({});
@@ -21,9 +24,23 @@ export default function FAQsPage() {
   const content = useMemo(() => resolveFaqsContent(pageContent), [pageContent]);
   const { header, items, cta } = content;
   const faqs = items?.length ? items : FAQS_PAGE_DEFAULTS.items;
+  const origin = getPublicSiteOrigin();
+  const schema = generateSchema({
+    type: "FAQPage",
+    url: `${origin}/faqs`,
+    name: header.title,
+    description: header.subtitle,
+    faqs,
+    breadcrumbs: [
+      { name: "Home", href: "/" },
+      { name: "FAQs", href: "/faqs" },
+    ],
+    site: { origin },
+  });
 
   return (
     <MarketingPageShell>
+      <JsonLd schema={schema} />
       <MarketingHero
         eyebrow="Help"
         title={header.title}

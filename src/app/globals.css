@@ -135,6 +135,30 @@
   --color-gold-muted: var(--gold-muted);
 }
 
+/* Self-hosted next/font families used by marketing pages */
+.marketing-page [class*="Cormorant_Garamond"],
+.splash-page [class*="Cormorant_Garamond"],
+.lp-page [class*="Cormorant_Garamond"],
+.legal-page [class*="Cormorant_Garamond"],
+.gallery-page [class*="Cormorant_Garamond"] {
+  font-family: var(--font-cormorant), "Cormorant Garamond", serif;
+}
+.marketing-page [class*="DM_Sans"],
+.splash-page [class*="DM_Sans"],
+.lp-page [class*="DM_Sans"],
+.legal-page [class*="DM_Sans"],
+.gallery-page [class*="DM_Sans"] {
+  font-family: var(--font-dm-sans), "DM Sans", sans-serif;
+}
+.splash-page,
+.marketing-page,
+.pricing-section,
+.legal-page,
+.gallery-page,
+.lp-page {
+  font-family: var(--font-dm-sans), "DM Sans", sans-serif;
+}
+
 @layer base {
   /**
    * Global minimal scrollbars (Firefox + WebKit): thin, very light thumb on all scrollers.

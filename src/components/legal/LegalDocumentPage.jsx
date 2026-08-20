@@ -6,9 +6,6 @@ import MarketingNav from "@/components/home/MarketingNav";
 import MarketingFooter from "@/components/home/MarketingFooter";
 import { apiService } from "@/lib/api";
 
-const FONT_IMPORT =
-  "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');";
-
 export default function LegalDocumentPage({
   type,
   fallbackTitle,
@@ -127,7 +124,6 @@ export default function LegalDocumentPage({
 
   return (
     <div className="legal-page min-h-screen w-full max-w-[100vw] overflow-x-clip bg-[#0E0D09] text-[#F2EDD8] [--nav-h:64px] pt-[var(--nav-h)] max-md:[--nav-h:56px]">
-      <style>{FONT_IMPORT}</style>
       <MarketingNav />
       {body}
       <MarketingFooter />

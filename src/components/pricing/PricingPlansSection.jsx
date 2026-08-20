@@ -78,7 +78,6 @@ function isFreePlan(plan) {
 }
 
 const PRICING_CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap');
 .pricing-section{
   --gold:#C9A84C;--gold-l:#E8D08A;--gold-dim:rgba(201,168,76,0.1);--gold-b:rgba(201,168,76,0.22);
   --d1:#0E0D09;--t1:#F2EDD8;--t2:rgba(242,237,216,0.58);--t3:rgba(242,237,216,0.38);
@@ -148,19 +147,19 @@ const PRICING_CSS = `
 .pricing-badge{
   display:inline-flex;align-items:center;gap:6px;
   border:.5px solid var(--gold-b);padding:4px 12px;border-radius:20px;
-  font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;
+  font-family:var(--font-dm-sans),sans-serif;font-size:10px;font-weight:500;
   letter-spacing:.16em;text-transform:uppercase;color:var(--gold-l);
   background:var(--gold-dim);margin-bottom:.7rem;
 }
 .pricing-heading{
-  font-family:'Cormorant Garamond',serif;
+  font-family:var(--font-cormorant),serif;
   font-size:clamp(30px,3.8vw,48px);font-weight:300;line-height:1.1;
   color:var(--t1);max-width:720px;margin:0 auto .5rem;
 }
 .pricing-heading-line{display:block}
 .pricing-heading em{font-style:italic;color:var(--gold-l)}
 .pricing-sub{
-  font-family:'DM Sans',sans-serif;font-size:clamp(12px,1.4vw,13px);font-weight:300;
+  font-family:var(--font-dm-sans),sans-serif;font-size:clamp(12px,1.4vw,13px);font-weight:300;
   color:var(--t2);max-width:460px;margin:0 auto;line-height:1.55;
 }
 .pricing-currency-toggle{
@@ -174,7 +173,7 @@ const PRICING_CSS = `
   display:inline-flex;margin:0 0 1rem;
 }
 .pricing-currency-btn{
-  font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:500;letter-spacing:.06em;
+  font-family:var(--font-dm-sans),sans-serif;font-size:.72rem;font-weight:500;letter-spacing:.06em;
   padding:.45rem .95rem;border:0;border-radius:999px;cursor:pointer;
   background:transparent;color:var(--t2);transition:background .2s,color .2s;
 }
@@ -198,7 +197,7 @@ const PRICING_CSS = `
 .pricing-popular{
   position:absolute;top:-11px;left:50%;transform:translateX(-50%);
   background:linear-gradient(135deg,#C9A84C,#E8D08A);color:var(--d1);
-  font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;
+  font-family:var(--font-dm-sans),sans-serif;font-size:9px;font-weight:700;
   letter-spacing:.14em;text-transform:uppercase;padding:5px 14px;border-radius:20px;white-space:nowrap;
 }
 .pricing-icon{
@@ -207,11 +206,11 @@ const PRICING_CSS = `
   display:flex;align-items:center;justify-content:center;margin-bottom:.85rem;
 }
 .pricing-name{
-  font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:400;
+  font-family:var(--font-cormorant),serif;font-size:1.35rem;font-weight:400;
   color:var(--gold-l);margin-bottom:.2rem;line-height:1.15;
 }
 .pricing-desc{
-  font-family:'DM Sans',sans-serif;font-size:.76rem;color:var(--t3);
+  font-family:var(--font-dm-sans),sans-serif;font-size:.76rem;color:var(--t3);
   line-height:1.45;margin-bottom:.85rem;
 }
 .pricing-amount{
@@ -219,7 +218,7 @@ const PRICING_CSS = `
   display:flex;align-items:baseline;flex-wrap:wrap;gap:.2rem;
 }
 .pricing-amount-value{
-  font-family:'Cormorant Garamond',serif;
+  font-family:var(--font-cormorant),serif;
   font-size:clamp(1.7rem,2.4vw,2rem);
   font-weight:400;
   color:var(--t1);
@@ -228,7 +227,7 @@ const PRICING_CSS = `
   line-height:1.15;
 }
 .pricing-amount-cycle{
-  font-family:'DM Sans',sans-serif;
+  font-family:var(--font-dm-sans),sans-serif;
   font-size:.78rem;
   color:var(--t2);
   font-weight:400;
@@ -239,18 +238,18 @@ const PRICING_CSS = `
 }
 .pricing-credits-hdr{display:flex;align-items:center;gap:7px;margin-bottom:.2rem}
 .pricing-credits-hdr strong{
-  font-family:'Cormorant Garamond',serif;
+  font-family:var(--font-cormorant),serif;
   font-size:.92rem;
   font-weight:400;
   color:var(--gold-l);
   font-variant-numeric:tabular-nums;
   letter-spacing:0.02em;
 }
-.pricing-credits p{font-family:'DM Sans',sans-serif;font-size:.7rem;color:var(--t3);line-height:1.4;margin:0}
+.pricing-credits p{font-family:var(--font-dm-sans),sans-serif;font-size:.7rem;color:var(--t3);line-height:1.4;margin:0}
 .pricing-features{list-style:none;padding:0;margin:0 0 .65rem;flex:1}
 .pricing-features li{
   display:flex;align-items:flex-start;gap:8px;
-  font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--t2);
+  font-family:var(--font-dm-sans),sans-serif;font-size:.72rem;color:var(--t2);
   line-height:1.3;margin-bottom:.35rem;
 }
 .pricing-check{
@@ -261,7 +260,7 @@ const PRICING_CSS = `
 .pricing-btn{
   display:flex;align-items:center;justify-content:center;gap:6px;
   width:100%;min-height:40px;border-radius:8px;
-  font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;
+  font-family:var(--font-dm-sans),sans-serif;font-size:.82rem;font-weight:500;
   cursor:pointer;transition:opacity .2s,transform .15s,border-color .2s;
   border:none;margin-top:auto;
 }

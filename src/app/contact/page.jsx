@@ -12,7 +12,6 @@ export default function ContactPage() {
 
   return (
     <div className="marketing-page min-h-screen w-full max-w-[100vw] overflow-x-clip bg-[#0E0D09] text-[#F2EDD8] [--nav-h:64px] pt-[var(--nav-h)] max-md:[--nav-h:56px]">
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');`}</style>
       <MarketingNav />
       <div className="min-h-[calc(100dvh-var(--nav-h))]">
         {isAuthenticated && (

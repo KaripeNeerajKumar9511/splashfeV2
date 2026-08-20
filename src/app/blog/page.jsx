@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiService } from "@/lib/api";
 import { buildMediaUrl } from "@/utils/imagehelper";
 import MarketingPageShell, { MarketingHero } from "@/components/home/MarketingPageShell";
+import JsonLd from "@/lib/schema/JsonLd";
+import { generateSchema } from "@/lib/schema/generateSchema";
+import { getPublicSiteOrigin } from "@/lib/schema/siteConfig";
 
 function mediaSrc(src) {
   if (!src) return "";
@@ -39,8 +42,34 @@ export default function BlogIndexPage() {
     };
   }, []);
 
+  const origin = getPublicSiteOrigin();
+  const schema = useMemo(
+    () =>
+      generateSchema({
+        type: "CollectionPage",
+        url: `${origin}/blog`,
+        name: "Insights & Updates",
+        description:
+          "Latest news, trends, and insights on AI, fashion photography, and digital retail.",
+        items: posts
+          .filter((post) => post?.slug)
+          .map((post) => ({
+            name: post.title,
+            url: `${origin}/blog/${post.slug}`,
+            description: post.excerpt || post.short_content,
+          })),
+        breadcrumbs: [
+          { name: "Home", href: "/" },
+          { name: "Blog", href: "/blog" },
+        ],
+        site: { origin },
+      }),
+    [origin, posts]
+  );
+
   return (
     <MarketingPageShell>
+      <JsonLd schema={schema} />
       <MarketingHero
         eyebrow="Our Blog"
         title="Insights & Updates"

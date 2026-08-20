@@ -58,8 +58,6 @@ export default function PublicGallery({ images = [] }) {
       <MarketingNav />
 
       <style>{`
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap');
-
 .gallery-page {
   --gold: #C9A84C;
   --gold-l: #E8D08A;
@@ -75,7 +73,7 @@ export default function PublicGallery({ images = [] }) {
   min-height: 100dvh;
   background: var(--d1);
   color: var(--t1);
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-dm-sans), sans-serif;
   padding-top: var(--nav-h);
 }
 
@@ -123,7 +121,7 @@ export default function PublicGallery({ images = [] }) {
 }
 
 .gallery-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-cormorant), serif;
   font-size: clamp(36px, 5.5vw, 64px);
   font-weight: 300;
   line-height: 1.08;
@@ -153,7 +151,7 @@ export default function PublicGallery({ images = [] }) {
 }
 
 .gallery-filter {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-dm-sans), sans-serif;
   font-size: 13px;
   font-weight: 400;
   padding: 8px 18px;
@@ -282,7 +280,7 @@ export default function PublicGallery({ images = [] }) {
 }
 
 .gallery-cta h2 {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-cormorant), serif;
   font-size: clamp(28px, 4vw, 42px);
   font-weight: 300;
   line-height: 1.2;

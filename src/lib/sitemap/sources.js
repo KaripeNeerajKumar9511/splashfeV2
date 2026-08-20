@@ -27,6 +27,12 @@ export const SITEMAP_SOURCES = [
     apiPath: "/api/sitemap/blog",
     enabled: true,
   },
+  {
+    id: "landing-pages",
+    filePrefix: "landing-pages",
+    apiPath: "/api/sitemap/landing-pages",
+    enabled: true,
+  },
 ];
 
 /** Important public marketing / legal / app routes (paths only). */

@@ -174,10 +174,10 @@ export default function MarketingNav({ isHome = false }) {
 .marketing-nav .nav-logo{display:flex;align-items:center;flex-shrink:0;min-width:0;max-width:58%}
 .marketing-nav .nav-logo img{height:clamp(36px,10vw,52px);width:auto;max-width:100%;object-fit:contain}
 .marketing-nav .nav-r{display:flex;align-items:center;gap:1.1rem}
-.marketing-nav .nav-r a,.marketing-nav .nav-dd-btn,.marketing-nav .nav-dd-toggle{font-size:13px;color:rgba(242,237,216,.58);text-decoration:none;transition:color .2s,background .2s;white-space:nowrap;background:none;border:0;cursor:pointer;font-family:'DM Sans',sans-serif}
+.marketing-nav .nav-r a,.marketing-nav .nav-dd-btn,.marketing-nav .nav-dd-toggle{font-size:13px;color:rgba(242,237,216,.58);text-decoration:none;transition:color .2s,background .2s;white-space:nowrap;background:none;border:0;cursor:pointer;font-family:var(--font-dm-sans),'DM Sans',sans-serif}
 .marketing-nav .nav-r a:hover,.marketing-nav .nav-dd-btn:hover,.marketing-nav .nav-dd-toggle:hover{color:#F2EDD8}
-.marketing-nav .btn-gold{background:#C9A84C;color:#0E0D09!important;font-weight:500!important;padding:10px 22px;border-radius:6px;transition:opacity .2s!important;white-space:nowrap}
-.marketing-nav .btn-gold:hover{opacity:.88}
+.marketing-nav .nav-r a.btn-gold{display:inline-flex;align-items:center;justify-content:center;background:#C9A84C;color:#0E0D09;font-weight:500;padding:10px 22px;border-radius:6px;transition:opacity .2s,background .2s;white-space:nowrap}
+.marketing-nav .nav-r a.btn-gold:hover{opacity:.88;color:#0E0D09;background:#C9A84C}
 .marketing-nav .nav-toggle{display:none;align-items:center;justify-content:center;width:44px;height:44px;border:.5px solid rgba(255,255,255,.07);border-radius:10px;background:#1E1C15;color:#F2EDD8;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .marketing-nav .nav-toggle svg{width:22px;height:22px}
 .marketing-nav .nav-backdrop{display:none}
@@ -201,7 +201,7 @@ export default function MarketingNav({ isHome = false }) {
   .marketing-nav .nav-r.open{opacity:1;pointer-events:auto;transform:translateY(0)}
   .marketing-nav .nav-r a{font-size:15px;padding:14px 12px;border-bottom:.5px solid rgba(255,255,255,.07);width:100%;white-space:normal}
   .marketing-nav .nav-r a:last-of-type{border-bottom:none}
-  .marketing-nav .nav-r .btn-gold{margin-top:8px;text-align:center;justify-content:center;display:flex;padding:14px 20px}
+  .marketing-nav .nav-r a.btn-gold{margin-top:8px;text-align:center;justify-content:center;display:flex;padding:14px 20px}
   .nav-dd-menu{display:none}
 }
 @media(max-width:380px){

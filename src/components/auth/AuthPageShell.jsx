@@ -2,7 +2,29 @@
 
 import Navigation from "@/components/home/Navigation";
 import LoginImage from "@/components/login-image";
-import { AuthPageContentProvider } from "@/components/auth/AuthPageContent";
+import {
+    AuthPageContentProvider,
+    prefetchAuthPageContent,
+    useAuthPageContent,
+    useAuthPageReady,
+} from "@/components/auth/AuthPageContent";
+
+if (typeof window !== "undefined") {
+    prefetchAuthPageContent();
+}
+
+function AuthImagesColumn() {
+    const { images } = useAuthPageContent();
+    const ready = useAuthPageReady();
+    const hasImages = Boolean(images?.small_url || images?.large_url);
+    if (ready && !hasImages) return null;
+
+    return (
+        <div className="hidden xl:flex flex-1 items-center justify-center min-w-0 max-w-[480px]">
+            <LoginImage />
+        </div>
+    );
+}
 
 export default function AuthPageShell({ children }) {
     return (
@@ -15,10 +37,7 @@ export default function AuthPageShell({ children }) {
                             <div className="w-full max-w-[420px] mx-auto xl:mx-0 xl:shrink-0">
                                 {children}
                             </div>
-
-                            <div className="hidden xl:flex flex-1 items-center justify-center min-w-0 max-w-[480px]">
-                                <LoginImage />
-                            </div>
+                            <AuthImagesColumn />
                         </div>
                     </div>
                 </main>

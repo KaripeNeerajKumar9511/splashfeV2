@@ -517,10 +517,10 @@ export function resolveHomeContent(raw) {
 
 export const AUTH_PAGE_DEFAULTS = {
   images: {
-    small_url: "/images/login-1.jpg",
-    small_alt: "Diamond heart pendant",
-    large_url: "/images/login-2.jpg",
-    large_alt: "Woman wearing luxury jewelry",
+    small_url: "",
+    small_alt: "",
+    large_url: "",
+    large_alt: "",
   },
   login: {
     title: "Login",
@@ -557,8 +557,21 @@ export function resolveFaqsContent(raw) {
   return deepMerge(FAQS_PAGE_DEFAULTS, raw || {});
 }
 
+const STATIC_AUTH_IMAGE_PATHS = new Set(["/images/login-1.jpg", "/images/login-2.jpg"]);
+
+function stripStaticAuthImages(content) {
+  const images = { ...(content?.images || {}) };
+  for (const key of ["small_url", "large_url"]) {
+    const path = String(images[key] || "").split("?")[0];
+    if (STATIC_AUTH_IMAGE_PATHS.has(path) || path.endsWith("/login-1.jpg") || path.endsWith("/login-2.jpg")) {
+      images[key] = "";
+    }
+  }
+  return { ...content, images };
+}
+
 export function resolveAuthContent(raw) {
-  return deepMerge(AUTH_PAGE_DEFAULTS, raw || {});
+  return stripStaticAuthImages(deepMerge(AUTH_PAGE_DEFAULTS, raw || {}));
 }
 
 export function resolveContactContent(raw) {

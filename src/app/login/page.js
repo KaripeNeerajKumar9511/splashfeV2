@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import LoginForm from "@/components/login-form";
 import AuthPageShell from "@/components/auth/AuthPageShell";
+import { prefetchAuthPageContent } from "@/components/auth/AuthPageContent";
+
+if (typeof window !== "undefined") {
+    prefetchAuthPageContent();
+}
 
 export default function LoginPage() {
     const router = useRouter();

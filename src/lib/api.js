@@ -1846,7 +1846,7 @@ class ApiService {
         });
     }
 
-    // Page content (CMS): home, about, vision_mission, tutorials, security
+    // Page content (CMS): home, about, vision_mission, tutorials, security, faqs, contact, auth
     async getPageContent(slug) {
         const res = await this.get(`/api/homepage/content/${slug}/`);
         return res?.content ?? {};

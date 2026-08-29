@@ -8,12 +8,14 @@ import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { usePortalDevice } from "@/hooks/usePortalDevice";
 import { Monitor, Smartphone, Tablet } from "lucide-react";
+import { useAuthPageContent } from "@/components/auth/AuthPageContent";
 
 const inputClassName =
     "w-full min-h-11 px-4 py-3 text-base sm:text-sm bg-input border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 
 export default function LoginForm() {
     const { t } = useLanguage();
+    const { login: copy } = useAuthPageContent();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
@@ -49,10 +51,10 @@ export default function LoginForm() {
         <div className="w-full">
             <div className="mb-6 sm:mb-8 text-left">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">
-                    {t("auth.login")}
+                    {copy.title || t("auth.login")}
                 </h1>
                 <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
-                    {t("auth.stayConnected")}
+                    {copy.subtitle || t("auth.stayConnected")}
                 </p>
             </div>
 
@@ -62,12 +64,12 @@ export default function LoginForm() {
                         htmlFor="email"
                         className="block text-sm font-semibold text-foreground"
                     >
-                        {t("auth.email")}
+                        {copy.email_label || t("auth.email")}
                     </label>
                     <Input
                         id="email"
                         type="email"
-                        placeholder={t("auth.exampleEmail")}
+                        placeholder={copy.email_placeholder || t("auth.exampleEmail")}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className={inputClassName}
@@ -83,12 +85,12 @@ export default function LoginForm() {
                         htmlFor="password"
                         className="block text-sm font-semibold text-foreground"
                     >
-                        {t("auth.password")}
+                        {copy.password_label || t("auth.password")}
                     </label>
                     <Input
                         id="password"
                         type="password"
-                        placeholder={t("auth.atLeast8Chars")}
+                        placeholder={copy.password_placeholder || t("auth.atLeast8Chars")}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className={inputClassName}
@@ -104,7 +106,7 @@ export default function LoginForm() {
                             href="/forgot-password"
                             className="text-sm font-medium text-gold-solid hover:brightness-110 transition-opacity touch-manipulation"
                         >
-                            {t("auth.forgotPassword")}
+                            {copy.forgot_password_text || t("auth.forgotPassword")}
                         </Link>
                     </div>
                 )}
@@ -162,15 +164,15 @@ export default function LoginForm() {
                     className="w-full min-h-11 py-3 h-auto rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-sm"
                     disabled={loading || showMobileBlock}
                 >
-                    {loading ? t("auth.signingIn") : t("auth.signin")}
+                    {loading ? t("auth.signingIn") : (copy.submit_text || t("auth.signin"))}
                 </Button>
             </form>
 
             <div className="mt-6 sm:mt-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                    {t("auth.dontHaveAccount")}{" "}
+                    {copy.no_account_text || t("auth.dontHaveAccount")}{" "}
                     <Link href="/signup" className="font-semibold text-gold-solid hover:brightness-110 touch-manipulation">
-                        {t("auth.signup")}
+                        {copy.signup_link_text || t("auth.signup")}
                     </Link>
                 </p>
             </div>

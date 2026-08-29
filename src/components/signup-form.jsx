@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { resolveBillingDestination } from "@/lib/billingAccess";
 import { redirectToOrgPayments } from "@/lib/portalSwitch";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuthPageContent } from "@/components/auth/AuthPageContent";
 import PhoneCountryInput from "@/components/PhoneCountryInput";
 import { SIGNUP_COUNTRIES, buildE164 } from "@/lib/signupCountries";
 import {
@@ -47,6 +48,7 @@ function formatCountdown(seconds) {
 
 export default function SignupForm() {
     const { t } = useLanguage();
+    const { signup: copy } = useAuthPageContent();
     const [formData, setFormData] = useState({
         full_name: "",
         username: "",
@@ -440,11 +442,11 @@ export default function SignupForm() {
         <div className="w-full">
             <div className="mb-5 sm:mb-8 text-left">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">
-                    {step === "signup" ? t("auth.signup") : "Verification"}
+                    {step === "signup" ? (copy.title || t("auth.signup")) : "Verification"}
                 </h1>
                 <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
                     {step === "signup"
-                        ? t("auth.createAccount")
+                        ? (copy.subtitle || t("auth.createAccount"))
                         : "Verify your email and mobile to finish signup"}
                 </p>
             </div>
@@ -452,13 +454,13 @@ export default function SignupForm() {
             {step === "signup" ? (
                 <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                     <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-foreground">{t("auth.fullName")}</label>
+                        <label className="block text-sm font-semibold text-foreground">{copy.full_name_label || t("auth.fullName")}</label>
                         <Input
                             type="text"
                             name="full_name"
                             value={formData.full_name}
                             onChange={handleChange}
-                            placeholder={t("auth.johnDoe")}
+                            placeholder={copy.full_name_placeholder || t("auth.johnDoe")}
                             autoComplete="name"
                             required
                             className={inputClassName}
@@ -466,13 +468,13 @@ export default function SignupForm() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-foreground">{t("auth.username")}</label>
+                        <label className="block text-sm font-semibold text-foreground">{copy.username_label || t("auth.username")}</label>
                         <Input
                             type="text"
                             name="username"
                             value={formData.username}
                             onChange={handleChange}
-                            placeholder={t("auth.johndoe123")}
+                            placeholder={copy.username_placeholder || t("auth.johndoe123")}
                             autoComplete="username"
                             required
                             className={inputClassName}
@@ -480,13 +482,13 @@ export default function SignupForm() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-foreground">{t("auth.email")}</label>
+                        <label className="block text-sm font-semibold text-foreground">{copy.email_label || t("auth.email")}</label>
                         <Input
                             type="email"
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
-                            placeholder={t("auth.exampleEmail")}
+                            placeholder={copy.email_placeholder || t("auth.exampleEmail")}
                             autoComplete="email"
                             inputMode="email"
                             required
@@ -503,13 +505,13 @@ export default function SignupForm() {
                     />
 
                     <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-foreground">{t("auth.password")}</label>
+                        <label className="block text-sm font-semibold text-foreground">{copy.password_label || t("auth.password")}</label>
                         <Input
                             type="password"
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            placeholder={t("auth.atLeast8Chars")}
+                            placeholder={copy.password_placeholder || t("auth.atLeast8Chars")}
                             autoComplete="new-password"
                             minLength={8}
                             required
@@ -517,13 +519,13 @@ export default function SignupForm() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-foreground">{t("auth.confirmPassword")}</label>
+                        <label className="block text-sm font-semibold text-foreground">{copy.confirm_password_label || t("auth.confirmPassword")}</label>
                         <Input
                             type="password"
                             name="confirm_password"
                             value={formData.confirm_password}
                             onChange={handleChange}
-                            placeholder={t("auth.confirmYourPassword")}
+                            placeholder={copy.confirm_password_placeholder || t("auth.confirmYourPassword")}
                             autoComplete="new-password"
                             minLength={8}
                             required
@@ -571,7 +573,7 @@ export default function SignupForm() {
                         disabled={loading}
                         className="w-full min-h-11 py-3 h-auto font-semibold rounded-full text-base sm:text-sm"
                     >
-                        {loading ? "Sending codes..." : "Go to verification"}
+                        {loading ? "Sending codes..." : (copy.submit_text || "Go to verification")}
                     </Button>
                 </form>
             ) : (
@@ -765,9 +767,9 @@ export default function SignupForm() {
             {step === "signup" && (
                 <div className="mt-8 text-center">
                     <p className="text-sm text-muted-foreground">
-                        {t("auth.alreadyHaveAccount")}{" "}
+                        {copy.have_account_text || t("auth.alreadyHaveAccount")}{" "}
                         <Link href="/login" className="font-semibold text-gold-solid hover:opacity-80">
-                            {t("auth.login")}
+                            {copy.login_link_text || t("auth.login")}
                         </Link>
                     </p>
                 </div>

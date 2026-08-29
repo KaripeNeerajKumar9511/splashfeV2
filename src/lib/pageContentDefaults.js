@@ -515,8 +515,50 @@ export function resolveHomeContent(raw) {
   };
 }
 
+export const AUTH_PAGE_DEFAULTS = {
+  images: {
+    small_url: "/images/login-1.jpg",
+    small_alt: "Diamond heart pendant",
+    large_url: "/images/login-2.jpg",
+    large_alt: "Woman wearing luxury jewelry",
+  },
+  login: {
+    title: "Login",
+    subtitle: "Stay connected with us to see magic",
+    email_label: "Email",
+    email_placeholder: "Example@email.com",
+    password_label: "Password",
+    password_placeholder: "At least 8 characters",
+    forgot_password_text: "Forgot Password?",
+    submit_text: "Sign in",
+    no_account_text: "Don't have an account?",
+    signup_link_text: "Sign Up",
+  },
+  signup: {
+    title: "Sign Up",
+    subtitle: "Create your account to get started",
+    full_name_label: "Full Name",
+    full_name_placeholder: "John Doe",
+    username_label: "Username",
+    username_placeholder: "johndoe123",
+    email_label: "Email",
+    email_placeholder: "Example@email.com",
+    password_label: "Password",
+    password_placeholder: "At least 8 characters",
+    confirm_password_label: "Confirm Password",
+    confirm_password_placeholder: "Confirm your password",
+    submit_text: "Go to verification",
+    have_account_text: "Already have an account?",
+    login_link_text: "Login",
+  },
+};
+
 export function resolveFaqsContent(raw) {
   return deepMerge(FAQS_PAGE_DEFAULTS, raw || {});
+}
+
+export function resolveAuthContent(raw) {
+  return deepMerge(AUTH_PAGE_DEFAULTS, raw || {});
 }
 
 export function resolveContactContent(raw) {
